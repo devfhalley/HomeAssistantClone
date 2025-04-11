@@ -6,11 +6,14 @@ import {
   insertPhaseSSchema,
   insertPhaseTSchema, 
   insertChartDataSchema,
+  insertPanelSchema,
   type InsertPhaseR,
   type InsertPhaseS,
   type InsertPhaseT,
   type InsertChartData,
-  type PhaseData
+  type InsertPanel,
+  type PhaseData,
+  type Panel
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -422,6 +425,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error seeding data:", error);
       res.status(500).json({ error: "Failed to seed data" });
+    }
+  });
+
+  // Panel Management Routes
+  // Get all panels
+  app.get("/api/panels", async (req: Request, res: Response) => {
+    try {
+      const panels = await storage.getAllPanels();
+      res.json(panels);
+    } catch (error) {
+      console.error("Error fetching panels:", error);
+      res.status(500).json({ error: "Failed to fetch panels" });
+    }
+  });
+
+  // Get a specific panel by ID
+  app.get("/api/panels/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid panel ID" });
+      }
+
+      const panel = await storage.getPanelById(id);
+      if (!panel) {
+        return res.status(404).json({ error: "Panel not found" });
+      }
+
+      res.json(panel);
+    } catch (error) {
+      console.error(`Error fetching panel ${req.params.id}:`, error);
+      res.status(500).json({ error: "Failed to fetch panel" });
+    }
+  });
+
+  // Get phase data for a specific panel
+  app.get("/api/panels/:id/phase-data", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid panel ID" });
+      }
+
+      // Check if panel exists
+      const panel = await storage.getPanelById(id);
+      if (!panel) {
+        return res.status(404).json({ error: "Panel not found" });
+      }
+
+      const phaseData = await storage.getPhaseDataByPanelId(id);
+      res.json(phaseData);
+    } catch (error) {
+      console.error(`Error fetching phase data for panel ${req.params.id}:`, error);
+      res.status(500).json({ error: "Failed to fetch panel phase data" });
+    }
+  });
+
+  // Create a new panel
+  app.post("/api/panels", async (req: Request, res: Response) => {
+    try {
+      const validationResult = insertPanelSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid panel data", 
+          details: validationResult.error 
+        });
+      }
+      
+      const panel = await storage.createPanel(validationResult.data);
+      res.status(201).json(panel);
+    } catch (error) {
+      console.error("Error creating panel:", error);
+      res.status(500).json({ error: "Failed to create panel" });
+    }
+  });
+
+  // Update a panel
+  app.put("/api/panels/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid panel ID" });
+      }
+
+      // Validate panel data
+      const validationResult = insertPanelSchema.partial().safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid panel data", 
+          details: validationResult.error 
+        });
+      }
+
+      const updatedPanel = await storage.updatePanel(id, validationResult.data);
+      if (!updatedPanel) {
+        return res.status(404).json({ error: "Panel not found" });
+      }
+      
+      res.json(updatedPanel);
+    } catch (error) {
+      console.error(`Error updating panel ${req.params.id}:`, error);
+      res.status(500).json({ error: "Failed to update panel" });
+    }
+  });
+
+  // Delete a panel
+  app.delete("/api/panels/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid panel ID" });
+      }
+
+      // Check if panel exists
+      const panel = await storage.getPanelById(id);
+      if (!panel) {
+        return res.status(404).json({ error: "Panel not found" });
+      }
+
+      const result = await storage.deletePanel(id);
+      if (!result) {
+        return res.status(500).json({ error: "Failed to delete panel" });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error(`Error deleting panel ${req.params.id}:`, error);
+      res.status(500).json({ error: "Failed to delete panel" });
     }
   });
 
