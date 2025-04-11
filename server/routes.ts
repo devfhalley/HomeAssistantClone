@@ -31,8 +31,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get total power consumption (combined from all phases)
   app.get("/api/total-power", async (req: Request, res: Response) => {
     try {
-      const { granularity = 'hour' } = req.query;
-      const data = await storage.getTotalPowerConsumption(granularity as string);
+      const { 
+        granularity = 'hour', 
+        startDate, 
+        endDate 
+      } = req.query;
+      
+      // Convert string dates to Date objects if provided
+      const startDateObj = startDate ? new Date(startDate as string) : undefined;
+      const endDateObj = endDate ? new Date(endDate as string) : undefined;
+      
+      const data = await storage.getTotalPowerConsumption(
+        granularity as string,
+        startDateObj,
+        endDateObj
+      );
+      
       res.json(data);
     } catch (error) {
       console.error("Error fetching total power data:", error);

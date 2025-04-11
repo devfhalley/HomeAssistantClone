@@ -75,7 +75,7 @@ const ChartCard = ({
                 tick={{ fontSize: 10 }}
               />
               <YAxis 
-                domain={yAxisDomain as YAxisDomain}
+                domain={yAxisDomain}
                 tick={{ fontSize: 10 }}
               />
               <Tooltip 

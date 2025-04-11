@@ -6,7 +6,7 @@ import {
   chartData, type ChartData, type InsertChartData 
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte, lte } from "drizzle-orm";
 
 // Combined type for phase data response
 interface PhaseData {
@@ -47,7 +47,7 @@ export interface IStorage {
   createMultipleChartData(dataArray: InsertChartData[]): Promise<void>;
   
   // Total power consumption methods
-  getTotalPowerConsumption(granularity: string): Promise<TotalPowerData[]>;
+  getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -212,22 +212,26 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Total power consumption methods
-  async getTotalPowerConsumption(granularity: string): Promise<TotalPowerData[]> {
-    // Get data for all phases with power values
-    const rData = await db
-      .select()
-      .from(phaseR)
-      .orderBy(phaseR.time);
+  async getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]> {
+    // Fetch all phase data first
+    let rData = await db.select().from(phaseR).orderBy(phaseR.time);
+    let sData = await db.select().from(phaseS).orderBy(phaseS.time);
+    let tData = await db.select().from(phaseT).orderBy(phaseT.time);
     
-    const sData = await db
-      .select()
-      .from(phaseS)
-      .orderBy(phaseS.time);
-    
-    const tData = await db
-      .select()
-      .from(phaseT)
-      .orderBy(phaseT.time);
+    // Apply date filters in memory if provided
+    if (startDate && endDate) {
+      rData = rData.filter(d => new Date(d.time) >= startDate && new Date(d.time) <= endDate);
+      sData = sData.filter(d => new Date(d.time) >= startDate && new Date(d.time) <= endDate);
+      tData = tData.filter(d => new Date(d.time) >= startDate && new Date(d.time) <= endDate);
+    } else if (startDate) {
+      rData = rData.filter(d => new Date(d.time) >= startDate);
+      sData = sData.filter(d => new Date(d.time) >= startDate);
+      tData = tData.filter(d => new Date(d.time) >= startDate);
+    } else if (endDate) {
+      rData = rData.filter(d => new Date(d.time) <= endDate);
+      sData = sData.filter(d => new Date(d.time) <= endDate);
+      tData = tData.filter(d => new Date(d.time) <= endDate);
+    }
     
     // If we don't have data for all phases, return empty array
     if (!rData.length && !sData.length && !tData.length) {
