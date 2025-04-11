@@ -2,10 +2,15 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
-  insertPhaseDataSchema, 
+  insertPhaseRSchema,
+  insertPhaseSSchema,
+  insertPhaseTSchema, 
   insertChartDataSchema,
-  type InsertPhaseData,
-  type InsertChartData
+  type InsertPhaseR,
+  type InsertPhaseS,
+  type InsertPhaseT,
+  type InsertChartData,
+  type PhaseData
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -27,7 +32,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/phase-data/:phase", async (req: Request, res: Response) => {
     try {
       const { phase } = req.params;
-      const data = await storage.getPhaseData(phase);
+      let data: PhaseData | null = null;
+      
+      if (phase === 'R') {
+        const phaseData = await storage.getPhaseR();
+        if (phaseData) {
+          data = {
+            phase: 'R',
+            voltage: phaseData.voltage,
+            current: phaseData.current,
+            power: phaseData.power,
+            energy: phaseData.energy,
+            frequency: phaseData.frequency,
+            pf: phaseData.pf,
+            time: phaseData.time
+          };
+        }
+      } else if (phase === 'S') {
+        const phaseData = await storage.getPhaseS();
+        if (phaseData) {
+          data = {
+            phase: 'S',
+            voltage: phaseData.voltage,
+            current: phaseData.current,
+            power: phaseData.power,
+            energy: phaseData.energy,
+            frequency: phaseData.frequency,
+            pf: phaseData.pf,
+            time: phaseData.time
+          };
+        }
+      } else if (phase === 'T') {
+        const phaseData = await storage.getPhaseT();
+        if (phaseData) {
+          data = {
+            phase: 'T',
+            voltage: phaseData.voltage,
+            current: phaseData.current,
+            power: phaseData.power,
+            energy: phaseData.energy,
+            frequency: phaseData.frequency,
+            pf: phaseData.pf,
+            time: phaseData.time
+          };
+        }
+      }
       
       if (!data) {
         return res.status(404).json({ error: "Phase data not found" });
@@ -40,23 +89,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Create or update phase data
+  // Create phase data (with different schemas for each phase)
   app.post("/api/phase-data", async (req: Request, res: Response) => {
     try {
-      const validationResult = insertPhaseDataSchema.safeParse(req.body);
+      const { phase } = req.body;
       
-      if (!validationResult.success) {
-        return res.status(400).json({ 
-          error: "Invalid phase data", 
-          details: validationResult.error 
-        });
+      if (!phase) {
+        return res.status(400).json({ error: "Phase identifier is required" });
       }
       
-      const data = await storage.createOrUpdatePhaseData(validationResult.data);
-      res.status(201).json(data);
+      if (phase === 'R') {
+        const validationResult = insertPhaseRSchema.safeParse(req.body);
+        
+        if (!validationResult.success) {
+          return res.status(400).json({ 
+            error: "Invalid phase R data", 
+            details: validationResult.error 
+          });
+        }
+        
+        const data = await storage.createPhaseR(validationResult.data);
+        return res.status(201).json(data);
+      } 
+      else if (phase === 'S') {
+        const validationResult = insertPhaseSSchema.safeParse(req.body);
+        
+        if (!validationResult.success) {
+          return res.status(400).json({ 
+            error: "Invalid phase S data", 
+            details: validationResult.error 
+          });
+        }
+        
+        const data = await storage.createPhaseS(validationResult.data);
+        return res.status(201).json(data);
+      }
+      else if (phase === 'T') {
+        const validationResult = insertPhaseTSchema.safeParse(req.body);
+        
+        if (!validationResult.success) {
+          return res.status(400).json({ 
+            error: "Invalid phase T data", 
+            details: validationResult.error 
+          });
+        }
+        
+        const data = await storage.createPhaseT(validationResult.data);
+        return res.status(201).json(data);
+      }
+      
+      return res.status(400).json({ error: "Invalid phase identifier" });
     } catch (error) {
-      console.error("Error creating/updating phase data:", error);
-      res.status(500).json({ error: "Failed to create/update phase data" });
+      console.error("Error creating phase data:", error);
+      res.status(500).json({ error: "Failed to create phase data" });
     }
   });
   
@@ -128,33 +213,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Seed phase data for R, S, and T
-      const phaseDataR: InsertPhaseData = {
-        phase: "R",
+      const phaseDataR: InsertPhaseR = {
         voltage: 218.6,
         current: 18.547,
         power: 4009.8,
-        energy: 214945
+        energy: 214945,
+        frequency: 50,
+        pf: 0.95
       };
       
-      const phaseDataS: InsertPhaseData = {
-        phase: "S",
+      const phaseDataS: InsertPhaseS = {
         voltage: 228.2,
         current: 19.181,
         power: 3802.7,
-        energy: 215652
+        energy: 215652,
+        frequency: 50,
+        pf: 0.92
       };
       
-      const phaseDataT: InsertPhaseData = {
-        phase: "T",
+      const phaseDataT: InsertPhaseT = {
         voltage: 220.2,
         current: 27.785,
         power: 5860.7,
-        energy: 294149
+        energy: 294149,
+        frequency: 50,
+        pf: 0.97
       };
       
-      await storage.createOrUpdatePhaseData(phaseDataR);
-      await storage.createOrUpdatePhaseData(phaseDataS);
-      await storage.createOrUpdatePhaseData(phaseDataT);
+      await storage.createPhaseR(phaseDataR);
+      await storage.createPhaseS(phaseDataS);
+      await storage.createPhaseT(phaseDataT);
       
       // Generate time labels for chart data
       const timeLabels = Array.from({ length: 24 }, (_, i) => {
@@ -251,6 +339,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       };
       
+      // Generate frequency data
+      const generateFrequencyData = (phase: string): InsertChartData[] => {
+        return timeLabels.map((time, i) => {
+          // Small variations around 50Hz
+          const value = 50 + (Math.random() * 0.5 - 0.25);
+          return {
+            phase,
+            dataType: "frequency",
+            time,
+            value: parseFloat(value.toFixed(2))
+          };
+        });
+      };
+      
+      // Generate power factor data
+      const generatePFData = (phase: string): InsertChartData[] => {
+        return timeLabels.map((time, i) => {
+          // Values between 0.85 and 0.98
+          const value = 0.85 + (Math.random() * 0.13);
+          return {
+            phase,
+            dataType: "pf",
+            time,
+            value: parseFloat(value.toFixed(2))
+          };
+        });
+      };
+      
       const currentDataR = generateCurrentData("R");
       const currentDataS = generateCurrentData("S");
       const currentDataT = generateCurrentData("T");
@@ -259,11 +375,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const powerDataS = generatePowerData("S");
       const powerDataT = generatePowerData("T");
       
+      const frequencyDataR = generateFrequencyData("R");
+      const frequencyDataS = generateFrequencyData("S");
+      const frequencyDataT = generateFrequencyData("T");
+      
+      const pfDataR = generatePFData("R");
+      const pfDataS = generatePFData("S");
+      const pfDataT = generatePFData("T");
+      
       // Save all chart data to database
       await storage.createMultipleChartData([
         ...voltageDataR, ...voltageDataS, ...voltageDataT,
         ...currentDataR, ...currentDataS, ...currentDataT,
-        ...powerDataR, ...powerDataS, ...powerDataT
+        ...powerDataR, ...powerDataS, ...powerDataT,
+        ...frequencyDataR, ...frequencyDataS, ...frequencyDataT,
+        ...pfDataR, ...pfDataS, ...pfDataT
       ]);
       
       res.status(201).json({ success: true, message: "Data seeded successfully" });

@@ -1,4 +1,4 @@
-import { Activity, Waves, Droplet, Bolt } from "lucide-react";
+import { Activity, Waves, Droplet, Bolt, Zap, Gauge } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface PowerMonitorCardProps {
@@ -8,6 +8,8 @@ interface PowerMonitorCardProps {
   current: number;
   power: number;
   energy: number;
+  frequency: number;
+  pf: number;
 }
 
 const PowerMonitorCard = ({
@@ -17,6 +19,8 @@ const PowerMonitorCard = ({
   current,
   power,
   energy,
+  frequency,
+  pf,
 }: PowerMonitorCardProps) => {
   return (
     <Card>
@@ -66,6 +70,28 @@ const PowerMonitorCard = ({
               <span>energy {phase}</span>
             </div>
             <span className="font-medium">{energy.toLocaleString()} Wh</span>
+          </div>
+
+          {/* Frequency */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="text-blue-500 mr-3">
+                <Gauge className="h-5 w-5" />
+              </div>
+              <span>frequency {phase}</span>
+            </div>
+            <span className="font-medium">{frequency.toFixed(2)} Hz</span>
+          </div>
+
+          {/* Power Factor */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="text-blue-500 mr-3">
+                <Zap className="h-5 w-5" />
+              </div>
+              <span>power factor {phase}</span>
+            </div>
+            <span className="font-medium">{pf.toFixed(2)}</span>
           </div>
         </div>
       </CardContent>

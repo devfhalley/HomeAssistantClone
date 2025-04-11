@@ -18,34 +18,95 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Phase data table
-export const phaseData = pgTable("phase_data", {
-  id: serial("id").primaryKey(),
-  phase: text("phase").notNull(), // "R", "S", or "T"
+// Phase R table (based on provided schema)
+export const phaseR = pgTable("phasa_R", {
+  No: serial("No").primaryKey(),
   voltage: doublePrecision("voltage").notNull(),
   current: doublePrecision("current").notNull(),
   power: doublePrecision("power").notNull(),
   energy: doublePrecision("energy").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  frequency: integer("frequency").notNull(),
+  pf: doublePrecision("pf").notNull(),
+  time: timestamp("time").defaultNow().notNull(),
 });
 
-export const insertPhaseDataSchema = createInsertSchema(phaseData).pick({
-  phase: true,
+export const insertPhaseRSchema = createInsertSchema(phaseR).pick({
   voltage: true,
   current: true,
   power: true,
   energy: true,
+  frequency: true,
+  pf: true,
 });
 
-export type InsertPhaseData = z.infer<typeof insertPhaseDataSchema>;
-export type PhaseData = typeof phaseData.$inferSelect;
+export type InsertPhaseR = z.infer<typeof insertPhaseRSchema>;
+export type PhaseR = typeof phaseR.$inferSelect;
+
+// Phase S table
+export const phaseS = pgTable("phasa_S", {
+  No: serial("No").primaryKey(),
+  voltage: doublePrecision("voltage").notNull(),
+  current: doublePrecision("current").notNull(),
+  power: doublePrecision("power").notNull(),
+  energy: doublePrecision("energy").notNull(),
+  frequency: integer("frequency").notNull(),
+  pf: doublePrecision("pf").notNull(),
+  time: timestamp("time").defaultNow().notNull(),
+});
+
+export const insertPhaseSSchema = createInsertSchema(phaseS).pick({
+  voltage: true,
+  current: true,
+  power: true,
+  energy: true,
+  frequency: true,
+  pf: true,
+});
+
+export type InsertPhaseS = z.infer<typeof insertPhaseSSchema>;
+export type PhaseS = typeof phaseS.$inferSelect;
+
+// Phase T table
+export const phaseT = pgTable("phasa_T", {
+  No: serial("No").primaryKey(),
+  voltage: doublePrecision("voltage").notNull(),
+  current: doublePrecision("current").notNull(),
+  power: doublePrecision("power").notNull(),
+  energy: doublePrecision("energy").notNull(),
+  frequency: integer("frequency").notNull(),
+  pf: doublePrecision("pf").notNull(),
+  time: timestamp("time").defaultNow().notNull(),
+});
+
+export const insertPhaseTSchema = createInsertSchema(phaseT).pick({
+  voltage: true,
+  current: true,
+  power: true,
+  energy: true,
+  frequency: true,
+  pf: true,
+});
+
+export type InsertPhaseT = z.infer<typeof insertPhaseTSchema>;
+export type PhaseT = typeof phaseT.$inferSelect;
+
+// Common interface for all phase data
+export interface PhaseData {
+  phase: string;
+  voltage: number;
+  current: number;
+  power: number;
+  energy: number;
+  frequency: number;
+  pf: number;
+  time: Date;
+}
 
 // Chart data for historical readings
 export const chartData = pgTable("chart_data", {
   id: serial("id").primaryKey(),
   phase: text("phase").notNull(), // "R", "S", or "T"
-  dataType: text("data_type").notNull(), // "voltage", "current", "power"
+  dataType: text("data_type").notNull(), // "voltage", "current", "power", "energy", "frequency", "pf"
   time: text("time").notNull(),
   value: doublePrecision("value").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -60,15 +121,3 @@ export const insertChartDataSchema = createInsertSchema(chartData).pick({
 
 export type InsertChartData = z.infer<typeof insertChartDataSchema>;
 export type ChartData = typeof chartData.$inferSelect;
-
-// Relations definition
-export const phaseDataRelations = relations(phaseData, ({ many }) => ({
-  chartData: many(chartData),
-}));
-
-export const chartDataRelations = relations(chartData, ({ one }) => ({
-  phaseData: one(phaseData, {
-    fields: [chartData.phase],
-    references: [phaseData.phase],
-  }),
-}));

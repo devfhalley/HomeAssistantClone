@@ -1,10 +1,24 @@
 import { 
   users, type User, type InsertUser,
-  phaseData, type PhaseData, type InsertPhaseData,
+  phaseR, type PhaseR, type InsertPhaseR,
+  phaseS, type PhaseS, type InsertPhaseS,
+  phaseT, type PhaseT, type InsertPhaseT,
   chartData, type ChartData, type InsertChartData 
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
+
+// Combined type for phase data response
+interface PhaseData {
+  phase: string;
+  voltage: number;
+  current: number;
+  power: number;
+  energy: number;
+  frequency: number;
+  pf: number;
+  time: Date;
+}
 
 export interface IStorage {
   // User methods
@@ -12,10 +26,14 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
-  // Phase data methods
-  getPhaseData(phase: string): Promise<PhaseData | undefined>;
+  // Phase data methods 
+  getPhaseR(): Promise<PhaseR | undefined>;
+  getPhaseS(): Promise<PhaseS | undefined>;
+  getPhaseT(): Promise<PhaseT | undefined>;
   getAllPhaseData(): Promise<PhaseData[]>;
-  createOrUpdatePhaseData(data: InsertPhaseData): Promise<PhaseData>;
+  createPhaseR(data: InsertPhaseR): Promise<PhaseR>;
+  createPhaseS(data: InsertPhaseS): Promise<PhaseS>;
+  createPhaseT(data: InsertPhaseT): Promise<PhaseT>;
   
   // Chart data methods
   getChartDataByType(dataType: string, phase: string): Promise<ChartData[]>;
@@ -44,38 +62,108 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Phase data methods
-  async getPhaseData(phase: string): Promise<PhaseData | undefined> {
-    const [data] = await db.select().from(phaseData).where(eq(phaseData.phase, phase));
+  async getPhaseR(): Promise<PhaseR | undefined> {
+    // Get the latest reading for phase R
+    const [data] = await db
+      .select()
+      .from(phaseR)
+      .orderBy(desc(phaseR.time))
+      .limit(1);
+    return data || undefined;
+  }
+  
+  async getPhaseS(): Promise<PhaseS | undefined> {
+    // Get the latest reading for phase S
+    const [data] = await db
+      .select()
+      .from(phaseS)
+      .orderBy(desc(phaseS.time))
+      .limit(1);
+    return data || undefined;
+  }
+  
+  async getPhaseT(): Promise<PhaseT | undefined> {
+    // Get the latest reading for phase T
+    const [data] = await db
+      .select()
+      .from(phaseT)
+      .orderBy(desc(phaseT.time))
+      .limit(1);
     return data || undefined;
   }
   
   async getAllPhaseData(): Promise<PhaseData[]> {
-    return await db.select().from(phaseData);
+    // Get the latest data for all phases
+    const phaseRData = await this.getPhaseR();
+    const phaseSData = await this.getPhaseS();
+    const phaseTData = await this.getPhaseT();
+    
+    const result: PhaseData[] = [];
+    
+    if (phaseRData) {
+      result.push({
+        phase: 'R',
+        voltage: phaseRData.voltage,
+        current: phaseRData.current,
+        power: phaseRData.power,
+        energy: phaseRData.energy,
+        frequency: phaseRData.frequency,
+        pf: phaseRData.pf,
+        time: phaseRData.time
+      });
+    }
+    
+    if (phaseSData) {
+      result.push({
+        phase: 'S',
+        voltage: phaseSData.voltage,
+        current: phaseSData.current,
+        power: phaseSData.power,
+        energy: phaseSData.energy,
+        frequency: phaseSData.frequency,
+        pf: phaseSData.pf,
+        time: phaseSData.time
+      });
+    }
+    
+    if (phaseTData) {
+      result.push({
+        phase: 'T',
+        voltage: phaseTData.voltage,
+        current: phaseTData.current,
+        power: phaseTData.power,
+        energy: phaseTData.energy,
+        frequency: phaseTData.frequency,
+        pf: phaseTData.pf,
+        time: phaseTData.time
+      });
+    }
+    
+    return result;
   }
   
-  async createOrUpdatePhaseData(data: InsertPhaseData): Promise<PhaseData> {
-    // Check if phase data already exists
-    const existingData = await this.getPhaseData(data.phase);
-    
-    if (existingData) {
-      // Update existing data
-      const [updated] = await db
-        .update(phaseData)
-        .set({
-          ...data,
-          updatedAt: new Date(),
-        })
-        .where(eq(phaseData.phase, data.phase))
-        .returning();
-      return updated;
-    } else {
-      // Insert new data
-      const [newData] = await db
-        .insert(phaseData)
-        .values(data)
-        .returning();
-      return newData;
-    }
+  async createPhaseR(data: InsertPhaseR): Promise<PhaseR> {
+    const [newData] = await db
+      .insert(phaseR)
+      .values(data)
+      .returning();
+    return newData;
+  }
+  
+  async createPhaseS(data: InsertPhaseS): Promise<PhaseS> {
+    const [newData] = await db
+      .insert(phaseS)
+      .values(data)
+      .returning();
+    return newData;
+  }
+  
+  async createPhaseT(data: InsertPhaseT): Promise<PhaseT> {
+    const [newData] = await db
+      .insert(phaseT)
+      .values(data)
+      .returning();
+    return newData;
   }
   
   // Chart data methods

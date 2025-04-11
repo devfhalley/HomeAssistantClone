@@ -4,7 +4,19 @@ import PowerMonitorCard from "@/components/PowerMonitorCard";
 import ChartCard from "@/components/ChartCard";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { type PhaseData, type ChartData } from "@shared/schema";
+import { type ChartData } from "@shared/schema";
+
+// Interface for phase data from API
+interface PhaseData {
+  phase: string;
+  voltage: number;
+  current: number;
+  power: number;
+  energy: number;
+  frequency: number;
+  pf: number;
+  time: Date;
+}
 
 interface ChartDataPoint {
   time: string;
@@ -13,9 +25,9 @@ interface ChartDataPoint {
 
 // Default data fallback in case API fails
 const defaultPhaseData = {
-  R: { voltage: 0, current: 0, power: 0, energy: 0 },
-  S: { voltage: 0, current: 0, power: 0, energy: 0 },
-  T: { voltage: 0, current: 0, power: 0, energy: 0 }
+  R: { voltage: 0, current: 0, power: 0, energy: 0, frequency: 0, pf: 0 },
+  S: { voltage: 0, current: 0, power: 0, energy: 0, frequency: 0, pf: 0 },
+  T: { voltage: 0, current: 0, power: 0, energy: 0, frequency: 0, pf: 0 }
 };
 
 const processChartData = (data: ChartData[] | undefined): ChartDataPoint[] => {
@@ -79,17 +91,63 @@ const PowerMonitoring = () => {
     queryFn: () => apiRequest<ChartData[]>('/api/chart-data/power/T')
   });
   
+  const { data: frequencyDataR } = useQuery({
+    queryKey: ['/api/chart-data', 'frequency', 'R'],
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/frequency/R')
+  });
+
+  const { data: frequencyDataS } = useQuery({
+    queryKey: ['/api/chart-data', 'frequency', 'S'],
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/frequency/S')
+  });
+
+  const { data: frequencyDataT } = useQuery({
+    queryKey: ['/api/chart-data', 'frequency', 'T'],
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/frequency/T')
+  });
+  
+  const { data: pfDataR } = useQuery({
+    queryKey: ['/api/chart-data', 'pf', 'R'],
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/pf/R')
+  });
+
+  const { data: pfDataS } = useQuery({
+    queryKey: ['/api/chart-data', 'pf', 'S'],
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/pf/S')
+  });
+
+  const { data: pfDataT } = useQuery({
+    queryKey: ['/api/chart-data', 'pf', 'T'],
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/pf/T')
+  });
+  
   // Process phase data into the format needed by components
   const processedPhaseData = Array.isArray(phaseDataArray) 
-    ? phaseDataArray.reduce((acc: Record<string, { voltage: number, current: number, power: number, energy: number }>, phase: PhaseData) => {
+    ? phaseDataArray.reduce((acc: Record<string, { 
+        voltage: number, 
+        current: number, 
+        power: number, 
+        energy: number,
+        frequency: number,
+        pf: number
+      }>, phase: PhaseData) => {
         acc[phase.phase] = {
           voltage: phase.voltage,
           current: phase.current,
           power: phase.power,
-          energy: phase.energy
+          energy: phase.energy,
+          frequency: phase.frequency,
+          pf: phase.pf
         };
         return acc;
-      }, {} as Record<string, { voltage: number, current: number, power: number, energy: number }>)
+      }, {} as Record<string, { 
+        voltage: number, 
+        current: number, 
+        power: number, 
+        energy: number,
+        frequency: number,
+        pf: number 
+      }>)
     : defaultPhaseData;
   
   return (
@@ -112,6 +170,8 @@ const PowerMonitoring = () => {
               current={processedPhaseData.R?.current || 0}
               power={processedPhaseData.R?.power || 0}
               energy={processedPhaseData.R?.energy || 0}
+              frequency={processedPhaseData.R?.frequency || 0}
+              pf={processedPhaseData.R?.pf || 0}
             />
             
             <PowerMonitorCard 
@@ -121,6 +181,8 @@ const PowerMonitoring = () => {
               current={processedPhaseData.S?.current || 0}
               power={processedPhaseData.S?.power || 0}
               energy={processedPhaseData.S?.energy || 0}
+              frequency={processedPhaseData.S?.frequency || 0}
+              pf={processedPhaseData.S?.pf || 0}
             />
             
             <PowerMonitorCard 
@@ -130,11 +192,13 @@ const PowerMonitoring = () => {
               current={processedPhaseData.T?.current || 0}
               power={processedPhaseData.T?.power || 0}
               energy={processedPhaseData.T?.energy || 0}
+              frequency={processedPhaseData.T?.frequency || 0}
+              pf={processedPhaseData.T?.pf || 0}
             />
           </>
         )}
 
-        {/* Chart Cards */}
+        {/* Chart Cards - First Row */}
         <ChartCard 
           title="Voltage Comparison" 
           phaseRData={processChartData(voltageDataR)}
@@ -160,6 +224,25 @@ const PowerMonitoring = () => {
           phaseTData={processChartData(powerDataT)}
           yAxisDomain={[0, 20000]}
           unit="W"
+        />
+        
+        {/* Chart Cards - Second Row */}
+        <ChartCard 
+          title="Frequency Comparison" 
+          phaseRData={processChartData(frequencyDataR)}
+          phaseSData={processChartData(frequencyDataS)}
+          phaseTData={processChartData(frequencyDataT)}
+          yAxisDomain={[49.5, 50.5]}
+          unit="Hz"
+        />
+        
+        <ChartCard 
+          title="Power Factor Comparison" 
+          phaseRData={processChartData(pfDataR)}
+          phaseSData={processChartData(pfDataS)}
+          phaseTData={processChartData(pfDataT)}
+          yAxisDomain={[0.8, 1.0]}
+          unit=""
         />
       </div>
     </HomeAssistant>
