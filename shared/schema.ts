@@ -53,6 +53,7 @@ export const phaseR = pgTable("phasa_R", {
 });
 
 export const insertPhaseRSchema = createInsertSchema(phaseR).pick({
+  panelId: true,
   voltage: true,
   current: true,
   power: true,
@@ -78,6 +79,7 @@ export const phaseS = pgTable("phasa_S", {
 });
 
 export const insertPhaseSSchema = createInsertSchema(phaseS).pick({
+  panelId: true,
   voltage: true,
   current: true,
   power: true,
@@ -103,6 +105,7 @@ export const phaseT = pgTable("phasa_T", {
 });
 
 export const insertPhaseTSchema = createInsertSchema(phaseT).pick({
+  panelId: true,
   voltage: true,
   current: true,
   power: true,
@@ -138,6 +141,7 @@ export const chartData = pgTable("chart_data", {
 });
 
 export const insertChartDataSchema = createInsertSchema(chartData).pick({
+  panelId: true,
   phase: true,
   dataType: true,
   time: true,
