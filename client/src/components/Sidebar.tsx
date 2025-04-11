@@ -1,78 +1,70 @@
-import { Home, LayoutGrid, MapPin, ToggleLeft, Bolt, List, History, FileCode, Settings, PlayCircle, Bell, Menu } from "lucide-react";
+import React from "react";
+import { useLocation, Link } from "wouter";
+import { 
+  LayoutDashboard, 
+  Settings, 
+  BatteryCharging 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type MenuItem = {
+type SidebarItemProps = {
   icon: React.ReactNode;
   label: string;
-  active?: boolean;
-  badge?: number;
+  href: string;
+  active: boolean;
 };
 
-const menuItems: MenuItem[] = [
-  { icon: <LayoutGrid className="w-5 h-5" />, label: "Overview" },
-  { icon: <Home className="w-5 h-5" />, label: "Coba" },
-  { icon: <MapPin className="w-5 h-5" />, label: "Map" },
-  { icon: <Home className="w-5 h-5" />, label: "Rumah Pak Sindu" },
-  { icon: <ToggleLeft className="w-5 h-5" />, label: "WO 08", active: true },
-  { icon: <ToggleLeft className="w-5 h-5" />, label: "WO 689" },
-  { icon: <Bolt className="w-5 h-5" />, label: "Energy" },
-  { icon: <List className="w-5 h-5" />, label: "Logbook" },
-  { icon: <History className="w-5 h-5" />, label: "History" },
-  { icon: <FileCode className="w-5 h-5" />, label: "File editor" },
-  { icon: <Settings className="w-5 h-5" />, label: "HACS" },
-  { icon: <Home className="w-5 h-5" />, label: "Home Panel" },
-  { icon: <PlayCircle className="w-5 h-5" />, label: "Media" },
-  { icon: <Bell className="w-5 h-5" />, label: "Notifications", badge: 1 },
-];
-
-const SidebarItem = ({ item }: { item: MenuItem }) => {
+const SidebarItem = ({ icon, label, href, active }: SidebarItemProps) => {
   return (
-    <li>
-      <a
-        href="#"
+    <Link href={href}>
+      <div
         className={cn(
-          "flex items-center px-3 py-2 rounded-md hover:bg-gray-200 transition-colors",
-          item.active && "bg-gray-200 border-l-2 border-primary text-primary"
+          "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer",
+          active ? "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"
         )}
       >
-        <div className={cn("w-6", item.active && "text-primary")}>
-          {item.icon}
-        </div>
-        <span className="flex-1 ml-2">{item.label}</span>
-        {item.badge && (
-          <span className="bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-            {item.badge}
-          </span>
-        )}
-      </a>
-    </li>
+        {icon}
+        <span>{label}</span>
+      </div>
+    </Link>
   );
 };
 
-const Sidebar = () => {
+export const Sidebar = () => {
+  const [location] = useLocation();
+  
+  const isActive = (path: string) => {
+    return location === path;
+  };
+
   return (
-    <div className="w-52 bg-gray-50 border-r border-gray-200 flex flex-col overflow-y-auto">
-      <div className="flex items-center px-4 py-3 border-b border-gray-200">
-        <button className="mr-3 text-gray-700">
-          <Menu className="h-5 w-5" />
-        </button>
-        <h1 className="font-medium text-lg">Home Assistant</h1>
+    <div className="flex h-screen w-64 flex-col border-r bg-white dark:bg-gray-950 dark:border-gray-800">
+      <div className="p-4">
+        <div className="flex items-center gap-2 font-medium text-lg">
+          <BatteryCharging className="h-5 w-5 text-blue-600" />
+          <span>Home Assistant</span>
+        </div>
       </div>
-
-      <nav className="flex-1">
-        <ul className="py-2 px-1 space-y-1">
-          {menuItems.map((item, index) => (
-            <SidebarItem key={index} item={item} />
-          ))}
-        </ul>
-      </nav>
-
-      <div className="mt-auto border-t border-gray-200 py-2 px-3">
-        <div className="flex items-center">
-          <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 mr-3">
-            r
-          </div>
-          <span>md</span>
+      <div className="flex-1 px-3">
+        <div className="space-y-1 py-2">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 mt-2">
+            Dashboard
+          </p>
+          <SidebarItem
+            icon={<LayoutDashboard className="h-5 w-5" />}
+            label="Power Monitoring"
+            href="/"
+            active={isActive("/")}
+          />
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 mt-4">
+            Administration
+          </p>
+          <SidebarItem
+            icon={<Settings className="h-5 w-5" />}
+            label="Manage Panels"
+            href="/manage-panels"
+            active={isActive("/manage-panels")}
+          />
         </div>
       </div>
     </div>

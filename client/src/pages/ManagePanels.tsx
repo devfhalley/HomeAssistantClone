@@ -68,10 +68,10 @@ export default function ManagePanels() {
 
   // Fetch all panels
   const {
-    data: panels,
+    data: panels = [],
     isLoading,
     error,
-  } = useQuery({
+  } = useQuery<Panel[]>({
     queryKey: ["/api/panels"],
     retry: 1,
   });
@@ -252,7 +252,7 @@ export default function ManagePanels() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {panels?.length === 0 && (
+                {panels.length === 0 && (
                   <TableRow>
                     <TableCell
                       colSpan={5}
@@ -262,7 +262,7 @@ export default function ManagePanels() {
                     </TableCell>
                   </TableRow>
                 )}
-                {panels?.map((panel: Panel) => (
+                {panels.map((panel: Panel) => (
                   <TableRow key={panel.id}>
                     <TableCell className="font-medium">{panel.name}</TableCell>
                     <TableCell>{panel.location || "—"}</TableCell>
