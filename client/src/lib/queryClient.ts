@@ -7,20 +7,23 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
-  method: string,
+export async function apiRequest<T = any>(
   url: string,
   data?: unknown | undefined,
-): Promise<Response> {
+  method: string = "GET"
+): Promise<T> {
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: data && method !== "GET" ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 
   await throwIfResNotOk(res);
-  return res;
+  return await res.json() as T;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -29,8 +32,20 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    const url = queryKey[0] as string;
+    
+    // Handle URLs with parameters like /api/chart-data/voltage/R
+    const fullUrl = queryKey.length > 1 && 
+                   typeof queryKey[1] === 'string' && 
+                   typeof queryKey[2] === 'string' 
+      ? `${url}/${queryKey[1]}/${queryKey[2]}`
+      : url;
+    
+    const res = await fetch(fullUrl, {
       credentials: "include",
+      headers: {
+        "Accept": "application/json"
+      }
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

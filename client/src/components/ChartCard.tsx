@@ -10,12 +10,15 @@ interface ChartCardProps {
   unit: string;
 }
 
+// Define the type for YAxis domain to fix the TypeScript error
+type YAxisDomain = [number, number | 'auto' | 'dataMax' | 'dataMin'];
+
 const ChartCard = ({ 
   title, 
   phaseRData, 
   phaseSData, 
   phaseTData, 
-  yAxisDomain = [0, 'auto'],
+  yAxisDomain = [0, 'auto' as const],
   unit
 }: ChartCardProps) => {
   // Handle empty data states
@@ -75,7 +78,7 @@ const ChartCard = ({
                 tick={{ fontSize: 10 }}
               />
               <YAxis 
-                domain={yAxisDomain}
+                domain={yAxisDomain as YAxisDomain}
                 tick={{ fontSize: 10 }}
               />
               <Tooltip 

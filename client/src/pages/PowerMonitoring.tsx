@@ -30,95 +30,67 @@ const PowerMonitoring = () => {
   // Fetch phase data
   const { data: phaseDataArray, isLoading: isLoadingPhaseData } = useQuery({
     queryKey: ['/api/phase-data'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/phase-data');
-      return response as PhaseData[];
-    }
+    queryFn: () => apiRequest<PhaseData[]>('/api/phase-data')
   });
 
   // Fetch chart data for each type and phase
   const { data: voltageDataR } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'R'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/chart-data/voltage/R');
-      return response as ChartData[];
-    }
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/voltage/R')
   });
 
   const { data: voltageDataS } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'S'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/chart-data/voltage/S');
-      return response as ChartData[];
-    }
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/voltage/S')
   });
 
   const { data: voltageDataT } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'T'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/chart-data/voltage/T');
-      return response as ChartData[];
-    }
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/voltage/T')
   });
 
   const { data: currentDataR } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'R'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/chart-data/current/R');
-      return response as ChartData[];
-    }
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/current/R')
   });
 
   const { data: currentDataS } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'S'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/chart-data/current/S');
-      return response as ChartData[];
-    }
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/current/S')
   });
 
   const { data: currentDataT } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'T'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/chart-data/current/T');
-      return response as ChartData[];
-    }
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/current/T')
   });
 
   const { data: powerDataR } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'R'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/chart-data/power/R');
-      return response as ChartData[];
-    }
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/power/R')
   });
 
   const { data: powerDataS } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'S'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/chart-data/power/S');
-      return response as ChartData[];
-    }
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/power/S')
   });
 
   const { data: powerDataT } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'T'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/chart-data/power/T');
-      return response as ChartData[];
-    }
+    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/power/T')
   });
   
   // Process phase data into the format needed by components
-  const processedPhaseData = phaseDataArray?.reduce((acc: Record<string, { voltage: number, current: number, power: number, energy: number }>, phase: PhaseData) => {
-    acc[phase.phase] = {
-      voltage: phase.voltage,
-      current: phase.current,
-      power: phase.power,
-      energy: phase.energy
-    };
-    return acc;
-  }, {} as Record<string, { voltage: number, current: number, power: number, energy: number }>) || defaultPhaseData;
+  const processedPhaseData = Array.isArray(phaseDataArray) 
+    ? phaseDataArray.reduce((acc: Record<string, { voltage: number, current: number, power: number, energy: number }>, phase: PhaseData) => {
+        acc[phase.phase] = {
+          voltage: phase.voltage,
+          current: phase.current,
+          power: phase.power,
+          energy: phase.energy
+        };
+        return acc;
+      }, {} as Record<string, { voltage: number, current: number, power: number, energy: number }>)
+    : defaultPhaseData;
   
   return (
     <HomeAssistant>
