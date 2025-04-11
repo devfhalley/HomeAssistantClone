@@ -18,16 +18,44 @@ const ChartCard = ({
   yAxisDomain = [0, 'auto'],
   unit
 }: ChartCardProps) => {
-  // Merge data for the chart
-  const combinedData = phaseRData.map((item, index) => ({
-    time: item.time,
-    R: item.value,
-    S: phaseSData[index].value,
-    T: phaseTData[index].value
+  // Handle empty data states
+  if (!phaseRData.length || !phaseSData.length || !phaseTData.length) {
+    return (
+      <Card>
+        <CardContent className="pt-6 pb-4">
+          <h2 className="text-lg font-medium mb-2">{title}</h2>
+          <div className="h-[200px] w-full flex items-center justify-center bg-gray-50">
+            <p className="text-gray-400">Loading chart data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Get the smallest length to avoid out of bounds errors
+  const minDataLength = Math.min(
+    phaseRData.length,
+    phaseSData.length,
+    phaseTData.length
+  );
+  
+  // Merge data for the chart, safely accessing indices
+  const combinedData = Array.from({ length: minDataLength }, (_, i) => ({
+    time: phaseRData[i]?.time || '',
+    R: phaseRData[i]?.value || 0,
+    S: phaseSData[i]?.value || 0,
+    T: phaseTData[i]?.value || 0
   }));
 
   // Filter to show only select points on the x-axis for better readability
   const filteredData = combinedData.filter((_, i) => i % 4 === 0 || i === combinedData.length - 1);
+  
+  // Determine which label to use based on the data type
+  const dataTypeName = title.toLowerCase().includes("voltage") 
+    ? "voltage" 
+    : title.toLowerCase().includes("current")
+      ? "current"
+      : "power";
 
   return (
     <Card>
@@ -58,7 +86,7 @@ const ChartCard = ({
               <Line
                 type="monotone"
                 dataKey="R"
-                name="voltage R"
+                name={`${dataTypeName} R`}
                 stroke="#1e90ff"
                 strokeWidth={1.5}
                 dot={false}
@@ -67,7 +95,7 @@ const ChartCard = ({
               <Line
                 type="monotone"
                 dataKey="S"
-                name="voltage S"
+                name={`${dataTypeName} S`}
                 stroke="#ffa500"
                 strokeWidth={1.5}
                 dot={false}
@@ -76,7 +104,7 @@ const ChartCard = ({
               <Line
                 type="monotone"
                 dataKey="T"
-                name="voltage T"
+                name={`${dataTypeName} T`}
                 stroke="#2ecc71"
                 strokeWidth={1.5}
                 dot={false}
