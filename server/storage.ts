@@ -98,6 +98,10 @@ export class DatabaseStorage implements IStorage {
     const phaseSData = await this.getPhaseS();
     const phaseTData = await this.getPhaseT();
     
+    console.log("Phase R data:", phaseRData);
+    console.log("Phase S data:", phaseSData);
+    console.log("Phase T data:", phaseTData);
+    
     const result: PhaseData[] = [];
     
     if (phaseRData) {
@@ -139,6 +143,7 @@ export class DatabaseStorage implements IStorage {
       });
     }
     
+    console.log("Returning phase data:", result);
     return result;
   }
   
