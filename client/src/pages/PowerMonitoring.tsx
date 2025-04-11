@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import HomeAssistant from "@/components/HomeAssistant";
 import PowerMonitorCard from "@/components/PowerMonitorCard";
 import ChartCard from "@/components/ChartCard";
+import TotalPowerChart from "@/components/TotalPowerChart";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { type ChartData } from "@shared/schema";
@@ -244,6 +245,9 @@ const PowerMonitoring = () => {
           yAxisDomain={[0.8, 1.0]}
           unit=""
         />
+
+        {/* Total Power Consumption Chart - Third Row */}
+        <TotalPowerChart />
       </div>
     </HomeAssistant>
   );

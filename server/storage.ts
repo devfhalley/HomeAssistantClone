@@ -20,6 +20,12 @@ interface PhaseData {
   time: Date;
 }
 
+// Interface for total power consumption data point
+interface TotalPowerData {
+  time: string;
+  totalPower: number;
+}
+
 export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -39,6 +45,9 @@ export interface IStorage {
   getChartDataByType(dataType: string, phase: string): Promise<ChartData[]>;
   createChartData(data: InsertChartData): Promise<ChartData>;
   createMultipleChartData(dataArray: InsertChartData[]): Promise<void>;
+  
+  // Total power consumption methods
+  getTotalPowerConsumption(granularity: string): Promise<TotalPowerData[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -200,6 +209,85 @@ export class DatabaseStorage implements IStorage {
       const chunk = dataArray.slice(i, i + CHUNK_SIZE);
       await db.insert(chartData).values(chunk);
     }
+  }
+  
+  // Total power consumption methods
+  async getTotalPowerConsumption(granularity: string): Promise<TotalPowerData[]> {
+    // Get data for all phases with power values
+    const rData = await db
+      .select()
+      .from(phaseR)
+      .orderBy(phaseR.time);
+    
+    const sData = await db
+      .select()
+      .from(phaseS)
+      .orderBy(phaseS.time);
+    
+    const tData = await db
+      .select()
+      .from(phaseT)
+      .orderBy(phaseT.time);
+    
+    // If we don't have data for all phases, return empty array
+    if (!rData.length && !sData.length && !tData.length) {
+      return [];
+    }
+    
+    // Combine and process data based on granularity
+    const allData: TotalPowerData[] = [];
+    
+    // Helper function to format date based on granularity
+    const formatDate = (date: Date, gran: string): string => {
+      if (gran === 'minute') {
+        return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+      } else if (gran === 'hour') {
+        return `${date.getHours().toString().padStart(2, '0')}:00`;
+      } else {
+        // Default daily view shows hours
+        return `${date.getHours().toString().padStart(2, '0')}:00`;
+      }
+    };
+    
+    // Process data for each phase and combine
+    const processPhaseData = (data: any[], phase: string) => {
+      data.forEach(record => {
+        const timeLabel = formatDate(new Date(record.time), granularity);
+        
+        // Look for existing entry with this time label
+        const existingEntry = allData.find(entry => entry.time === timeLabel);
+        
+        if (existingEntry) {
+          // Add this phase's power to the total
+          existingEntry.totalPower += record.power;
+        } else {
+          // Create new entry with this phase's power
+          allData.push({
+            time: timeLabel,
+            totalPower: record.power
+          });
+        }
+      });
+    };
+    
+    // Process data for each phase
+    processPhaseData(rData, 'R');
+    processPhaseData(sData, 'S');
+    processPhaseData(tData, 'T');
+    
+    // Sort by time
+    allData.sort((a, b) => {
+      // Parse hour and minute for comparison
+      const [aHour, aMinute] = a.time.split(':').map(Number);
+      const [bHour, bMinute] = b.time.split(':').map(Number);
+      
+      if (aHour !== bHour) {
+        return aHour - bHour;
+      }
+      return (aMinute || 0) - (bMinute || 0);
+    });
+    
+    return allData;
   }
 }
 
