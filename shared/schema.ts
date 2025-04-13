@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, numeric, timestamp, doublePrecision, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, numeric, timestamp, doublePrecision } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -18,31 +18,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Panels table for organizing monitoring data
-export const panels = pgTable("panels", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull().unique(),
-  description: text("description"),
-  location: text("location"),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-export const insertPanelSchema = createInsertSchema(panels).pick({
-  name: true,
-  description: true,
-  location: true,
-  isActive: true,
-});
-
-export type InsertPanel = z.infer<typeof insertPanelSchema>;
-export type Panel = typeof panels.$inferSelect;
-
 // Phase R table (based on provided schema)
 export const phaseR = pgTable("phasa_R", {
   No: serial("No").primaryKey(),
-  panelId: integer("panel_id").references(() => panels.id),
   voltage: doublePrecision("voltage").notNull(),
   current: doublePrecision("current").notNull(),
   power: doublePrecision("power").notNull(),
@@ -53,7 +31,6 @@ export const phaseR = pgTable("phasa_R", {
 });
 
 export const insertPhaseRSchema = createInsertSchema(phaseR).pick({
-  panelId: true,
   voltage: true,
   current: true,
   power: true,
@@ -68,7 +45,6 @@ export type PhaseR = typeof phaseR.$inferSelect;
 // Phase S table
 export const phaseS = pgTable("phasa_S", {
   No: serial("No").primaryKey(),
-  panelId: integer("panel_id").references(() => panels.id),
   voltage: doublePrecision("voltage").notNull(),
   current: doublePrecision("current").notNull(),
   power: doublePrecision("power").notNull(),
@@ -79,7 +55,6 @@ export const phaseS = pgTable("phasa_S", {
 });
 
 export const insertPhaseSSchema = createInsertSchema(phaseS).pick({
-  panelId: true,
   voltage: true,
   current: true,
   power: true,
@@ -94,7 +69,6 @@ export type PhaseS = typeof phaseS.$inferSelect;
 // Phase T table
 export const phaseT = pgTable("phasa_T", {
   No: serial("No").primaryKey(),
-  panelId: integer("panel_id").references(() => panels.id),
   voltage: doublePrecision("voltage").notNull(),
   current: doublePrecision("current").notNull(),
   power: doublePrecision("power").notNull(),
@@ -105,7 +79,6 @@ export const phaseT = pgTable("phasa_T", {
 });
 
 export const insertPhaseTSchema = createInsertSchema(phaseT).pick({
-  panelId: true,
   voltage: true,
   current: true,
   power: true,
@@ -132,7 +105,6 @@ export interface PhaseData {
 // Chart data for historical readings
 export const chartData = pgTable("chart_data", {
   id: serial("id").primaryKey(),
-  panelId: integer("panel_id").references(() => panels.id),
   phase: text("phase").notNull(), // "R", "S", or "T"
   dataType: text("data_type").notNull(), // "voltage", "current", "power", "energy", "frequency", "pf"
   time: text("time").notNull(),
@@ -141,7 +113,6 @@ export const chartData = pgTable("chart_data", {
 });
 
 export const insertChartDataSchema = createInsertSchema(chartData).pick({
-  panelId: true,
   phase: true,
   dataType: true,
   time: true,
