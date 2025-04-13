@@ -5,11 +5,10 @@ import { db } from "./db";
 import { 
   insertPanel33kvaSchema,
   insertPanel66kvaSchema,
-  insertChartDataSchema,
   type InsertPanel33kva,
   type InsertPanel66kva,
-  type InsertChartData,
   type PhaseData,
+  type ChartData,
   panel33kva,
   panel66kva
 } from "@shared/schema";
@@ -267,47 +266,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Create chart data
-  app.post("/api/chart-data", async (req: Request, res: Response) => {
-    try {
-      const validationResult = insertChartDataSchema.safeParse(req.body);
-      
-      if (!validationResult.success) {
-        return res.status(400).json({ 
-          error: "Invalid chart data", 
-          details: validationResult.error 
-        });
-      }
-      
-      const data = await storage.createChartData(validationResult.data);
-      res.status(201).json(data);
-    } catch (error) {
-      console.error("Error creating chart data:", error);
-      res.status(500).json({ error: "Failed to create chart data" });
-    }
-  });
-  
-  // Create multiple chart data entries (bulk insert)
-  app.post("/api/chart-data/bulk", async (req: Request, res: Response) => {
-    try {
-      // Validate array of chart data
-      const arraySchema = z.array(insertChartDataSchema);
-      const validationResult = arraySchema.safeParse(req.body);
-      
-      if (!validationResult.success) {
-        return res.status(400).json({ 
-          error: "Invalid chart data array", 
-          details: validationResult.error 
-        });
-      }
-      
-      await storage.createMultipleChartData(validationResult.data);
-      res.status(201).json({ success: true, message: "Chart data created successfully" });
-    } catch (error) {
-      console.error("Error creating bulk chart data:", error);
-      res.status(500).json({ error: "Failed to create bulk chart data" });
-    }
-  });
+  // Chart data is now derived from panel data
+  // POST endpoints for chart data have been removed since we're using panel data directly
 
   // Seed initial data if database is empty
   app.post("/api/seed-data", async (req: Request, res: Response) => {
@@ -358,153 +318,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createPanel33kvaData(panel33kvaData);
       await storage.createPanel66kvaData(panel66kvaData);
       
-      // Generate time labels for chart data
-      const timeLabels = Array.from({ length: 24 }, (_, i) => {
-        const hour = i % 12 === 0 ? 12 : i % 12;
-        const ampm = i < 12 ? 'AM' : 'PM';
-        return `${hour}:00`;
-      });
-      
-      // Generate and seed chart data
-      // Voltage data
-      const voltageDataR: InsertChartData[] = timeLabels.map((time, i) => {
-        const x = i / (timeLabels.length - 1);
-        const wave = Math.sin(x * Math.PI * 2) * 5;
-        const trend = 190 + 20 + wave + Math.random() * 5;
-        return {
-          phase: "R",
-          dataType: "voltage",
-          time,
-          value: parseFloat(trend.toFixed(1))
-        };
-      });
-      
-      const voltageDataS: InsertChartData[] = timeLabels.map((time, i) => {
-        const x = i / (timeLabels.length - 1);
-        const wave = Math.sin(x * Math.PI * 2) * 5;
-        const trend = 200 + 20 + wave + Math.random() * 5;
-        return {
-          phase: "S",
-          dataType: "voltage",
-          time,
-          value: parseFloat(trend.toFixed(1))
-        };
-      });
-      
-      const voltageDataT: InsertChartData[] = timeLabels.map((time, i) => {
-        const x = i / (timeLabels.length - 1);
-        const wave = Math.sin(x * Math.PI * 2) * 5;
-        const trend = 195 + 20 + wave + Math.random() * 5;
-        return {
-          phase: "T",
-          dataType: "voltage",
-          time,
-          value: parseFloat(trend.toFixed(1))
-        };
-      });
-      
-      // Current data with daily pattern
-      const generateCurrentData = (phase: string): InsertChartData[] => {
-        return timeLabels.map((time, i) => {
-          let hour = i;
-          let baseValue;
-          
-          if (hour < 6) { // Night (low usage)
-            baseValue = 20 + Math.random() * 10;
-          } else if (hour < 12) { // Morning (rising)
-            baseValue = 30 + (hour - 6) * 10 + Math.random() * 15;
-          } else if (hour < 18) { // Afternoon (high)
-            baseValue = 80 + Math.random() * 20;
-          } else { // Evening (decreasing)
-            baseValue = 60 - (hour - 18) * 8 + Math.random() * 15;
-          }
-          
-          return {
-            phase,
-            dataType: "current",
-            time,
-            value: parseFloat(baseValue.toFixed(1))
-          };
-        });
-      };
-      
-      // Power data with daily pattern
-      const generatePowerData = (phase: string): InsertChartData[] => {
-        return timeLabels.map((time, i) => {
-          let hour = i;
-          let baseValue;
-          
-          if (hour < 6) { // Night (low usage)
-            baseValue = 2000 + Math.random() * 1000;
-          } else if (hour < 12) { // Morning (rising)
-            baseValue = 3000 + (hour - 6) * 1500 + Math.random() * 1500;
-          } else if (hour < 18) { // Afternoon (high)
-            baseValue = 15000 + Math.random() * 5000;
-          } else { // Evening (decreasing)
-            baseValue = 10000 - (hour - 18) * 1500 + Math.random() * 2000;
-          }
-          
-          return {
-            phase,
-            dataType: "power",
-            time,
-            value: parseFloat(baseValue.toFixed(1))
-          };
-        });
-      };
-      
-      // Generate frequency data
-      const generateFrequencyData = (phase: string): InsertChartData[] => {
-        return timeLabels.map((time, i) => {
-          // Small variations around 50Hz
-          const value = 50 + (Math.random() * 0.5 - 0.25);
-          return {
-            phase,
-            dataType: "frequency",
-            time,
-            value: parseFloat(value.toFixed(2))
-          };
-        });
-      };
-      
-      // Generate power factor data
-      const generatePFData = (phase: string): InsertChartData[] => {
-        return timeLabels.map((time, i) => {
-          // Values between 0.85 and 0.98
-          const value = 0.85 + (Math.random() * 0.13);
-          return {
-            phase,
-            dataType: "pf",
-            time,
-            value: parseFloat(value.toFixed(2))
-          };
-        });
-      };
-      
-      const currentDataR = generateCurrentData("R");
-      const currentDataS = generateCurrentData("S");
-      const currentDataT = generateCurrentData("T");
-      
-      const powerDataR = generatePowerData("R");
-      const powerDataS = generatePowerData("S");
-      const powerDataT = generatePowerData("T");
-      
-      const frequencyDataR = generateFrequencyData("R");
-      const frequencyDataS = generateFrequencyData("S");
-      const frequencyDataT = generateFrequencyData("T");
-      
-      const pfDataR = generatePFData("R");
-      const pfDataS = generatePFData("S");
-      const pfDataT = generatePFData("T");
-      
-      // Save all chart data to database
-      await storage.createMultipleChartData([
-        ...voltageDataR, ...voltageDataS, ...voltageDataT,
-        ...currentDataR, ...currentDataS, ...currentDataT,
-        ...powerDataR, ...powerDataS, ...powerDataT,
-        ...frequencyDataR, ...frequencyDataS, ...frequencyDataT,
-        ...pfDataR, ...pfDataS, ...pfDataT
-      ]);
+          // Now using direct panel data for charts
+      // Additional panel data can be added for time-series if needed
       
       res.status(201).json({ success: true, message: "Data seeded successfully" });
     } catch (error) {

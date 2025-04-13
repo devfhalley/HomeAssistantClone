@@ -1,8 +1,8 @@
 import { 
   users, type User, type InsertUser,
   panel33kva, type Panel33kva, type InsertPanel33kva,
-  panel66kva, type Panel66kva, type InsertPanel66kva, 
-  chartData, type ChartData, type InsertChartData 
+  panel66kva, type Panel66kva, type InsertPanel66kva,
+  type ChartData
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte } from "drizzle-orm";
@@ -38,10 +38,8 @@ export interface IStorage {
   createPanel33kvaData(data: InsertPanel33kva): Promise<Panel33kva>;
   createPanel66kvaData(data: InsertPanel66kva): Promise<Panel66kva>;
   
-  // Chart data methods
+  // Chart data methods (now using panel data)
   getChartDataByType(dataType: string, phase: string): Promise<ChartData[]>;
-  createChartData(data: InsertChartData): Promise<ChartData>;
-  createMultipleChartData(dataArray: InsertChartData[]): Promise<void>;
   
   // Total power consumption methods
   getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]>;
@@ -154,35 +152,108 @@ export class DatabaseStorage implements IStorage {
     return newData;
   }
   
-  // Chart data methods
+  // Chart data methods now use panel data
   async getChartDataByType(dataType: string, phase: string): Promise<ChartData[]> {
-    return await db
+    // Get data from panels to create chart data
+    const panel33Data = await db
       .select()
-      .from(chartData)
-      .where(
-        and(
-          eq(chartData.dataType, dataType),
-          eq(chartData.phase, phase)
-        )
-      )
-      .orderBy(chartData.createdAt);
-  }
-  
-  async createChartData(data: InsertChartData): Promise<ChartData> {
-    const [newData] = await db
-      .insert(chartData)
-      .values(data)
-      .returning();
-    return newData;
-  }
-  
-  async createMultipleChartData(dataArray: InsertChartData[]): Promise<void> {
-    // Split into chunks to avoid too many parameters in a single query
-    const CHUNK_SIZE = 100;
-    for (let i = 0; i < dataArray.length; i += CHUNK_SIZE) {
-      const chunk = dataArray.slice(i, i + CHUNK_SIZE);
-      await db.insert(chartData).values(chunk);
+      .from(panel33kva)
+      .orderBy(panel33kva.timestamp);
+    
+    const panel66Data = await db
+      .select()
+      .from(panel66kva)
+      .orderBy(panel66kva.timestamp);
+    
+    // Format timestamp to time string
+    const formatTime = (timestamp: Date): string => {
+      return `${timestamp.getHours().toString().padStart(2, '0')}:${timestamp.getMinutes().toString().padStart(2, '0')}`;
+    };
+    
+    // Map to chart data format
+    const result: ChartData[] = [];
+    
+    // Process panel33 data
+    for (const record of panel33Data) {
+      if (!record.timestamp) continue;
+      
+      const time = formatTime(new Date(record.timestamp));
+      
+      if (phase === 'R') {
+        if (dataType === 'voltage') {
+          result.push({
+            phase,
+            dataType,
+            time,
+            value: parseFloat(record.volt_r || '0')
+          });
+        } else if (dataType === 'current') {
+          result.push({
+            phase,
+            dataType,
+            time,
+            value: parseFloat(record.arus_r || '0')
+          });
+        } else if (dataType === 'power') {
+          result.push({
+            phase,
+            dataType,
+            time,
+            value: parseFloat(record.kva_r || '0') * 1000 // kVA to VA
+          });
+        }
+      } else if (phase === 'S') {
+        if (dataType === 'voltage') {
+          result.push({
+            phase,
+            dataType,
+            time,
+            value: parseFloat(record.volt_s || '0')
+          });
+        } else if (dataType === 'current') {
+          result.push({
+            phase,
+            dataType,
+            time,
+            value: parseFloat(record.arus_s || '0')
+          });
+        } else if (dataType === 'power') {
+          result.push({
+            phase,
+            dataType,
+            time,
+            value: parseFloat(record.kva_s || '0') * 1000 // kVA to VA
+          });
+        }
+      } else if (phase === 'T') {
+        if (dataType === 'voltage') {
+          result.push({
+            phase,
+            dataType,
+            time,
+            value: parseFloat(record.volt_t || '0')
+          });
+        } else if (dataType === 'current') {
+          result.push({
+            phase,
+            dataType,
+            time,
+            value: parseFloat(record.arus_t || '0')
+          });
+        } else if (dataType === 'power') {
+          result.push({
+            phase,
+            dataType,
+            time,
+            value: parseFloat(record.kva_t || '0') * 1000 // kVA to VA
+          });
+        }
+      }
     }
+    
+    // We could do something similar for panel66 data if needed
+    
+    return result;
   }
   
   // Total power consumption methods

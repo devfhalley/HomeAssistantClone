@@ -104,22 +104,11 @@ export interface PhaseData {
   time: Date;
 }
 
-// Chart data for historical readings
-export const chartData = pgTable("chart_data", {
-  id: serial("id").primaryKey(),
-  phase: text("phase").notNull(), // "R", "S", or "T"
-  dataType: text("data_type").notNull(), // "voltage", "current", "power", "energy", "frequency", "pf"
-  time: text("time").notNull(),
-  value: doublePrecision("value").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const insertChartDataSchema = createInsertSchema(chartData).pick({
-  phase: true,
-  dataType: true,
-  time: true,
-  value: true,
-});
-
-export type InsertChartData = z.infer<typeof insertChartDataSchema>;
-export type ChartData = typeof chartData.$inferSelect;
+// ChartData type definition for frontend (now derived from panel data)
+export interface ChartData {
+  id?: number;
+  phase: string;
+  dataType: string;
+  time: string;
+  value: number;
+}
