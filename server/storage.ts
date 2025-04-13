@@ -127,25 +127,49 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  // Panel data methods
+  // Panel data methods - using direct SQL with correct column names
   async getPanel33kvaData(): Promise<Panel33kva | undefined> {
-    // Get the latest reading for Panel 33KVA
-    const [data] = await db
-      .select()
-      .from(panel33kva)
-      .orderBy(desc(panel33kva.timestamp))
-      .limit(1);
-    return data || undefined;
+    try {
+      // Use direct SQL query for consistency with production DB column names
+      const result = await pool.query(
+        "SELECT * FROM panel_33kva ORDER BY created_at DESC LIMIT 1"
+      );
+      
+      if (result.rows.length === 0) return undefined;
+      
+      // Map created_at to timestamp for compatibility
+      const data = {
+        ...result.rows[0],
+        timestamp: result.rows[0].created_at  // Map to expected property name
+      };
+      
+      return data;
+    } catch (error) {
+      console.error("Error in getPanel33kvaData:", error);
+      return undefined;
+    }
   }
   
   async getPanel66kvaData(): Promise<Panel66kva | undefined> {
-    // Get the latest reading for Panel 66KVA
-    const [data] = await db
-      .select()
-      .from(panel66kva)
-      .orderBy(desc(panel66kva.timestamp))
-      .limit(1);
-    return data || undefined;
+    try {
+      // Use direct SQL query for consistency with production DB column names
+      const result = await pool.query(
+        "SELECT * FROM panel_66kva ORDER BY created_at DESC LIMIT 1"
+      );
+      
+      if (result.rows.length === 0) return undefined;
+      
+      // Map created_at to timestamp for compatibility
+      const data = {
+        ...result.rows[0],
+        timestamp: result.rows[0].created_at  // Map to expected property name
+      };
+      
+      return data;
+    } catch (error) {
+      console.error("Error in getPanel66kvaData:", error);
+      return undefined;
+    }
   }
   
   async getAllPhaseData(): Promise<PhaseData[]> {
@@ -216,106 +240,146 @@ export class DatabaseStorage implements IStorage {
   
   // Chart data methods now use panel data
   async getChartDataByType(dataType: string, phase: string): Promise<ChartData[]> {
-    // Get data from panels to create chart data
-    const panel33Data = await db
-      .select()
-      .from(panel33kva)
-      .orderBy(panel33kva.timestamp);
-    
-    const panel66Data = await db
-      .select()
-      .from(panel66kva)
-      .orderBy(panel66kva.timestamp);
-    
-    // Format timestamp to time string
-    const formatTime = (timestamp: Date): string => {
-      return `${timestamp.getHours().toString().padStart(2, '0')}:${timestamp.getMinutes().toString().padStart(2, '0')}`;
-    };
-    
-    // Map to chart data format
-    const result: ChartData[] = [];
-    
-    // Process panel33 data
-    for (const record of panel33Data) {
-      if (!record.timestamp) continue;
+    try {
+      // Use direct SQL query for consistency with production DB column names
+      const panel33Result = await pool.query(
+        "SELECT * FROM panel_33kva ORDER BY created_at"
+      );
       
-      const time = formatTime(new Date(record.timestamp));
+      // Format timestamp to time string
+      const formatTime = (timestamp: Date): string => {
+        return `${timestamp.getHours().toString().padStart(2, '0')}:${timestamp.getMinutes().toString().padStart(2, '0')}`;
+      };
       
-      if (phase === 'R') {
-        if (dataType === 'voltage') {
-          result.push({
-            phase,
-            dataType,
-            time,
-            value: parseFloat(record.volt_r || '0')
-          });
-        } else if (dataType === 'current') {
-          result.push({
-            phase,
-            dataType,
-            time,
-            value: parseFloat(record.arus_r || '0')
-          });
-        } else if (dataType === 'power') {
-          result.push({
-            phase,
-            dataType,
-            time,
-            value: parseFloat(record.kva_r || '0') * 1000 // kVA to VA
-          });
-        }
-      } else if (phase === 'S') {
-        if (dataType === 'voltage') {
-          result.push({
-            phase,
-            dataType,
-            time,
-            value: parseFloat(record.volt_s || '0')
-          });
-        } else if (dataType === 'current') {
-          result.push({
-            phase,
-            dataType,
-            time,
-            value: parseFloat(record.arus_s || '0')
-          });
-        } else if (dataType === 'power') {
-          result.push({
-            phase,
-            dataType,
-            time,
-            value: parseFloat(record.kva_s || '0') * 1000 // kVA to VA
-          });
-        }
-      } else if (phase === 'T') {
-        if (dataType === 'voltage') {
-          result.push({
-            phase,
-            dataType,
-            time,
-            value: parseFloat(record.volt_t || '0')
-          });
-        } else if (dataType === 'current') {
-          result.push({
-            phase,
-            dataType,
-            time,
-            value: parseFloat(record.arus_t || '0')
-          });
-        } else if (dataType === 'power') {
-          result.push({
-            phase,
-            dataType,
-            time,
-            value: parseFloat(record.kva_t || '0') * 1000 // kVA to VA
-          });
+      // Map to chart data format
+      const result: ChartData[] = [];
+      
+      // Process panel33 data
+      const panel33Data = panel33Result.rows;
+      for (const record of panel33Data) {
+        if (!record.created_at) continue;
+        
+        const time = formatTime(new Date(record.created_at));
+        
+        if (phase === 'R') {
+          if (dataType === 'voltage') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: parseFloat(record.volt_r || '0')
+            });
+          } else if (dataType === 'current') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: parseFloat(record.arus_r || '0')
+            });
+          } else if (dataType === 'power') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: parseFloat(record.kva_r || '0') * 1000 // kVA to VA
+            });
+          } else if (dataType === 'frequency') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: 50 // Default frequency
+            });
+          } else if (dataType === 'pf') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: 0.9 // Default power factor
+            });
+          }
+        } else if (phase === 'S') {
+          if (dataType === 'voltage') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: parseFloat(record.volt_s || '0')
+            });
+          } else if (dataType === 'current') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: parseFloat(record.arus_s || '0')
+            });
+          } else if (dataType === 'power') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: parseFloat(record.kva_s || '0') * 1000 // kVA to VA
+            });
+          } else if (dataType === 'frequency') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: 50 // Default frequency
+            });
+          } else if (dataType === 'pf') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: 0.9 // Default power factor
+            });
+          }
+        } else if (phase === 'T') {
+          if (dataType === 'voltage') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: parseFloat(record.volt_t || '0')
+            });
+          } else if (dataType === 'current') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: parseFloat(record.arus_t || '0')
+            });
+          } else if (dataType === 'power') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: parseFloat(record.kva_t || '0') * 1000 // kVA to VA
+            });
+          } else if (dataType === 'frequency') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: 50 // Default frequency
+            });
+          } else if (dataType === 'pf') {
+            result.push({
+              phase,
+              dataType,
+              time,
+              value: 0.9 // Default power factor
+            });
+          }
         }
       }
+      
+      return result;
+    } catch (error) {
+      console.error(`Error fetching ${dataType} data for phase ${phase}:`, error);
+      return [];
     }
-    
-    // We could do something similar for panel66 data if needed
-    
-    return result;
   }
   
   // Total power consumption methods

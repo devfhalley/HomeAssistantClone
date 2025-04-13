@@ -107,17 +107,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Fetching peak power data for date:", today);
       
       // Use the pool directly for raw SQL queries
+      // Try querying without the WHERE condition to see what data we get
       const panel33Query = {
-        text: "SELECT * FROM panel_33kva WHERE timestamp >= $1 ORDER BY timestamp",
-        values: [today]
+        text: "SELECT * FROM panel_33kva LIMIT 10",
+        values: []
       };
       const panel33Result = await pool.query(panel33Query);
       const panel33Data = panel33Result.rows;
       console.log("Panel 33KVA data count:", panel33Data.length);
+      console.log("Panel 33KVA first row:", panel33Data.length > 0 ? Object.keys(panel33Data[0]) : "No data");
       
       const panel66Query = {
-        text: "SELECT * FROM panel_66kva WHERE timestamp >= $1 ORDER BY timestamp",
-        values: [today]
+        text: "SELECT * FROM panel_66kva LIMIT 10",
+        values: []
       };
       const panel66Result = await pool.query(panel66Query);
       const panel66Data = panel66Result.rows;
