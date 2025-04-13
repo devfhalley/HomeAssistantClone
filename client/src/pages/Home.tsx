@@ -1,13 +1,27 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import HomeAssistant from "@/components/HomeAssistant";
 import { Link } from "wouter";
 import { ToggleLeft, PieChart, Activity, BarChart3, Zap } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+
+// Type for peak power data
+interface PeakPowerData {
+  panel33Peak: number;
+  panel66Peak: number;
+  totalPeak: number;
+}
 
 const Home = () => {
   useEffect(() => {
     document.title = "Home Assistant - Home";
   }, []);
+  
+  // Fetch peak power data
+  const { data: peakPowerData, isLoading } = useQuery({
+    queryKey: ['/api/peak-power'],
+    refetchInterval: 60000, // Refresh every minute
+  });
 
   return (
     <HomeAssistant>
@@ -22,12 +36,18 @@ const Home = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center">
               <PieChart className="w-5 h-5 mr-2 text-blue-600" />
-              Today's Usage
+              Today's Highest Peak
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">32.55 kWh</p>
-            <p className="text-sm text-gray-600 mt-1">+5% from yesterday</p>
+            <p className="text-3xl font-bold">
+              {isLoading ? (
+                <span className="text-gray-400">Loading...</span>
+              ) : (
+                <span>{(peakPowerData?.totalPeak || 0).toFixed(2)} kW</span>
+              )}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">Combined from all panels</p>
           </CardContent>
         </Card>
 
@@ -35,12 +55,18 @@ const Home = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center">
               <Activity className="w-5 h-5 mr-2 text-green-600" />
-              Current Load
+              Panel 1 Peak
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">32.5 kW</p>
-            <p className="text-sm text-gray-600 mt-1">Normal operation</p>
+            <p className="text-3xl font-bold">
+              {isLoading ? (
+                <span className="text-gray-400">Loading...</span>
+              ) : (
+                <span>{(peakPowerData?.panel33Peak || 0).toFixed(2)} kW</span>
+              )}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">33KVA Panel</p>
           </CardContent>
         </Card>
 
@@ -48,12 +74,18 @@ const Home = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center">
               <BarChart3 className="w-5 h-5 mr-2 text-amber-600" />
-              Monthly Trend
+              Panel 2 Peak
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">642.7 kWh</p>
-            <p className="text-sm text-gray-600 mt-1">-2% from last month</p>
+            <p className="text-3xl font-bold">
+              {isLoading ? (
+                <span className="text-gray-400">Loading...</span>
+              ) : (
+                <span>{(peakPowerData?.panel66Peak || 0).toFixed(2)} kW</span>
+              )}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">66KVA Panel</p>
           </CardContent>
         </Card>
 
@@ -64,9 +96,25 @@ const Home = () => {
               <ToggleLeft className="w-6 h-6 text-primary mr-2" />
               <h5 className="text-xl font-bold tracking-tight text-gray-900">Panel 1 33KVA</h5>
             </div>
-            <p className="font-normal text-gray-700 mb-4">
+            <p className="font-normal text-gray-700 mb-2">
               Monitor power consumption and performance metrics for Panel 1 33KVA control panel.
             </p>
+            
+            {/* Today's Highest Peak kWh */}
+            <div className="flex items-center mb-4 bg-blue-50 p-2 rounded">
+              <Zap className="w-4 h-4 text-blue-600 mr-2" />
+              <div>
+                <p className="text-sm font-medium">Today's Highest Peak:</p>
+                <p className="text-lg font-bold">
+                  {isLoading ? (
+                    <span className="text-gray-400">Loading...</span>
+                  ) : (
+                    <span>{peakPowerData?.panel33Peak.toFixed(2) || "0.00"} kW</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
@@ -83,9 +131,25 @@ const Home = () => {
               <ToggleLeft className="w-6 h-6 text-primary mr-2" />
               <h5 className="text-xl font-bold tracking-tight text-gray-900">Panel 2 66KVA</h5>
             </div>
-            <p className="font-normal text-gray-700 mb-4">
+            <p className="font-normal text-gray-700 mb-2">
               Check real-time data, phase analysis, and voltage variance for Panel 2 66KVA.
             </p>
+            
+            {/* Today's Highest Peak kWh */}
+            <div className="flex items-center mb-4 bg-blue-50 p-2 rounded">
+              <Zap className="w-4 h-4 text-blue-600 mr-2" />
+              <div>
+                <p className="text-sm font-medium">Today's Highest Peak:</p>
+                <p className="text-lg font-bold">
+                  {isLoading ? (
+                    <span className="text-gray-400">Loading...</span>
+                  ) : (
+                    <span>{peakPowerData?.panel66Peak.toFixed(2) || "0.00"} kW</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>

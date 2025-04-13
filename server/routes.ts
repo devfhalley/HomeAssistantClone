@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
 import { 
   insertPanel33kvaSchema,
   insertPanel66kvaSchema,
@@ -8,9 +9,12 @@ import {
   type InsertPanel33kva,
   type InsertPanel66kva,
   type InsertChartData,
-  type PhaseData
+  type PhaseData,
+  panel33kva,
+  panel66kva
 } from "@shared/schema";
 import { z } from "zod";
+import { gte, desc } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for power monitoring data
@@ -49,6 +53,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching total power data:", error);
       res.status(500).json({ error: "Failed to fetch total power data" });
+    }
+  });
+  
+  // Get peak power data for today
+  app.get("/api/peak-power", async (req: Request, res: Response) => {
+    try {
+      // Get the current date at midnight
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Get panel data
+      const panel33Data = await db
+        .select()
+        .from(panel33kva)
+        .where(gte(panel33kva.timestamp, today))
+        .orderBy(panel33kva.timestamp);
+      
+      const panel66Data = await db
+        .select()
+        .from(panel66kva)
+        .where(gte(panel66kva.timestamp, today))
+        .orderBy(panel66kva.timestamp);
+      
+      // Calculate peak values
+      const panel33Peak = panel33Data.reduce((max: number, record: any) => {
+        const currentValue = parseFloat(record.netkw || '0');
+        return currentValue > max ? currentValue : max;
+      }, 0);
+      
+      const panel66Peak = panel66Data.reduce((max: number, record: any) => {
+        const currentValue = parseFloat(record.netkw || '0');
+        return currentValue > max ? currentValue : max;
+      }, 0);
+      
+      res.json({
+        panel33Peak,
+        panel66Peak,
+        totalPeak: panel33Peak + panel66Peak
+      });
+    } catch (error) {
+      console.error("Error fetching peak power data:", error);
+      res.status(500).json({ error: "Failed to fetch peak power data" });
     }
   });
   
