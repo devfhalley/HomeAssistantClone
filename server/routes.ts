@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { 
   insertPanel33kvaSchema,
   insertPanel66kvaSchema,
@@ -97,18 +97,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      // Get panel data
-      const panel33Data = await db
-        .select()
-        .from(panel33kva)
-        .where(gte(panel33kva.timestamp, today))
-        .orderBy(panel33kva.timestamp);
+      console.log("Fetching peak power data for date:", today);
       
-      const panel66Data = await db
-        .select()
-        .from(panel66kva)
-        .where(gte(panel66kva.timestamp, today))
-        .orderBy(panel66kva.timestamp);
+      // Use the pool directly for raw SQL queries
+      const panel33Query = {
+        text: "SELECT * FROM panel_33kva WHERE timestamp >= $1 ORDER BY timestamp",
+        values: [today]
+      };
+      const panel33Result = await pool.query(panel33Query);
+      const panel33Data = panel33Result.rows;
+      console.log("Panel 33KVA data count:", panel33Data.length);
+      
+      const panel66Query = {
+        text: "SELECT * FROM panel_66kva WHERE timestamp >= $1 ORDER BY timestamp",
+        values: [today]
+      };
+      const panel66Result = await pool.query(panel66Query);
+      const panel66Data = panel66Result.rows;
+      console.log("Panel 66KVA data count:", panel66Data.length);
       
       // Find peak values with timestamp
       let panel33PeakValue = 0;

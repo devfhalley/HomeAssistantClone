@@ -43,83 +43,83 @@ const Panel66KVA = () => {
   // Fetch phase data
   const { data: phaseDataArray, isLoading: isLoadingPhaseData } = useQuery({
     queryKey: ['/api/phase-data'],
-    queryFn: () => apiRequest<PhaseData[]>('/api/phase-data')
+    queryFn: () => apiRequest<PhaseData[]>("GET", '/api/phase-data')
   });
 
   // Fetch chart data for each type and phase
   const { data: voltageDataR } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'R'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/voltage/R')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/voltage/R')
   });
 
   const { data: voltageDataS } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'S'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/voltage/S')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/voltage/S')
   });
 
   const { data: voltageDataT } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'T'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/voltage/T')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/voltage/T')
   });
 
   const { data: currentDataR } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'R'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/current/R')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/current/R')
   });
 
   const { data: currentDataS } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'S'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/current/S')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/current/S')
   });
 
   const { data: currentDataT } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'T'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/current/T')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/current/T')
   });
 
   const { data: powerDataR } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'R'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/power/R')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/power/R')
   });
 
   const { data: powerDataS } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'S'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/power/S')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/power/S')
   });
 
   const { data: powerDataT } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'T'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/power/T')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/power/T')
   });
   
   const { data: frequencyDataR } = useQuery({
     queryKey: ['/api/chart-data', 'frequency', 'R'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/frequency/R')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/frequency/R')
   });
 
   const { data: frequencyDataS } = useQuery({
     queryKey: ['/api/chart-data', 'frequency', 'S'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/frequency/S')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/frequency/S')
   });
 
   const { data: frequencyDataT } = useQuery({
     queryKey: ['/api/chart-data', 'frequency', 'T'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/frequency/T')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/frequency/T')
   });
   
   const { data: pfDataR } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'R'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/pf/R')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/pf/R')
   });
 
   const { data: pfDataS } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'S'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/pf/S')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/pf/S')
   });
 
   const { data: pfDataT } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'T'],
-    queryFn: () => apiRequest<ChartData[]>('/api/chart-data/pf/T')
+    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/pf/T')
   });
   
   // Process phase data into the format needed by components

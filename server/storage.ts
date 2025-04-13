@@ -4,7 +4,7 @@ import {
   panel66kva, type Panel66kva, type InsertPanel66kva,
   type ChartData
 } from "@shared/schema";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, and, desc, gte, lte } from "drizzle-orm";
 
 // Combined type for phase data response
@@ -50,23 +50,81 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    try {
+      const result = await pool.query(
+        "SELECT * FROM users WHERE id = $1",
+        [id]
+      );
+      
+      if (result.rows.length === 0) return undefined;
+      
+      // For debugging purposes
+      console.log("User data structure:", Object.keys(result.rows[0]));
+      
+      return {
+        id: result.rows[0].id,
+        username: result.rows[0].username,
+        password: result.rows[0].password_hash // The actual column is password_hash in the DB
+      };
+    } catch (error) {
+      console.error("Error in getUser:", error);
+      return undefined;
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
+    try {
+      // Try an approach without explicitly naming the columns
+      const result = await pool.query(
+        "SELECT * FROM users WHERE username = $1",
+        [username]
+      );
+      
+      if (result.rows.length === 0) return undefined;
+      
+      // Log the structure of the returned row to debug
+      console.log("User row structure:", Object.keys(result.rows[0]));
+      
+      return {
+        id: result.rows[0].id,
+        username: result.rows[0].username,
+        password: result.rows[0].password_hash // The actual column is password_hash in the DB
+      };
+    } catch (error) {
+      console.error("Error in getUserByUsername:", error);
+      return undefined;
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    // Store password directly as it's already hashed in auth.ts
-    const [user] = await db
-      .insert(users)
-      .values(insertUser)
-      .returning();
-    
-    return user;
+    try {
+      // Try a different approach - first check if the table structure matches our expectations
+      const tableResult = await pool.query(
+        "SELECT column_name FROM information_schema.columns WHERE table_name = 'users'"
+      );
+      
+      const columnNames = tableResult.rows.map(row => row.column_name);
+      console.log("Users table columns:", columnNames);
+      
+      // Now try to insert with the columns we know exist
+      if (columnNames.includes('password')) {
+        const result = await pool.query(
+          "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *",
+          [insertUser.username, insertUser.password]
+        );
+        
+        return {
+          id: result.rows[0].id,
+          username: result.rows[0].username,
+          password: result.rows[0].password
+        };
+      } else {
+        throw new Error("Cannot insert user - password column not found in users table");
+      }
+    } catch (error) {
+      console.error("Error in createUser:", error);
+      throw error;
+    }
   }
   
   // Panel data methods

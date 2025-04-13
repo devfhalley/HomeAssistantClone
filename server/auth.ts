@@ -17,7 +17,7 @@ declare global {
     interface User {
       id: number;
       username: string;
-      password: string;
+      password: string | null;
     }
   }
 }

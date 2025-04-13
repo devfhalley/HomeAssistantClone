@@ -21,7 +21,7 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export interface User {
   id: number;
   username: string;
-  password: string;
+  password: string | null;
 }
 
 // Panel 33KVA table
