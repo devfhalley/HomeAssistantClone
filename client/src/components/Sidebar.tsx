@@ -1,5 +1,6 @@
 import { LayoutGrid, ToggleLeft, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocation, Link } from "wouter";
 
 type MenuItem = {
   icon: React.ReactNode;
@@ -8,22 +9,30 @@ type MenuItem = {
   badge?: number;
 };
 
-const menuItems: MenuItem[] = [
-  { icon: <LayoutGrid className="w-5 h-5" />, label: "Overview" },
-  { icon: <ToggleLeft className="w-5 h-5" />, label: "WO 08", active: true },
+type MenuItemWithPath = MenuItem & { path: string };
+
+const menuItems: MenuItemWithPath[] = [
+  { icon: <LayoutGrid className="w-5 h-5" />, label: "Overview", path: "/" },
+  { icon: <ToggleLeft className="w-5 h-5" />, label: "WO 08", path: "/wo-08" },
+  { icon: <ToggleLeft className="w-5 h-5" />, label: "Panel 2 66KVA", path: "/panel-66kva" },
 ];
 
-const SidebarItem = ({ item }: { item: MenuItem }) => {
+const SidebarItem = ({ item }: { item: MenuItemWithPath }) => {
+  const [location] = useLocation();
+  const isActive = location === item.path || 
+                  (location === "/" && item.path === "/") ||
+                  (item.path === "/wo-08" && location === "/");
+  
   return (
     <li>
-      <a
-        href="#"
+      <Link
+        to={item.path}
         className={cn(
           "flex items-center px-3 py-2 rounded-md hover:bg-gray-200 transition-colors",
-          item.active && "bg-gray-200 border-l-2 border-primary text-primary"
+          isActive && "bg-gray-200 border-l-2 border-primary text-primary"
         )}
       >
-        <div className={cn("w-6", item.active && "text-primary")}>
+        <div className={cn("w-6", isActive && "text-primary")}>
           {item.icon}
         </div>
         <span className="flex-1 ml-2">{item.label}</span>
@@ -32,7 +41,7 @@ const SidebarItem = ({ item }: { item: MenuItem }) => {
             {item.badge}
           </span>
         )}
-      </a>
+      </Link>
     </li>
   );
 };
