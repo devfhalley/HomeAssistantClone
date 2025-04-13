@@ -40,16 +40,19 @@ const productionConfig: AppConfig = {
   isProduction: true
 };
 
+// Check for force production mode environment variable
+const forceProduction = process.env.FORCE_PRODUCTION === 'true';
+
 // Determine which config to use based on NODE_ENV
 const environment = process.env.NODE_ENV || 'development';
-const config: AppConfig = environment === 'production' 
+const config: AppConfig = (environment === 'production' || forceProduction)
   ? productionConfig 
   : developmentConfig;
 
 // Helper function to generate a connection string
 export function getDatabaseUrl(): string {
-  if (environment === 'development' && process.env.DATABASE_URL) {
-    // Use Replit's DATABASE_URL in development if available
+  if (environment === 'development' && !forceProduction && process.env.DATABASE_URL) {
+    // Use Replit's DATABASE_URL in development if available and not forcing production
     return process.env.DATABASE_URL;
   }
   
