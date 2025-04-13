@@ -62,10 +62,10 @@ const Home = () => {
           <div className="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-50 cursor-pointer">
             <div className="flex items-center mb-3">
               <ToggleLeft className="w-6 h-6 text-primary mr-2" />
-              <h5 className="text-xl font-bold tracking-tight text-gray-900">WO 08</h5>
+              <h5 className="text-xl font-bold tracking-tight text-gray-900">Panel 1 33KVA</h5>
             </div>
             <p className="font-normal text-gray-700 mb-4">
-              Monitor power consumption and performance metrics for WO 08 control panel.
+              Monitor power consumption and performance metrics for Panel 1 33KVA control panel.
             </p>
             <div className="flex justify-between items-center">
               <div className="flex items-center">

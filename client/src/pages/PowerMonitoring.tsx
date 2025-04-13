@@ -154,6 +154,11 @@ const PowerMonitoring = () => {
   return (
     <HomeAssistant>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Panel Name Header */}
+        <div className="col-span-3 bg-blue-600 text-white p-3 rounded-md mb-2">
+          <h1 className="text-xl font-bold">Panel 1 33KVA Monitoring</h1>
+        </div>
+        
         {/* Power Monitor Cards */}
         {isLoadingPhaseData ? (
           // Skeleton loading state for power monitor cards
@@ -165,7 +170,7 @@ const PowerMonitoring = () => {
         ) : (
           <>
             <PowerMonitorCard 
-              title="Power Monitor phase R" 
+              title="Panel 1 33KVA - Phase R" 
               phase="R"
               voltage={processedPhaseData.R?.voltage || 0}
               current={processedPhaseData.R?.current || 0}
@@ -176,7 +181,7 @@ const PowerMonitoring = () => {
             />
             
             <PowerMonitorCard 
-              title="Power Monitor phase S" 
+              title="Panel 1 33KVA - Phase S" 
               phase="S"
               voltage={processedPhaseData.S?.voltage || 0}
               current={processedPhaseData.S?.current || 0}
@@ -187,7 +192,7 @@ const PowerMonitoring = () => {
             />
             
             <PowerMonitorCard 
-              title="Power Monitor phase T" 
+              title="Panel 1 33KVA - Phase T" 
               phase="T"
               voltage={processedPhaseData.T?.voltage || 0}
               current={processedPhaseData.T?.current || 0}
@@ -201,7 +206,7 @@ const PowerMonitoring = () => {
 
         {/* Chart Cards - First Row */}
         <ChartCard 
-          title="Voltage Comparison" 
+          title="Panel 1 33KVA - Voltage" 
           phaseRData={processChartData(voltageDataR)}
           phaseSData={processChartData(voltageDataS)}
           phaseTData={processChartData(voltageDataT)}
@@ -210,7 +215,7 @@ const PowerMonitoring = () => {
         />
         
         <ChartCard 
-          title="Current Comparison" 
+          title="Panel 1 33KVA - Current" 
           phaseRData={processChartData(currentDataR)}
           phaseSData={processChartData(currentDataS)}
           phaseTData={processChartData(currentDataT)}
@@ -219,7 +224,7 @@ const PowerMonitoring = () => {
         />
         
         <ChartCard 
-          title="Power Comparison" 
+          title="Panel 1 33KVA - Power" 
           phaseRData={processChartData(powerDataR)}
           phaseSData={processChartData(powerDataS)}
           phaseTData={processChartData(powerDataT)}
@@ -229,7 +234,7 @@ const PowerMonitoring = () => {
         
         {/* Chart Cards - Second Row */}
         <ChartCard 
-          title="Frequency Comparison" 
+          title="Panel 1 33KVA - Frequency" 
           phaseRData={processChartData(frequencyDataR)}
           phaseSData={processChartData(frequencyDataS)}
           phaseTData={processChartData(frequencyDataT)}
@@ -238,7 +243,7 @@ const PowerMonitoring = () => {
         />
         
         <ChartCard 
-          title="Power Factor Comparison" 
+          title="Panel 1 33KVA - Power Factor" 
           phaseRData={processChartData(pfDataR)}
           phaseSData={processChartData(pfDataS)}
           phaseTData={processChartData(pfDataT)}
