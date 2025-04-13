@@ -2,6 +2,12 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// ALWAYS force production environment for testing
+process.env.FORCE_PRODUCTION = 'true';
+console.log('⚠️ FORCING PRODUCTION MODE - Using production database at 165.22.50.101');
+process.env.NODE_ENV = 'production';
+process.env.USE_SERVER_IP = 'true';
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -53,7 +59,11 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // In production, uncomment this when ready to build and serve static files
+    // serveStatic(app);
+    
+    // For now, always use Vite in dev mode for testing
+    await setupVite(app, server);
   }
 
   // ALWAYS serve the app on port 5000

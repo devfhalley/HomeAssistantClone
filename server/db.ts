@@ -1,11 +1,10 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import pg from 'pg';
+const { Pool } = pg;
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 import config, { getDatabaseUrl } from './config';
 
-// Set WebSocket constructor for neon
-neonConfig.webSocketConstructor = ws;
+console.log('Loading database module');
 
 // Log the current environment
 console.log(`Running in ${config.isProduction ? 'production' : 'development'} mode`);
@@ -36,7 +35,7 @@ pool.on('error', (err: Error) => {
 });
 
 // Initialize Drizzle ORM with our schema
-const db = drizzle({ client: pool, schema });
+const db = drizzle(pool, { schema });
 
 // Test connection during startup
 pool.query('SELECT 1').then(() => {

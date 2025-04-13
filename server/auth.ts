@@ -10,7 +10,11 @@ import { pool } from "./db";
 
 declare global {
   namespace Express {
-    interface User extends Omit<User, 'password_hash'> {}
+    interface User {
+      id: number;
+      username: string;
+      password_hash: string | null; 
+    }
   }
 }
 
@@ -50,12 +54,29 @@ export async function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user) {
           return done(null, false);
-        } else {
+        }
+        
+        // Check which password field exists and use that one
+        // Production uses password_hash
+        const storedPassword = user.password_hash;
+        
+        if (!storedPassword) {
+          console.error("User found but no password_hash field:", username);
+          return done(null, false);
+        }
+        
+        console.log(`Authenticating user ${username} with password_hash`);
+        
+        if (await comparePasswords(password, storedPassword)) {
           return done(null, user);
+        } else {
+          console.log(`Password mismatch for user ${username}`);
+          return done(null, false);
         }
       } catch (error) {
+        console.error("Error in authentication:", error);
         return done(error);
       }
     }),

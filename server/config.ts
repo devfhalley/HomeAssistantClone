@@ -60,7 +60,8 @@ const forceProduction = process.env.FORCE_PRODUCTION === 'true';
 
 // Determine which config to use based on NODE_ENV and other flags
 const environment = process.env.NODE_ENV || 'development';
-const useServerIp = process.env.USE_SERVER_IP === 'true' || forceProduction;
+// Always use server IP in this development environment for testing
+const useServerIp = true; // process.env.USE_SERVER_IP === 'true' || forceProduction;
 
 // Force development configuration (for testing)
 const forceDevelopment = process.env.FORCE_DEVELOPMENT === 'true';
@@ -81,6 +82,13 @@ if ((environment === 'development' && !forceProduction) || forceDevelopment) {
 
 // Helper function to generate a connection string
 export function getDatabaseUrl(): string {
+  // Testing with production database
+  const prodUrl = 'postgres://root:rnd.admin1@165.22.50.101:5432/panel_utama';
+  console.log('Using production database:', prodUrl.replace(/:[^:]*@/, ':****@'));
+  return prodUrl;
+  
+  // Comment out all the fallback code since we're testing with production DB only
+  /*
   // If we're forcing development config but in production mode
   if (forceDevelopment) {
     if (process.env.DATABASE_URL) {
@@ -114,6 +122,7 @@ export function getDatabaseUrl(): string {
   
   // Properly URL-encode the username and password for special characters
   return `postgres://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
+  */
 }
 
 export default config;
