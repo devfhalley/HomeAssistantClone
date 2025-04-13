@@ -2,8 +2,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import { User } from "@shared/schema";
 import connectPg from "connect-pg-simple";
@@ -11,23 +10,17 @@ import { pool } from "./db";
 
 declare global {
   namespace Express {
-    interface User extends User {}
+    interface User extends Omit<User, 'password_hash'> {}
   }
 }
 
-const scryptAsync = promisify(scrypt);
-
 async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+  // Use bcrypt with 10 rounds to match existing hash in the production database
+  return bcrypt.hash(password, 10);
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  return bcrypt.compare(supplied, stored);
 }
 
 export async function setupAuth(app: Express) {
@@ -57,7 +50,7 @@ export async function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user || !(await comparePasswords(password, user.password_hash))) {
           return done(null, false);
         } else {
           return done(null, user);
@@ -87,8 +80,8 @@ export async function setupAuth(app: Express) {
       }
 
       const user = await storage.createUser({
-        ...req.body,
-        password: await hashPassword(req.body.password),
+        username: req.body.username,
+        password_hash: await hashPassword(req.body.password),
       });
 
       req.login(user, (err) => {
@@ -137,7 +130,7 @@ export async function setupAuth(app: Express) {
       console.log("Creating admin user...");
       await storage.createUser({
         username: "admin",
-        password: await hashPassword("poweradmin"),
+        password_hash: await hashPassword("poweradmin"),
       });
       console.log("Admin user created successfully");
     }
