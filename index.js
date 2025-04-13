@@ -220,12 +220,12 @@ app.get('/api/chart-data/:dataType/:phase', async (req, res) => {
   }
 });
 
-// Serve static files from the client directory
-app.use(express.static(path.join(__dirname, 'client')));
+// Serve static files from the dist/public directory
+app.use(express.static(path.join(__dirname, 'dist/public')));
 
 // For any other request, serve the index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'index.html'));
+  res.sendFile(path.join(__dirname, 'dist/public', 'index.html'));
 });
 
 // Start the server
