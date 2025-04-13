@@ -52,7 +52,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dbName: process.env.PGDATABASE || "panel_utama",
         dbStatus: dbStatus,
         timestamp: new Date().toISOString(),
-        serverVersion: "1.0.0"
+        serverVersion: "1.0.0",
+        dbType: "PostgreSQL"  // Add explicit database type
       });
     } catch (error) {
       console.error("Error fetching system info:", error);

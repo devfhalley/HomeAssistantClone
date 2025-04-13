@@ -384,99 +384,123 @@ export class DatabaseStorage implements IStorage {
   
   // Total power consumption methods
   async getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]> {
-    // Fetch panel data
-    let panel33Data = await db.select().from(panel33kva).orderBy(panel33kva.timestamp);
-    let panel66Data = await db.select().from(panel66kva).orderBy(panel66kva.timestamp);
-    
-    // Apply date filters in memory if provided
-    if (startDate && endDate) {
-      panel33Data = panel33Data.filter(d => d.timestamp && new Date(d.timestamp) >= startDate && new Date(d.timestamp) <= endDate);
-      panel66Data = panel66Data.filter(d => d.timestamp && new Date(d.timestamp) >= startDate && new Date(d.timestamp) <= endDate);
-    } else if (startDate) {
-      panel33Data = panel33Data.filter(d => d.timestamp && new Date(d.timestamp) >= startDate);
-      panel66Data = panel66Data.filter(d => d.timestamp && new Date(d.timestamp) >= startDate);
-    } else if (endDate) {
-      panel33Data = panel33Data.filter(d => d.timestamp && new Date(d.timestamp) <= endDate);
-      panel66Data = panel66Data.filter(d => d.timestamp && new Date(d.timestamp) <= endDate);
-    }
-    
-    // If we don't have data for all panels, return empty array
-    if (!panel33Data.length && !panel66Data.length) {
+    try {
+      // Use direct SQL queries with the created_at column instead of timestamp
+      let panel33Query = "SELECT * FROM panel_33kva ORDER BY created_at";
+      let panel66Query = "SELECT * FROM panel_66kva ORDER BY created_at";
+      
+      // Apply date filters if provided
+      if (startDate && endDate) {
+        panel33Query = `SELECT * FROM panel_33kva WHERE created_at >= $1 AND created_at <= $2 ORDER BY created_at`;
+        panel66Query = `SELECT * FROM panel_66kva WHERE created_at >= $1 AND created_at <= $2 ORDER BY created_at`;
+      } else if (startDate) {
+        panel33Query = `SELECT * FROM panel_33kva WHERE created_at >= $1 ORDER BY created_at`;
+        panel66Query = `SELECT * FROM panel_66kva WHERE created_at >= $1 ORDER BY created_at`;
+      } else if (endDate) {
+        panel33Query = `SELECT * FROM panel_33kva WHERE created_at <= $1 ORDER BY created_at`;
+        panel66Query = `SELECT * FROM panel_66kva WHERE created_at <= $1 ORDER BY created_at`;
+      }
+      
+      // Execute queries with parameters if needed
+      let panel33Result, panel66Result;
+      if (startDate && endDate) {
+        panel33Result = await pool.query(panel33Query, [startDate, endDate]);
+        panel66Result = await pool.query(panel66Query, [startDate, endDate]);
+      } else if (startDate) {
+        panel33Result = await pool.query(panel33Query, [startDate]);
+        panel66Result = await pool.query(panel66Query, [startDate]);
+      } else if (endDate) {
+        panel33Result = await pool.query(panel33Query, [endDate]);
+        panel66Result = await pool.query(panel66Query, [endDate]);
+      } else {
+        panel33Result = await pool.query(panel33Query);
+        panel66Result = await pool.query(panel66Query);
+      }
+      
+      const panel33Data = panel33Result.rows;
+      const panel66Data = panel66Result.rows;
+      
+      // If we don't have data for all panels, return empty array
+      if (!panel33Data.length && !panel66Data.length) {
+        return [];
+      }
+      
+      // Combine and process data based on granularity
+      const allData: TotalPowerData[] = [];
+      
+      // Helper function to format date based on granularity
+      const formatDate = (date: Date, gran: string): string => {
+        if (gran === 'minute') {
+          return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        } else if (gran === 'hour') {
+          return `${date.getHours().toString().padStart(2, '0')}:00`;
+        } else {
+          // Default daily view shows hours
+          return `${date.getHours().toString().padStart(2, '0')}:00`;
+        }
+      };
+      
+      // Process panel 33kva data
+      panel33Data.forEach(record => {
+        if (!record.created_at) return;
+        
+        const timeLabel = formatDate(new Date(record.created_at), granularity);
+        const netKwValue = parseFloat(record.netkw || '0');
+        
+        // Look for existing entry with this time label
+        const existingEntry = allData.find(entry => entry.time === timeLabel);
+        
+        if (existingEntry) {
+          // Add this panel's power to the total
+          existingEntry.totalPower += netKwValue * 1000; // kW to W
+        } else {
+          // Create new entry with this panel's power
+          allData.push({
+            time: timeLabel,
+            totalPower: netKwValue * 1000 // kW to W
+          });
+        }
+      });
+      
+      // Process panel 66kva data
+      panel66Data.forEach(record => {
+        if (!record.created_at) return;
+        
+        const timeLabel = formatDate(new Date(record.created_at), granularity);
+        const netKwValue = parseFloat(record.netkw || '0');
+        
+        // Look for existing entry with this time label
+        const existingEntry = allData.find(entry => entry.time === timeLabel);
+        
+        if (existingEntry) {
+          // Add this panel's power to the total
+          existingEntry.totalPower += netKwValue * 1000; // kW to W
+        } else {
+          // Create new entry with this panel's power
+          allData.push({
+            time: timeLabel,
+            totalPower: netKwValue * 1000 // kW to W
+          });
+        }
+      });
+      
+      // Sort by time
+      allData.sort((a, b) => {
+        // Parse hour and minute for comparison
+        const [aHour, aMinute] = a.time.split(':').map(Number);
+        const [bHour, bMinute] = b.time.split(':').map(Number);
+        
+        if (aHour !== bHour) {
+          return aHour - bHour;
+        }
+        return (aMinute || 0) - (bMinute || 0);
+      });
+      
+      return allData;
+    } catch (error) {
+      console.error("Error fetching total power consumption:", error);
       return [];
     }
-    
-    // Combine and process data based on granularity
-    const allData: TotalPowerData[] = [];
-    
-    // Helper function to format date based on granularity
-    const formatDate = (date: Date, gran: string): string => {
-      if (gran === 'minute') {
-        return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-      } else if (gran === 'hour') {
-        return `${date.getHours().toString().padStart(2, '0')}:00`;
-      } else {
-        // Default daily view shows hours
-        return `${date.getHours().toString().padStart(2, '0')}:00`;
-      }
-    };
-    
-    // Process panel 33kva data
-    panel33Data.forEach(record => {
-      if (!record.timestamp) return;
-      
-      const timeLabel = formatDate(new Date(record.timestamp), granularity);
-      const netKwValue = parseFloat(record.netkw || '0');
-      
-      // Look for existing entry with this time label
-      const existingEntry = allData.find(entry => entry.time === timeLabel);
-      
-      if (existingEntry) {
-        // Add this panel's power to the total
-        existingEntry.totalPower += netKwValue * 1000; // kW to W
-      } else {
-        // Create new entry with this panel's power
-        allData.push({
-          time: timeLabel,
-          totalPower: netKwValue * 1000 // kW to W
-        });
-      }
-    });
-    
-    // Process panel 66kva data
-    panel66Data.forEach(record => {
-      if (!record.timestamp) return;
-      
-      const timeLabel = formatDate(new Date(record.timestamp), granularity);
-      const netKwValue = parseFloat(record.netkw || '0');
-      
-      // Look for existing entry with this time label
-      const existingEntry = allData.find(entry => entry.time === timeLabel);
-      
-      if (existingEntry) {
-        // Add this panel's power to the total
-        existingEntry.totalPower += netKwValue * 1000; // kW to W
-      } else {
-        // Create new entry with this panel's power
-        allData.push({
-          time: timeLabel,
-          totalPower: netKwValue * 1000 // kW to W
-        });
-      }
-    });
-    
-    // Sort by time
-    allData.sort((a, b) => {
-      // Parse hour and minute for comparison
-      const [aHour, aMinute] = a.time.split(':').map(Number);
-      const [bHour, bMinute] = b.time.split(':').map(Number);
-      
-      if (aHour !== bHour) {
-        return aHour - bHour;
-      }
-      return (aMinute || 0) - (bMinute || 0);
-    });
-    
-    return allData;
   }
 }
 

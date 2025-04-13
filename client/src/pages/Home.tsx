@@ -29,6 +29,7 @@ interface SystemInfo {
   dbStatus: string;
   timestamp: string;
   serverVersion: string;
+  dbType?: string; // Add database type field
 }
 
 const Home = () => {
@@ -237,7 +238,7 @@ const Home = () => {
               </span>
               <span className="px-2 py-1 bg-gray-100 rounded-md flex items-center">
                 <Database className="w-3 h-3 mr-1" />
-                Database: {systemInfo.dbName}
+                Database: {systemInfo.dbType || "PostgreSQL"} ({systemInfo.dbName})
               </span>
               <span className="px-2 py-1 bg-gray-100 rounded-md flex items-center">
                 <Server className="w-3 h-3 mr-1" />
