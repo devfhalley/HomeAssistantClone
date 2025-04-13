@@ -15,7 +15,12 @@ import {
 import { z } from "zod";
 import { gte, desc } from "drizzle-orm";
 
+import { setupAuth } from "./auth";
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication routes
+  await setupAuth(app);
+  
   // API routes for power monitoring data
   
   // Get environment information

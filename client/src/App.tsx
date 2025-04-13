@@ -6,13 +6,17 @@ import NotFound from "@/pages/not-found";
 import PowerMonitoring from "@/pages/PowerMonitoring";
 import Panel66KVA from "@/pages/Panel66KVA";
 import Home from "@/pages/Home";
+import LoginPage from "@/pages/LoginPage";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/wo-08" component={PowerMonitoring} />
-      <Route path="/panel-66kva" component={Panel66KVA} />
+      <ProtectedRoute path="/" component={Home} />
+      <ProtectedRoute path="/wo-08" component={PowerMonitoring} />
+      <ProtectedRoute path="/panel-66kva" component={Panel66KVA} />
+      <Route path="/login" component={LoginPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -21,8 +25,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <AuthProvider>
+        <Router />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

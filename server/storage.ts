@@ -25,6 +25,8 @@ interface TotalPowerData {
   totalPower: number;
 }
 
+import session from "express-session";
+
 export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
