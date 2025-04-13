@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import HomeAssistant from "@/components/HomeAssistant";
 import { Link } from "wouter";
-import { ToggleLeft, PieChart, Activity, BarChart3, Zap, Clock } from "lucide-react";
+import { ToggleLeft, PieChart, Activity, BarChart3, Zap, Clock, Server, Database, Wifi, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -21,6 +21,16 @@ interface PeakPowerData {
   totalUsage: number;
 }
 
+// Type for system information
+interface SystemInfo {
+  environment: string;
+  dbHost: string;
+  dbName: string;
+  dbStatus: string;
+  timestamp: string;
+  serverVersion: string;
+}
+
 const Home = () => {
   useEffect(() => {
     document.title = "Home Assistant - Home";
@@ -29,6 +39,12 @@ const Home = () => {
   // Fetch peak power data
   const { data: powerData, isLoading } = useQuery<PeakPowerData>({
     queryKey: ['/api/peak-power'],
+    refetchInterval: 60000, // Refresh every minute
+  });
+  
+  // Fetch system info
+  const { data: systemInfo, isLoading: isSystemInfoLoading } = useQuery<SystemInfo>({
+    queryKey: ['/api/system-info'],
     refetchInterval: 60000, // Refresh every minute
   });
 
@@ -179,21 +195,57 @@ const Home = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="flex items-center">
             <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-            <span>Network: Connected</span>
+            <div className="flex items-center">
+              <Wifi className="w-4 h-4 mr-2 text-gray-600" />
+              <span>Network: Connected</span>
+            </div>
           </div>
           <div className="flex items-center">
             <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-            <span>Database: Online</span>
+            <div className="flex items-center">
+              <Database className="w-4 h-4 mr-2 text-gray-600" />
+              <span>
+                {isSystemInfoLoading ? "Database: Loading..." : `Database: ${systemInfo?.dbStatus || "Online"}`}
+              </span>
+            </div>
           </div>
           <div className="flex items-center">
             <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-            <span>Sensors: All Operating</span>
+            <div className="flex items-center">
+              <Server className="w-4 h-4 mr-2 text-gray-600" />
+              <span>
+                {isSystemInfoLoading ? "Environment: Loading..." : `Environment: ${systemInfo?.environment || "Development"}`}
+              </span>
+            </div>
           </div>
           <div className="flex items-center">
             <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-            <span>Last Update: Just now</span>
+            <div className="flex items-center">
+              <RefreshCw className="w-4 h-4 mr-2 text-gray-600" />
+              <span>Last Update: {isSystemInfoLoading ? "Loading..." : formatTime(systemInfo?.timestamp || null)}</span>
+            </div>
           </div>
         </div>
+        
+        {/* Database Information */}
+        {!isSystemInfoLoading && systemInfo && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex flex-wrap gap-2 text-sm text-gray-600">
+              <span className="px-2 py-1 bg-gray-100 rounded-md flex items-center">
+                <Database className="w-3 h-3 mr-1" />
+                Server: {systemInfo.dbHost}
+              </span>
+              <span className="px-2 py-1 bg-gray-100 rounded-md flex items-center">
+                <Database className="w-3 h-3 mr-1" />
+                Database: {systemInfo.dbName}
+              </span>
+              <span className="px-2 py-1 bg-gray-100 rounded-md flex items-center">
+                <Server className="w-3 h-3 mr-1" />
+                Version: {systemInfo.serverVersion}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </HomeAssistant>
   );

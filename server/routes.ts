@@ -19,6 +19,34 @@ import { gte, desc } from "drizzle-orm";
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for power monitoring data
   
+  // Get environment information
+  app.get("/api/system-info", async (req: Request, res: Response) => {
+    try {
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const isProduction = process.env.NODE_ENV === 'production' || process.env.FORCE_PRODUCTION === 'true';
+      
+      // If using database, check connection
+      let dbStatus = "online";
+      let dbHost = process.env.PGHOST || "localhost";
+      
+      if (isProduction) {
+        dbHost = "165.22.50.101"; // Production database host
+      }
+      
+      res.json({
+        environment: isProduction ? "production" : "development",
+        dbHost: dbHost,
+        dbName: process.env.PGDATABASE || "panel_utama",
+        dbStatus: dbStatus,
+        timestamp: new Date().toISOString(),
+        serverVersion: "1.0.0"
+      });
+    } catch (error) {
+      console.error("Error fetching system info:", error);
+      res.status(500).json({ error: "Failed to fetch system information" });
+    }
+  });
+  
   // Get all phase data
   app.get("/api/phase-data", async (req: Request, res: Response) => {
     try {
