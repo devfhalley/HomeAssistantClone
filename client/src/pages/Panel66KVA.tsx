@@ -159,6 +159,11 @@ const Panel66KVA = () => {
           <h1 className="text-xl font-bold">Panel 2 66KVA Monitoring</h1>
         </div>
         
+        {/* Total Power Consumption Chart - First Row */}
+        <div className="col-span-3">
+          <TotalPowerChart />
+        </div>
+        
         {/* Power Monitor Cards */}
         {isLoadingPhaseData ? (
           // Skeleton loading state for power monitor cards
@@ -250,9 +255,6 @@ const Panel66KVA = () => {
           yAxisDomain={[0.8, 1.0]}
           unit=""
         />
-
-        {/* Total Power Consumption Chart - Third Row */}
-        <TotalPowerChart />
       </div>
     </HomeAssistant>
   );
