@@ -142,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (currentValue > panel33PeakValue) {
           panel33PeakValue = currentValue;
-          panel33PeakTime = record.timestamp;
+          panel33PeakTime = record.created_at; // Use created_at instead of timestamp
         }
       });
       
@@ -153,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (currentValue > panel66PeakValue) {
           panel66PeakValue = currentValue;
-          panel66PeakTime = record.timestamp;
+          panel66PeakTime = record.created_at; // Use created_at instead of timestamp
         }
       });
       
@@ -184,7 +184,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let data: PhaseData | null = null;
       
       // Get panel 33kva data
-      const panel33kvaData = await storage.getPanel33kvaData();
+      // Use 'any' type to handle both timestamp and created_at column names
+      const panel33kvaData = await storage.getPanel33kvaData() as any;
       
       if (panel33kvaData) {
         if (phase === 'R') {
@@ -196,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             energy: parseFloat(panel33kvaData.kvah || '0'),
             frequency: 50, // Default frequency
             pf: 0.9, // Default power factor
-            time: panel33kvaData.timestamp || new Date()
+            time: panel33kvaData.created_at || panel33kvaData.timestamp || new Date() // Check created_at first, then timestamp
           };
         } else if (phase === 'S') {
           data = {
@@ -207,7 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             energy: parseFloat(panel33kvaData.kvah || '0'),
             frequency: 50, // Default frequency
             pf: 0.9, // Default power factor
-            time: panel33kvaData.timestamp || new Date()
+            time: panel33kvaData.created_at || panel33kvaData.timestamp || new Date() // Check created_at first, then timestamp
           };
         } else if (phase === 'T') {
           data = {
@@ -218,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             energy: parseFloat(panel33kvaData.kvah || '0'),
             frequency: 50, // Default frequency
             pf: 0.9, // Default power factor
-            time: panel33kvaData.timestamp || new Date()
+            time: panel33kvaData.created_at || panel33kvaData.timestamp || new Date() // Check created_at first, then timestamp
           };
         }
       }
@@ -306,7 +307,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Seed panel data
-      const panel33kvaData: InsertPanel33kva = {
+      // Use created_at instead of timestamp for compatibility with production database
+      const panel33kvaData: any = {
         volt_r: "218.6",
         volt_s: "228.2",
         volt_t: "220.2",
@@ -319,10 +321,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         kva_t: "5.86",
         netkw: "12.25",
         netkva: "13.67",
-        timestamp: new Date()
+        created_at: new Date() // Changed from timestamp to created_at
       };
       
-      const panel66kvaData: InsertPanel66kva = {
+      const panel66kvaData: any = {
         volt_r: "225.3",
         volt_s: "231.5",
         volt_t: "227.8",
@@ -335,7 +337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         kva_t: "10.27",
         netkw: "25.85",
         netkva: "28.76",
-        timestamp: new Date()
+        created_at: new Date() // Changed from timestamp to created_at
       };
       
       await storage.createPanel33kvaData(panel33kvaData);
