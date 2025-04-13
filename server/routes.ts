@@ -76,21 +76,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(gte(panel66kva.timestamp, today))
         .orderBy(panel66kva.timestamp);
       
-      // Calculate peak values
-      const panel33Peak = panel33Data.reduce((max: number, record: any) => {
-        const currentValue = parseFloat(record.netkw || '0');
-        return currentValue > max ? currentValue : max;
-      }, 0);
+      // Find peak values with timestamp
+      let panel33PeakValue = 0;
+      let panel33PeakTime = null;
+      let panel33TotalUsage = 0;
       
-      const panel66Peak = panel66Data.reduce((max: number, record: any) => {
+      let panel66PeakValue = 0;
+      let panel66PeakTime = null;
+      let panel66TotalUsage = 0;
+      
+      // Process panel 33kva data
+      panel33Data.forEach((record: any) => {
         const currentValue = parseFloat(record.netkw || '0');
-        return currentValue > max ? currentValue : max;
-      }, 0);
+        panel33TotalUsage += currentValue; // Sum all values for total usage
+        
+        if (currentValue > panel33PeakValue) {
+          panel33PeakValue = currentValue;
+          panel33PeakTime = record.timestamp;
+        }
+      });
+      
+      // Process panel 66kva data
+      panel66Data.forEach((record: any) => {
+        const currentValue = parseFloat(record.netkw || '0');
+        panel66TotalUsage += currentValue; // Sum all values for total usage
+        
+        if (currentValue > panel66PeakValue) {
+          panel66PeakValue = currentValue;
+          panel66PeakTime = record.timestamp;
+        }
+      });
       
       res.json({
-        panel33Peak,
-        panel66Peak,
-        totalPeak: panel33Peak + panel66Peak
+        panel33: {
+          peak: panel33PeakValue,
+          peakTime: panel33PeakTime,
+          totalUsage: panel33TotalUsage
+        },
+        panel66: {
+          peak: panel66PeakValue,
+          peakTime: panel66PeakTime,
+          totalUsage: panel66TotalUsage
+        },
+        totalPeak: panel33PeakValue + panel66PeakValue,
+        totalUsage: panel33TotalUsage + panel66TotalUsage
       });
     } catch (error) {
       console.error("Error fetching peak power data:", error);
