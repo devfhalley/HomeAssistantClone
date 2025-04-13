@@ -65,24 +65,27 @@ const ChartCard = ({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={combinedData}
-              margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+              margin={{ top: 10, right: 5, left: -15, bottom: 10 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis 
                 dataKey="time" 
                 tickFormatter={(value) => value}
                 ticks={filteredData.map(d => d.time)}
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 9 }}
+                interval="preserveEnd"
               />
               <YAxis 
                 domain={yAxisDomain}
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 9 }}
+                width={30}
               />
               <Tooltip 
                 formatter={(value: number) => [`${value} ${unit}`, '']}
                 labelFormatter={(label) => `${label}`}
+                contentStyle={{ fontSize: '12px' }}
               />
-              <Legend align="left" verticalAlign="top" iconSize={10} iconType="line" />
+              <Legend align="center" verticalAlign="top" iconSize={8} iconType="line" wrapperStyle={{ fontSize: '10px' }} />
               <Line
                 type="monotone"
                 dataKey="R"
