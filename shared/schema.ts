@@ -3,20 +3,15 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// User table - Use production database structure with password_hash
+// User table - Use production database structure with password field (not password_hash)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  // Use password_hash for production database
-  password_hash: text("password_hash"),
+  password: text("password"), // Production uses 'password' column
 });
 
-// For inserting users, we still want to use "password" in our app logic
+// For inserting users
 export const insertUserSchema = createInsertSchema(users, {
-  password_hash: z.string().min(6),
-})
-.omit({ password_hash: true })
-.extend({
   password: z.string().min(6),
 });
 
@@ -26,7 +21,7 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export interface User {
   id: number;
   username: string;
-  password_hash: string | null;
+  password: string;
 }
 
 // Panel 33KVA table
