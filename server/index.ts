@@ -53,9 +53,24 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Always use Vite in development mode for now
-  // This ensures compatibility regardless of build status
-  await setupVite(app, server);
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
+  if (process.env.NODE_ENV === "development") {
+    // In development mode, use Vite middleware
+    await setupVite(app, server);
+  } else {
+    // In production mode, serve static files
+    try {
+      log("Running in production mode - serving static files");
+      serveStatic(app);
+    } catch (error) {
+      // If serving static files fails (e.g., no build directory),
+      // fallback to Vite development mode
+      log("Static file serving failed, falling back to Vite: " + error);
+      await setupVite(app, server);
+    }
+  }
 
   // Use the PORT environment variable in production, fallback to 5000 in development
   // this serves both the API and the client
