@@ -58,46 +58,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { phase } = req.params;
       let data: PhaseData | null = null;
       
-      if (phase === 'R') {
-        const phaseData = await storage.getPhaseR();
-        if (phaseData) {
+      // Get panel 33kva data
+      const panel33kvaData = await storage.getPanel33kvaData();
+      
+      if (panel33kvaData) {
+        if (phase === 'R') {
           data = {
             phase: 'R',
-            voltage: phaseData.voltage,
-            current: phaseData.current,
-            power: phaseData.power,
-            energy: phaseData.energy,
-            frequency: phaseData.frequency,
-            pf: phaseData.pf,
-            time: phaseData.time
+            voltage: parseFloat(panel33kvaData.volt_r || '0'),
+            current: parseFloat(panel33kvaData.arus_r || '0'),
+            power: parseFloat(panel33kvaData.kva_r || '0') * 1000, // kVA to VA
+            energy: parseFloat(panel33kvaData.kvah || '0'),
+            frequency: 50, // Default frequency
+            pf: 0.9, // Default power factor
+            time: panel33kvaData.timestamp || new Date()
           };
-        }
-      } else if (phase === 'S') {
-        const phaseData = await storage.getPhaseS();
-        if (phaseData) {
+        } else if (phase === 'S') {
           data = {
             phase: 'S',
-            voltage: phaseData.voltage,
-            current: phaseData.current,
-            power: phaseData.power,
-            energy: phaseData.energy,
-            frequency: phaseData.frequency,
-            pf: phaseData.pf,
-            time: phaseData.time
+            voltage: parseFloat(panel33kvaData.volt_s || '0'),
+            current: parseFloat(panel33kvaData.arus_s || '0'),
+            power: parseFloat(panel33kvaData.kva_s || '0') * 1000, // kVA to VA
+            energy: parseFloat(panel33kvaData.kvah || '0'),
+            frequency: 50, // Default frequency
+            pf: 0.9, // Default power factor
+            time: panel33kvaData.timestamp || new Date()
           };
-        }
-      } else if (phase === 'T') {
-        const phaseData = await storage.getPhaseT();
-        if (phaseData) {
+        } else if (phase === 'T') {
           data = {
             phase: 'T',
-            voltage: phaseData.voltage,
-            current: phaseData.current,
-            power: phaseData.power,
-            energy: phaseData.energy,
-            frequency: phaseData.frequency,
-            pf: phaseData.pf,
-            time: phaseData.time
+            voltage: parseFloat(panel33kvaData.volt_t || '0'),
+            current: parseFloat(panel33kvaData.arus_t || '0'),
+            power: parseFloat(panel33kvaData.kva_t || '0') * 1000, // kVA to VA
+            energy: parseFloat(panel33kvaData.kvah || '0'),
+            frequency: 50, // Default frequency
+            pf: 0.9, // Default power factor
+            time: panel33kvaData.timestamp || new Date()
           };
         }
       }
@@ -113,59 +109,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Create phase data (with different schemas for each phase)
-  app.post("/api/phase-data", async (req: Request, res: Response) => {
+  // Create panel data
+  app.post("/api/panel-data", async (req: Request, res: Response) => {
     try {
-      const { phase } = req.body;
+      const { panel } = req.body;
       
-      if (!phase) {
-        return res.status(400).json({ error: "Phase identifier is required" });
+      if (!panel) {
+        return res.status(400).json({ error: "Panel identifier is required" });
       }
       
-      if (phase === 'R') {
-        const validationResult = insertPhaseRSchema.safeParse(req.body);
+      if (panel === '33kva') {
+        const validationResult = insertPanel33kvaSchema.safeParse(req.body);
         
         if (!validationResult.success) {
           return res.status(400).json({ 
-            error: "Invalid phase R data", 
+            error: "Invalid panel 33KVA data", 
             details: validationResult.error 
           });
         }
         
-        const data = await storage.createPhaseR(validationResult.data);
+        const data = await storage.createPanel33kvaData(validationResult.data);
         return res.status(201).json(data);
       } 
-      else if (phase === 'S') {
-        const validationResult = insertPhaseSSchema.safeParse(req.body);
+      else if (panel === '66kva') {
+        const validationResult = insertPanel66kvaSchema.safeParse(req.body);
         
         if (!validationResult.success) {
           return res.status(400).json({ 
-            error: "Invalid phase S data", 
+            error: "Invalid panel 66KVA data", 
             details: validationResult.error 
           });
         }
         
-        const data = await storage.createPhaseS(validationResult.data);
-        return res.status(201).json(data);
-      }
-      else if (phase === 'T') {
-        const validationResult = insertPhaseTSchema.safeParse(req.body);
-        
-        if (!validationResult.success) {
-          return res.status(400).json({ 
-            error: "Invalid phase T data", 
-            details: validationResult.error 
-          });
-        }
-        
-        const data = await storage.createPhaseT(validationResult.data);
+        const data = await storage.createPanel66kvaData(validationResult.data);
         return res.status(201).json(data);
       }
       
-      return res.status(400).json({ error: "Invalid phase identifier" });
+      return res.status(400).json({ error: "Invalid panel identifier" });
     } catch (error) {
-      console.error("Error creating phase data:", error);
-      res.status(500).json({ error: "Failed to create phase data" });
+      console.error("Error creating panel data:", error);
+      res.status(500).json({ error: "Failed to create panel data" });
     }
   });
   
@@ -236,37 +219,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Seed phase data for R, S, and T
-      const phaseDataR: InsertPhaseR = {
-        voltage: 218.6,
-        current: 18.547,
-        power: 4009.8,
-        energy: 214945,
-        frequency: 50,
-        pf: 0.95
+      // Seed panel data
+      const panel33kvaData: InsertPanel33kva = {
+        volt_r: "218.6",
+        volt_s: "228.2",
+        volt_t: "220.2",
+        arus_r: "18.5",
+        arus_s: "19.2",
+        arus_t: "27.8",
+        kvah: "214.9",
+        kva_r: "4.01",
+        kva_s: "3.80",
+        kva_t: "5.86",
+        netkw: "12.25",
+        netkva: "13.67",
+        timestamp: new Date()
       };
       
-      const phaseDataS: InsertPhaseS = {
-        voltage: 228.2,
-        current: 19.181,
-        power: 3802.7,
-        energy: 215652,
-        frequency: 50,
-        pf: 0.92
+      const panel66kvaData: InsertPanel66kva = {
+        volt_r: "225.3",
+        volt_s: "231.5",
+        volt_t: "227.8",
+        arus_r: "42.3",
+        arus_s: "38.7",
+        arus_t: "45.1",
+        kvah: "325.6",
+        kva_r: "9.53",
+        kva_s: "8.96",
+        kva_t: "10.27",
+        netkw: "25.85",
+        netkva: "28.76",
+        timestamp: new Date()
       };
       
-      const phaseDataT: InsertPhaseT = {
-        voltage: 220.2,
-        current: 27.785,
-        power: 5860.7,
-        energy: 294149,
-        frequency: 50,
-        pf: 0.97
-      };
-      
-      await storage.createPhaseR(phaseDataR);
-      await storage.createPhaseS(phaseDataS);
-      await storage.createPhaseT(phaseDataT);
+      await storage.createPanel33kvaData(panel33kvaData);
+      await storage.createPanel66kvaData(panel66kvaData);
       
       // Generate time labels for chart data
       const timeLabels = Array.from({ length: 24 }, (_, i) => {
