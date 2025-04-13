@@ -27,15 +27,29 @@ const developmentConfig: AppConfig = {
   isProduction: false
 };
 
-// Production configuration uses external database
-// Updated with correct credentials
+// Production configuration for Docker environment
 const productionConfig: AppConfig = {
   database: {
-    host: '165.22.50.101', // Server IP
+    // When running in the same Docker network, use the service name
+    host: 'postgres', // Docker service name from docker-compose.yml
     port: 5432, 
-    database: 'panel_utama', // Database name from pgAdmin
-    user: 'root', // Username from pgAdmin
-    password: 'rnd.admin1', // Updated with correct password
+    database: 'panel_utama', 
+    user: 'root', 
+    password: 'rnd.admin1',
+  },
+  isDevelopment: false,
+  isProduction: true
+};
+
+// Alternative configuration for direct server IP
+// Use this by setting ENV_USE_SERVER_IP=true 
+const serverIpConfig: AppConfig = {
+  database: {
+    host: '165.22.50.101', // Server IP - only works if PostgreSQL allows remote connections
+    port: 5432, 
+    database: 'panel_utama', 
+    user: 'root', 
+    password: 'rnd.admin1',
   },
   isDevelopment: false,
   isProduction: true
@@ -44,11 +58,21 @@ const productionConfig: AppConfig = {
 // Check for force production mode environment variable
 const forceProduction = process.env.FORCE_PRODUCTION === 'true';
 
-// Determine which config to use based on NODE_ENV
+// Determine which config to use based on NODE_ENV and other flags
 const environment = process.env.NODE_ENV || 'development';
-const config: AppConfig = (environment === 'production' || forceProduction)
-  ? productionConfig 
-  : developmentConfig;
+const useServerIp = process.env.USE_SERVER_IP === 'true';
+
+// Select the appropriate configuration
+let config: AppConfig;
+if (environment === 'development' && !forceProduction) {
+  config = developmentConfig;
+} else if (useServerIp) {
+  // Use the direct server IP configuration if explicitly requested
+  config = serverIpConfig;
+} else {
+  // Default production config (Docker setup)
+  config = productionConfig;
+}
 
 // Helper function to generate a connection string
 export function getDatabaseUrl(): string {
