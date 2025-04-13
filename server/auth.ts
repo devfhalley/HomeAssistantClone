@@ -130,7 +130,7 @@ export async function setupAuth(app: Express) {
       console.log("Creating admin user...");
       await storage.createUser({
         username: "admin",
-        password_hash: await hashPassword("poweradmin"),
+        password: await hashPassword("poweradmin"),
       });
       console.log("Admin user created successfully");
     }

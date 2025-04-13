@@ -16,7 +16,7 @@ function Router() {
       <ProtectedRoute path="/" component={Home} />
       <ProtectedRoute path="/wo-08" component={PowerMonitoring} />
       <ProtectedRoute path="/panel-66kva" component={Panel66KVA} />
-      <Route path="/login" component={LoginPage} />
+      <Route path="/auth" component={LoginPage} />
       <Route component={NotFound} />
     </Switch>
   );
