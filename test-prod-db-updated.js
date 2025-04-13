@@ -4,13 +4,13 @@ import { hostname } from 'os';
 
 const { Pool } = pg;
 
-// Production database configuration with updated credentials from pgAdmin
+// Production database configuration with correct credentials
 const config = {
   host: '165.22.50.101',
   port: 5432,
   database: 'panel_utama',
   user: 'root',
-  password: 'Admin*46835Intek'
+  password: 'rnd.admin1'
 };
 
 console.log('Testing connection to production database using pg...');

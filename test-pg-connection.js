@@ -1,26 +1,20 @@
-// Test script for PostgreSQL connection using pg package
+// Test script for PostgreSQL connection with URI format
 import pg from 'pg';
-import { hostname } from 'os';
 
 const { Pool } = pg;
 
-// Production database configuration
-const config = {
-  host: '165.22.50.101',
-  port: 5432,
-  database: 'postgres',
-  user: 'admin@intek.co.id',
-  password: 'Admin*46835Intek'
-};
+// Let's try URI format
+const connectionString = 'postgres://root:rnd.admin1@165.22.50.101:5432/panel_utama';
 
-console.log('Testing connection to production database using pg...');
-console.log(`Host: ${config.host}`);
-console.log(`Database: ${config.database}`);
-console.log(`User: ${config.user}`);
-console.log(`Connection from: ${hostname()}`);
+console.log('Testing connection using connection string URI format...');
+console.log(`Connection string (masked password): ${connectionString.replace(/:[^:]*@/, ':****@')}`);
 
 // Create a connection pool
-const pool = new Pool(config);
+const pool = new Pool({ 
+  connectionString,
+  // Try a longer connection timeout
+  connectionTimeoutMillis: 15000
+});
 
 // Test the connection
 async function testConnection() {
@@ -51,6 +45,13 @@ async function testConnection() {
     }
   } catch (error) {
     console.error('❌ Connection failed:', error.message);
+    
+    console.log('\nPossible reasons for connection failure:');
+    console.log('1. PostgreSQL server is not configured to accept connections from external IP addresses');
+    console.log('2. There might be firewall rules blocking the connection');
+    console.log('3. The provided credentials might be incorrect');
+    console.log('4. The database name might be wrong');
+    console.log('5. The host might be an internal alias not accessible from outside');
   } finally {
     // Close the connection pool
     await pool.end();

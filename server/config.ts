@@ -28,15 +28,14 @@ const developmentConfig: AppConfig = {
 };
 
 // Production configuration uses external database
-// Note: Actual connection may require SSH tunnel or VPN access
+// Updated with correct credentials
 const productionConfig: AppConfig = {
   database: {
-    host: '165.22.50.101', // Server IP - connection may require SSH tunnel
+    host: '165.22.50.101', // Server IP
     port: 5432, 
     database: 'panel_utama', // Database name from pgAdmin
     user: 'root', // Username from pgAdmin
-    // Note: You may need to update the password when deploying to production
-    password: 'Admin*46835Intek',
+    password: 'rnd.admin1', // Updated with correct password
   },
   isDevelopment: false,
   isProduction: true
@@ -59,6 +58,20 @@ export function getDatabaseUrl(): string {
   }
   
   const { host, port, database, user, password } = config.database;
+  
+  // Special handling for production environment
+  if (environment === 'production' || forceProduction) {
+    // Check if DATABASE_URL environment variable is set in production
+    // This allows overriding connection details at runtime
+    if (process.env.PROD_DATABASE_URL) {
+      console.log('Using production DATABASE_URL environment variable');
+      return process.env.PROD_DATABASE_URL;
+    }
+    
+    console.log(`Connecting to production database at ${host}:${port}/${database} as ${user}`);
+  }
+  
+  // Properly URL-encode the username and password for special characters
   return `postgres://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`;
 }
 

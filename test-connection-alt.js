@@ -13,7 +13,7 @@ async function testConfigurations() {
         port: 5432,
         database: 'panel_utama',
         user: 'root',
-        password: 'Admin*46835Intek'
+        password: 'rnd.admin1'
       }
     },
     {
@@ -23,7 +23,7 @@ async function testConfigurations() {
         port: 5432,
         database: 'panel_utama',
         user: 'postgres', // Many installations use postgres as default user
-        password: 'Admin*46835Intek'
+        password: 'rnd.admin1'
       }
     },
     {
@@ -33,7 +33,7 @@ async function testConfigurations() {
         port: 5432,
         database: 'panel_utama',
         user: 'root',
-        password: 'Admin*46835Intek'
+        password: 'rnd.admin1'
       }
     }
   ];
