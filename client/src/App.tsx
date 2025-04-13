@@ -6,17 +6,19 @@ import NotFound from "@/pages/not-found";
 import PowerMonitoring from "@/pages/PowerMonitoring";
 import Panel66KVA from "@/pages/Panel66KVA";
 import Home from "@/pages/Home";
-import LoginPage from "@/pages/LoginPage";
-import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { AuthProvider } from "@/hooks/use-auth";
+
+// Authentication bypassed but provider still needed for hooks
 
 function Router() {
   return (
     <Switch>
+      {/* All routes use ProtectedRoute which now bypasses authentication */}
       <ProtectedRoute path="/" component={Home} />
       <ProtectedRoute path="/wo-08" component={PowerMonitoring} />
       <ProtectedRoute path="/panel-66kva" component={Panel66KVA} />
-      <Route path="/auth" component={LoginPage} />
+      <Route path="/auth" component={Home} /> {/* Redirect auth to Home */}
       <Route component={NotFound} />
     </Switch>
   );

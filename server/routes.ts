@@ -18,8 +18,15 @@ import { gte, desc } from "drizzle-orm";
 import { setupAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Set up authentication routes
-  await setupAuth(app);
+  // Remove authentication as requested
+  // Mock a user endpoint to bypass authentication completely
+  app.get("/api/user", (req: Request, res: Response) => {
+    // Return a fake authenticated user so frontend doesn't redirect
+    res.json({
+      id: 1,
+      username: "admin"
+    });
+  });
   
   // API routes for power monitoring data
   
