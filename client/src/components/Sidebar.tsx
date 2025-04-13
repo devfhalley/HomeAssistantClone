@@ -1,4 +1,4 @@
-import { Home, LayoutGrid, MapPin, ToggleLeft, Bolt, List, History, FileCode, Settings, PlayCircle, Bell, Menu } from "lucide-react";
+import { LayoutGrid, ToggleLeft, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type MenuItem = {
@@ -10,19 +10,7 @@ type MenuItem = {
 
 const menuItems: MenuItem[] = [
   { icon: <LayoutGrid className="w-5 h-5" />, label: "Overview" },
-  { icon: <Home className="w-5 h-5" />, label: "Coba" },
-  { icon: <MapPin className="w-5 h-5" />, label: "Map" },
-  { icon: <Home className="w-5 h-5" />, label: "Rumah Pak Sindu" },
   { icon: <ToggleLeft className="w-5 h-5" />, label: "WO 08", active: true },
-  { icon: <ToggleLeft className="w-5 h-5" />, label: "WO 689" },
-  { icon: <Bolt className="w-5 h-5" />, label: "Energy" },
-  { icon: <List className="w-5 h-5" />, label: "Logbook" },
-  { icon: <History className="w-5 h-5" />, label: "History" },
-  { icon: <FileCode className="w-5 h-5" />, label: "File editor" },
-  { icon: <Settings className="w-5 h-5" />, label: "HACS" },
-  { icon: <Home className="w-5 h-5" />, label: "Home Panel" },
-  { icon: <PlayCircle className="w-5 h-5" />, label: "Media" },
-  { icon: <Bell className="w-5 h-5" />, label: "Notifications", badge: 1 },
 ];
 
 const SidebarItem = ({ item }: { item: MenuItem }) => {
