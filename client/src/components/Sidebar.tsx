@@ -19,9 +19,7 @@ const menuItems: MenuItemWithPath[] = [
 
 const SidebarItem = ({ item }: { item: MenuItemWithPath }) => {
   const [location] = useLocation();
-  const isActive = location === item.path || 
-                  (location === "/" && item.path === "/") ||
-                  (item.path === "/wo-08" && location === "/");
+  const isActive = location === item.path;
   
   return (
     <li>
