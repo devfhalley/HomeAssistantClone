@@ -3,17 +3,16 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// User table - Existing table in production
+// User table - Using development database structure
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password_hash: text("password_hash").notNull(),
-  created_at: timestamp("created_at", { withTimezone: true }).defaultNow()
+  password: text("password").notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
-  password_hash: true,
+  password: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

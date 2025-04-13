@@ -50,7 +50,7 @@ export async function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password_hash))) {
+        if (!user || !(await comparePasswords(password, user.password))) {
           return done(null, false);
         } else {
           return done(null, user);
@@ -81,7 +81,7 @@ export async function setupAuth(app: Express) {
 
       const user = await storage.createUser({
         username: req.body.username,
-        password_hash: await hashPassword(req.body.password),
+        password: await hashPassword(req.body.password),
       });
 
       req.login(user, (err) => {
