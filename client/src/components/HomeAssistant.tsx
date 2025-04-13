@@ -1,29 +1,11 @@
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { ReactNode, useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HomeAssistantProps {
   children: ReactNode;
 }
-
-// Custom hook to detect mobile screen size
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  
-  useEffect(() => {
-    // Set initial state
-    setIsMobile(window.innerWidth < 768);
-    
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  
-  return isMobile;
-};
 
 const HomeAssistant = ({ children }: HomeAssistantProps) => {
   const isMobile = useIsMobile();

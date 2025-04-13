@@ -153,108 +153,119 @@ const PowerMonitoring = () => {
   
   return (
     <HomeAssistant>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="space-y-4">
         {/* Panel Name Header */}
-        <div className="col-span-3 bg-blue-600 text-white p-3 rounded-md mb-2">
+        <div className="bg-blue-600 text-white p-3 rounded-md">
           <h1 className="text-xl font-bold">Panel 1 33KVA Monitoring</h1>
         </div>
         
-        {/* Total Power Consumption Chart - First Row */}
-        <div className="col-span-3">
+        {/* Total Power Consumption Chart */}
+        <div>
           <TotalPowerChart />
         </div>
         
         {/* Power Monitor Cards */}
-        {isLoadingPhaseData ? (
-          // Skeleton loading state for power monitor cards
-          <>
-            <div className="h-[300px] animate-pulse bg-gray-200 rounded-md"></div>
-            <div className="h-[300px] animate-pulse bg-gray-200 rounded-md"></div>
-            <div className="h-[300px] animate-pulse bg-gray-200 rounded-md"></div>
-          </>
-        ) : (
-          <>
-            <PowerMonitorCard 
-              title="Panel 1 33KVA - Phase R" 
-              phase="R"
-              voltage={processedPhaseData.R?.voltage || 0}
-              current={processedPhaseData.R?.current || 0}
-              power={processedPhaseData.R?.power || 0}
-              energy={processedPhaseData.R?.energy || 0}
-              frequency={processedPhaseData.R?.frequency || 0}
-              pf={processedPhaseData.R?.pf || 0}
-            />
-            
-            <PowerMonitorCard 
-              title="Panel 1 33KVA - Phase S" 
-              phase="S"
-              voltage={processedPhaseData.S?.voltage || 0}
-              current={processedPhaseData.S?.current || 0}
-              power={processedPhaseData.S?.power || 0}
-              energy={processedPhaseData.S?.energy || 0}
-              frequency={processedPhaseData.S?.frequency || 0}
-              pf={processedPhaseData.S?.pf || 0}
-            />
-            
-            <PowerMonitorCard 
-              title="Panel 1 33KVA - Phase T" 
-              phase="T"
-              voltage={processedPhaseData.T?.voltage || 0}
-              current={processedPhaseData.T?.current || 0}
-              power={processedPhaseData.T?.power || 0}
-              energy={processedPhaseData.T?.energy || 0}
-              frequency={processedPhaseData.T?.frequency || 0}
-              pf={processedPhaseData.T?.pf || 0}
-            />
-          </>
-        )}
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Phase Monitoring</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {isLoadingPhaseData ? (
+              // Skeleton loading state for power monitor cards
+              <>
+                <div className="h-[300px] animate-pulse bg-gray-200 rounded-md"></div>
+                <div className="h-[300px] animate-pulse bg-gray-200 rounded-md"></div>
+                <div className="h-[300px] animate-pulse bg-gray-200 rounded-md"></div>
+              </>
+            ) : (
+              <>
+                <PowerMonitorCard 
+                  title="Panel 1 33KVA - Phase R" 
+                  phase="R"
+                  voltage={processedPhaseData.R?.voltage || 0}
+                  current={processedPhaseData.R?.current || 0}
+                  power={processedPhaseData.R?.power || 0}
+                  energy={processedPhaseData.R?.energy || 0}
+                  frequency={processedPhaseData.R?.frequency || 0}
+                  pf={processedPhaseData.R?.pf || 0}
+                />
+                
+                <PowerMonitorCard 
+                  title="Panel 1 33KVA - Phase S" 
+                  phase="S"
+                  voltage={processedPhaseData.S?.voltage || 0}
+                  current={processedPhaseData.S?.current || 0}
+                  power={processedPhaseData.S?.power || 0}
+                  energy={processedPhaseData.S?.energy || 0}
+                  frequency={processedPhaseData.S?.frequency || 0}
+                  pf={processedPhaseData.S?.pf || 0}
+                />
+                
+                <PowerMonitorCard 
+                  title="Panel 1 33KVA - Phase T" 
+                  phase="T"
+                  voltage={processedPhaseData.T?.voltage || 0}
+                  current={processedPhaseData.T?.current || 0}
+                  power={processedPhaseData.T?.power || 0}
+                  energy={processedPhaseData.T?.energy || 0}
+                  frequency={processedPhaseData.T?.frequency || 0}
+                  pf={processedPhaseData.T?.pf || 0}
+                />
+              </>
+            )}
+          </div>
+        </div>
 
-        {/* Chart Cards - First Row */}
-        <ChartCard 
-          title="Panel 1 33KVA - Voltage" 
-          phaseRData={processChartData(voltageDataR)}
-          phaseSData={processChartData(voltageDataS)}
-          phaseTData={processChartData(voltageDataT)}
-          yAxisDomain={[190, 240]}
-          unit="V"
-        />
-        
-        <ChartCard 
-          title="Panel 1 33KVA - Current" 
-          phaseRData={processChartData(currentDataR)}
-          phaseSData={processChartData(currentDataS)}
-          phaseTData={processChartData(currentDataT)}
-          yAxisDomain={[0, 100]}
-          unit="A"
-        />
-        
-        <ChartCard 
-          title="Panel 1 33KVA - Power" 
-          phaseRData={processChartData(powerDataR)}
-          phaseSData={processChartData(powerDataS)}
-          phaseTData={processChartData(powerDataT)}
-          yAxisDomain={[0, 20000]}
-          unit="W"
-        />
-        
-        {/* Chart Cards - Second Row */}
-        <ChartCard 
-          title="Panel 1 33KVA - Frequency" 
-          phaseRData={processChartData(frequencyDataR)}
-          phaseSData={processChartData(frequencyDataS)}
-          phaseTData={processChartData(frequencyDataT)}
-          yAxisDomain={[49.5, 50.5]}
-          unit="Hz"
-        />
-        
-        <ChartCard 
-          title="Panel 1 33KVA - Power Factor" 
-          phaseRData={processChartData(pfDataR)}
-          phaseSData={processChartData(pfDataS)}
-          phaseTData={processChartData(pfDataT)}
-          yAxisDomain={[0.8, 1.0]}
-          unit=""
-        />
+        {/* Electrical Parameters Charts */}
+        <div>
+          <h2 className="text-lg font-semibold my-3">Electrical Parameters</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <ChartCard 
+              title="Panel 1 33KVA - Voltage" 
+              phaseRData={processChartData(voltageDataR)}
+              phaseSData={processChartData(voltageDataS)}
+              phaseTData={processChartData(voltageDataT)}
+              yAxisDomain={[190, 240]}
+              unit="V"
+            />
+            
+            <ChartCard 
+              title="Panel 1 33KVA - Current" 
+              phaseRData={processChartData(currentDataR)}
+              phaseSData={processChartData(currentDataS)}
+              phaseTData={processChartData(currentDataT)}
+              yAxisDomain={[0, 100]}
+              unit="A"
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <ChartCard 
+              title="Panel 1 33KVA - Power" 
+              phaseRData={processChartData(powerDataR)}
+              phaseSData={processChartData(powerDataS)}
+              phaseTData={processChartData(powerDataT)}
+              yAxisDomain={[0, 20000]}
+              unit="W"
+            />
+            
+            <ChartCard 
+              title="Panel 1 33KVA - Frequency" 
+              phaseRData={processChartData(frequencyDataR)}
+              phaseSData={processChartData(frequencyDataS)}
+              phaseTData={processChartData(frequencyDataT)}
+              yAxisDomain={[49.5, 50.5]}
+              unit="Hz"
+            />
+            
+            <ChartCard 
+              title="Panel 1 33KVA - Power Factor" 
+              phaseRData={processChartData(pfDataR)}
+              phaseSData={processChartData(pfDataS)}
+              phaseTData={processChartData(pfDataT)}
+              yAxisDomain={[0.8, 1.0]}
+              unit=""
+            />
+          </div>
+        </div>
       </div>
     </HomeAssistant>
   );

@@ -1,30 +1,11 @@
 import { Search, MessageSquare, PenSquare, LogOut, Loader2, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HeaderProps {
   toggleSidebar?: () => void;
 }
-
-// Custom hook to detect mobile screen size
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  
-  useEffect(() => {
-    // Set initial state
-    setIsMobile(window.innerWidth < 768);
-    
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  
-  return isMobile;
-};
 
 const Header = ({ toggleSidebar }: HeaderProps) => {
   const { user, logoutMutation } = useAuth();

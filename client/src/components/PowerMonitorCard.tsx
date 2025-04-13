@@ -34,9 +34,9 @@ const PowerMonitorCard = ({
               <div className="text-blue-500 mr-3">
                 <Waves className="h-5 w-5" />
               </div>
-              <span>voltage {phase}</span>
+              <span className="text-sm sm:text-base">voltage {phase}</span>
             </div>
-            <span className="font-medium">{voltage.toFixed(1)} V</span>
+            <span className="font-medium text-sm sm:text-base">{voltage.toFixed(1)} V</span>
           </div>
           
           {/* Current */}
@@ -45,9 +45,9 @@ const PowerMonitorCard = ({
               <div className="text-blue-500 mr-3">
                 <Droplet className="h-5 w-5" />
               </div>
-              <span>current {phase}</span>
+              <span className="text-sm sm:text-base">current {phase}</span>
             </div>
-            <span className="font-medium">{current.toFixed(3)} A</span>
+            <span className="font-medium text-sm sm:text-base">{current.toFixed(3)} A</span>
           </div>
           
           {/* Power */}
@@ -56,9 +56,9 @@ const PowerMonitorCard = ({
               <div className="text-blue-500 mr-3">
                 <Activity className="h-5 w-5" />
               </div>
-              <span>power {phase}</span>
+              <span className="text-sm sm:text-base">power {phase}</span>
             </div>
-            <span className="font-medium">{power.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} W</span>
+            <span className="font-medium text-sm sm:text-base">{power.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} W</span>
           </div>
           
           {/* Energy */}
@@ -67,9 +67,9 @@ const PowerMonitorCard = ({
               <div className="text-blue-500 mr-3">
                 <Bolt className="h-5 w-5" />
               </div>
-              <span>energy {phase}</span>
+              <span className="text-sm sm:text-base">energy {phase}</span>
             </div>
-            <span className="font-medium">{energy.toLocaleString()} Wh</span>
+            <span className="font-medium text-sm sm:text-base">{energy.toLocaleString()} Wh</span>
           </div>
 
           {/* Frequency */}
@@ -78,9 +78,9 @@ const PowerMonitorCard = ({
               <div className="text-blue-500 mr-3">
                 <Gauge className="h-5 w-5" />
               </div>
-              <span>frequency {phase}</span>
+              <span className="text-sm sm:text-base">frequency {phase}</span>
             </div>
-            <span className="font-medium">{frequency.toFixed(2)} Hz</span>
+            <span className="font-medium text-sm sm:text-base">{frequency.toFixed(2)} Hz</span>
           </div>
 
           {/* Power Factor */}
@@ -89,9 +89,9 @@ const PowerMonitorCard = ({
               <div className="text-blue-500 mr-3">
                 <Zap className="h-5 w-5" />
               </div>
-              <span>power factor {phase}</span>
+              <span className="text-sm sm:text-base">power factor {phase}</span>
             </div>
-            <span className="font-medium">{pf.toFixed(2)}</span>
+            <span className="font-medium text-sm sm:text-base">{pf.toFixed(2)}</span>
           </div>
         </div>
       </CardContent>
