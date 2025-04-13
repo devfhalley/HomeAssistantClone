@@ -6,13 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 const Home = () => {
   useEffect(() => {
-    document.title = "Home Assistant - Overview";
+    document.title = "Home Assistant - Home";
   }, []);
 
   return (
     <HomeAssistant>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-1">Welcome to Home Assistant</h1>
+        <h1 className="text-3xl font-bold mb-1">Home</h1>
         <p className="text-gray-600">Monitor and control your power usage</p>
       </div>
 
