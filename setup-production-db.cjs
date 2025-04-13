@@ -1,19 +1,9 @@
-import { Pool } from '@neondatabase/serverless';
-import dotenv from 'dotenv';
+const { Pool } = require('pg');
 
-// Load environment variables
-dotenv.config();
+// Environment variables are already loaded by the shell
 
 // Force production mode
 process.env.FORCE_PRODUCTION = 'true';
-
-// Import our schema
-import { 
-  users, 
-  panel33kva, 
-  panel66kva, 
-  chartData 
-} from './shared/schema.js';
 
 const connectionString = process.env.DATABASE_URL;
 
