@@ -28,13 +28,15 @@ const developmentConfig: AppConfig = {
 };
 
 // Production configuration uses external database
+// Note: Actual connection may require SSH tunnel or VPN access
 const productionConfig: AppConfig = {
   database: {
-    host: '165.22.50.101', // External server IP
-    port: 5432, // Default PostgreSQL port
-    database: 'panel_utama', // Correct database name from pgAdmin
+    host: '165.22.50.101', // Server IP - connection may require SSH tunnel
+    port: 5432, 
+    database: 'panel_utama', // Database name from pgAdmin
     user: 'root', // Username from pgAdmin
-    password: 'Admin*46835Intek', // Keeping the same password
+    // Note: You may need to update the password when deploying to production
+    password: 'Admin*46835Intek',
   },
   isDevelopment: false,
   isProduction: true

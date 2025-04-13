@@ -1,59 +1,52 @@
-// Test script for PostgreSQL connection - alternative formats
+// Alternative connection test that tries multiple configurations
 import pg from 'pg';
-import { hostname } from 'os';
 
 const { Pool } = pg;
 
-// Try different username formats
-const configs = [
-  {
-    host: '165.22.50.101',
-    port: 5432,
-    database: 'postgres',
-    user: 'admin@intek.co.id',
-    password: 'Admin*46835Intek',
-    name: 'Original format'
-  },
-  {
-    host: '165.22.50.101',
-    port: 5432,
-    database: 'postgres',
-    user: 'admin',
-    password: 'Admin*46835Intek',
-    name: 'Username only'
-  },
-  {
-    host: '165.22.50.101',
-    port: 5432,
-    database: 'postgres',
-    user: '"admin@intek.co.id"',
-    password: 'Admin*46835Intek',
-    name: 'Quoted username'
-  },
-  {
-    host: '165.22.50.101',
-    port: 5432,
-    database: 'postgres',
-    user: 'postgres',
-    password: 'Admin*46835Intek',
-    name: 'Default postgres user'
-  }
-];
-
-// Test each configuration
+// Test multiple connection configurations
 async function testConfigurations() {
-  for (const config of configs) {
-    console.log(`\n\nTesting: ${config.name}`);
-    console.log(`Host: ${config.host}`);
-    console.log(`Database: ${config.database}`);
-    console.log(`User: ${config.user}`);
+  const connectionOptions = [
+    {
+      name: 'Direct IP connection',
+      config: {
+        host: '165.22.50.101',
+        port: 5432,
+        database: 'panel_utama',
+        user: 'root',
+        password: 'Admin*46835Intek'
+      }
+    },
+    {
+      name: 'Alternative IP connection',
+      config: {
+        host: '165.22.50.101',
+        port: 5432,
+        database: 'panel_utama',
+        user: 'postgres', // Many installations use postgres as default user
+        password: 'Admin*46835Intek'
+      }
+    },
+    {
+      name: 'Local connection with Docker hostname',
+      config: {
+        host: 'db',
+        port: 5432,
+        database: 'panel_utama',
+        user: 'root',
+        password: 'Admin*46835Intek'
+      }
+    }
+  ];
+
+  console.log('⚙️  Testing multiple database configurations...');
+  
+  for (const option of connectionOptions) {
+    console.log(`\nTrying: ${option.name}`);
+    console.log(`Host: ${option.config.host}`);
+    console.log(`User: ${option.config.user}`);
     
     const pool = new Pool({
-      host: config.host,
-      port: config.port,
-      database: config.database,
-      user: config.user,
-      password: config.password,
+      ...option.config,
       // Set a shorter connection timeout
       connectionTimeoutMillis: 5000
     });
@@ -63,7 +56,11 @@ async function testConfigurations() {
       console.log('✅ Connection successful!');
       console.log(`Server time: ${result.rows[0].time}`);
       
-      // If connection is successful, check tables
+      // If we get here, connection works!
+      console.log('\n🎉 Found working database configuration:');
+      console.log(JSON.stringify(option.config, null, 2));
+      
+      // Check if our tables exist
       try {
         const tableResult = await pool.query(`
           SELECT table_name 
@@ -71,7 +68,7 @@ async function testConfigurations() {
           WHERE table_schema = 'public'
         `);
         
-        console.log('Available tables:');
+        console.log('\nAvailable tables:');
         if (tableResult.rows.length === 0) {
           console.log('No tables found in the database.');
         } else {
@@ -83,15 +80,29 @@ async function testConfigurations() {
         console.error('Error checking tables:', tableError.message);
       }
       
-      // Since we found a working configuration, stop testing
-      break;
+      // Close pool
+      await pool.end();
+      
+      // End the loop - we found a working connection
+      return true;
     } catch (error) {
-      console.error('❌ Connection failed:', error.message);
-    } finally {
+      console.error(`❌ Connection failed: ${error.message}`);
+      // Close pool and try next option
       await pool.end();
     }
   }
+  
+  console.log('\n❌ All connection attempts failed.');
+  console.log('Please verify:\n');
+  console.log('1. Database server is running and accessible from this network');
+  console.log('2. Credentials are correct');
+  console.log('3. Firewall allows connections from this IP');
+  console.log('\nContinuing with local development database...');
+  
+  return false;
 }
 
-// Run the tests
-testConfigurations();
+// Run the test
+testConfigurations().catch(err => {
+  console.error('Error running tests:', err);
+});
