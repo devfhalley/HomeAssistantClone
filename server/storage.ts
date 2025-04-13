@@ -1,8 +1,7 @@
 import { 
   users, type User, type InsertUser,
-  phaseR, type PhaseR, type InsertPhaseR,
-  phaseS, type PhaseS, type InsertPhaseS,
-  phaseT, type PhaseT, type InsertPhaseT,
+  panel33kva, type Panel33kva, type InsertPanel33kva,
+  panel66kva, type Panel66kva, type InsertPanel66kva, 
   chartData, type ChartData, type InsertChartData 
 } from "@shared/schema";
 import { db } from "./db";
@@ -32,14 +31,12 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
-  // Phase data methods 
-  getPhaseR(): Promise<PhaseR | undefined>;
-  getPhaseS(): Promise<PhaseS | undefined>;
-  getPhaseT(): Promise<PhaseT | undefined>;
+  // Panel data methods 
+  getPanel33kvaData(): Promise<Panel33kva | undefined>;
+  getPanel66kvaData(): Promise<Panel66kva | undefined>;
   getAllPhaseData(): Promise<PhaseData[]>;
-  createPhaseR(data: InsertPhaseR): Promise<PhaseR>;
-  createPhaseS(data: InsertPhaseS): Promise<PhaseS>;
-  createPhaseT(data: InsertPhaseT): Promise<PhaseT>;
+  createPanel33kvaData(data: InsertPanel33kva): Promise<Panel33kva>;
+  createPanel66kvaData(data: InsertPanel66kva): Promise<Panel66kva>;
   
   // Chart data methods
   getChartDataByType(dataType: string, phase: string): Promise<ChartData[]>;
@@ -70,85 +67,70 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
   
-  // Phase data methods
-  async getPhaseR(): Promise<PhaseR | undefined> {
-    // Get the latest reading for phase R
+  // Panel data methods
+  async getPanel33kvaData(): Promise<Panel33kva | undefined> {
+    // Get the latest reading for Panel 33KVA
     const [data] = await db
       .select()
-      .from(phaseR)
-      .orderBy(desc(phaseR.time))
+      .from(panel33kva)
+      .orderBy(desc(panel33kva.timestamp))
       .limit(1);
     return data || undefined;
   }
   
-  async getPhaseS(): Promise<PhaseS | undefined> {
-    // Get the latest reading for phase S
+  async getPanel66kvaData(): Promise<Panel66kva | undefined> {
+    // Get the latest reading for Panel 66KVA
     const [data] = await db
       .select()
-      .from(phaseS)
-      .orderBy(desc(phaseS.time))
-      .limit(1);
-    return data || undefined;
-  }
-  
-  async getPhaseT(): Promise<PhaseT | undefined> {
-    // Get the latest reading for phase T
-    const [data] = await db
-      .select()
-      .from(phaseT)
-      .orderBy(desc(phaseT.time))
+      .from(panel66kva)
+      .orderBy(desc(panel66kva.timestamp))
       .limit(1);
     return data || undefined;
   }
   
   async getAllPhaseData(): Promise<PhaseData[]> {
-    // Get the latest data for all phases
-    const phaseRData = await this.getPhaseR();
-    const phaseSData = await this.getPhaseS();
-    const phaseTData = await this.getPhaseT();
+    // Get the latest data for both panels
+    const panel33kvaData = await this.getPanel33kvaData();
+    const panel66kvaData = await this.getPanel66kvaData();
     
-    console.log("Phase R data:", phaseRData);
-    console.log("Phase S data:", phaseSData);
-    console.log("Phase T data:", phaseTData);
+    console.log("Panel 33KVA data:", panel33kvaData);
+    console.log("Panel 66KVA data:", panel66kvaData);
     
     const result: PhaseData[] = [];
     
-    if (phaseRData) {
+    if (panel33kvaData) {
+      // Convert panel 33KVA data to R, S, T phase data format for compatibility
       result.push({
         phase: 'R',
-        voltage: phaseRData.voltage,
-        current: phaseRData.current,
-        power: phaseRData.power,
-        energy: phaseRData.energy,
-        frequency: phaseRData.frequency,
-        pf: phaseRData.pf,
-        time: phaseRData.time
+        voltage: parseFloat(panel33kvaData.volt_r || '0'),
+        current: parseFloat(panel33kvaData.arus_r || '0'),
+        power: parseFloat(panel33kvaData.kva_r || '0') * 1000, // kVA to VA
+        energy: parseFloat(panel33kvaData.kvah || '0'),
+        frequency: 50, // Default frequency
+        pf: 0.9, // Default power factor
+        time: panel33kvaData.timestamp || new Date()
       });
-    }
-    
-    if (phaseSData) {
+      
       result.push({
         phase: 'S',
-        voltage: phaseSData.voltage,
-        current: phaseSData.current,
-        power: phaseSData.power,
-        energy: phaseSData.energy,
-        frequency: phaseSData.frequency,
-        pf: phaseSData.pf,
-        time: phaseSData.time
+        voltage: parseFloat(panel33kvaData.volt_s || '0'),
+        current: parseFloat(panel33kvaData.arus_s || '0'),
+        power: parseFloat(panel33kvaData.kva_s || '0') * 1000, // kVA to VA
+        energy: parseFloat(panel33kvaData.kvah || '0'),
+        frequency: 50, // Default frequency
+        pf: 0.9, // Default power factor
+        time: panel33kvaData.timestamp || new Date()
       });
-    }
-    
-    if (phaseTData) {
+      
       result.push({
         phase: 'T',
-        voltage: phaseTData.voltage,
-        current: phaseTData.current,
-        power: phaseTData.power,
-        energy: phaseTData.energy,
-        frequency: phaseTData.frequency,
-        pf: phaseTData.pf,
-        time: phaseTData.time
+        voltage: parseFloat(panel33kvaData.volt_t || '0'),
+        current: parseFloat(panel33kvaData.arus_t || '0'),
+        power: parseFloat(panel33kvaData.kva_t || '0') * 1000, // kVA to VA
+        energy: parseFloat(panel33kvaData.kvah || '0'),
+        frequency: 50, // Default frequency
+        pf: 0.9, // Default power factor
+        time: panel33kvaData.timestamp || new Date()
       });
     }
     
@@ -156,25 +138,17 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
   
-  async createPhaseR(data: InsertPhaseR): Promise<PhaseR> {
+  async createPanel33kvaData(data: InsertPanel33kva): Promise<Panel33kva> {
     const [newData] = await db
-      .insert(phaseR)
+      .insert(panel33kva)
       .values(data)
       .returning();
     return newData;
   }
   
-  async createPhaseS(data: InsertPhaseS): Promise<PhaseS> {
+  async createPanel66kvaData(data: InsertPanel66kva): Promise<Panel66kva> {
     const [newData] = await db
-      .insert(phaseS)
-      .values(data)
-      .returning();
-    return newData;
-  }
-  
-  async createPhaseT(data: InsertPhaseT): Promise<PhaseT> {
-    const [newData] = await db
-      .insert(phaseT)
+      .insert(panel66kva)
       .values(data)
       .returning();
     return newData;
@@ -213,28 +187,24 @@ export class DatabaseStorage implements IStorage {
   
   // Total power consumption methods
   async getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]> {
-    // Fetch all phase data first
-    let rData = await db.select().from(phaseR).orderBy(phaseR.time);
-    let sData = await db.select().from(phaseS).orderBy(phaseS.time);
-    let tData = await db.select().from(phaseT).orderBy(phaseT.time);
+    // Fetch panel data
+    let panel33Data = await db.select().from(panel33kva).orderBy(panel33kva.timestamp);
+    let panel66Data = await db.select().from(panel66kva).orderBy(panel66kva.timestamp);
     
     // Apply date filters in memory if provided
     if (startDate && endDate) {
-      rData = rData.filter(d => new Date(d.time) >= startDate && new Date(d.time) <= endDate);
-      sData = sData.filter(d => new Date(d.time) >= startDate && new Date(d.time) <= endDate);
-      tData = tData.filter(d => new Date(d.time) >= startDate && new Date(d.time) <= endDate);
+      panel33Data = panel33Data.filter(d => d.timestamp && new Date(d.timestamp) >= startDate && new Date(d.timestamp) <= endDate);
+      panel66Data = panel66Data.filter(d => d.timestamp && new Date(d.timestamp) >= startDate && new Date(d.timestamp) <= endDate);
     } else if (startDate) {
-      rData = rData.filter(d => new Date(d.time) >= startDate);
-      sData = sData.filter(d => new Date(d.time) >= startDate);
-      tData = tData.filter(d => new Date(d.time) >= startDate);
+      panel33Data = panel33Data.filter(d => d.timestamp && new Date(d.timestamp) >= startDate);
+      panel66Data = panel66Data.filter(d => d.timestamp && new Date(d.timestamp) >= startDate);
     } else if (endDate) {
-      rData = rData.filter(d => new Date(d.time) <= endDate);
-      sData = sData.filter(d => new Date(d.time) <= endDate);
-      tData = tData.filter(d => new Date(d.time) <= endDate);
+      panel33Data = panel33Data.filter(d => d.timestamp && new Date(d.timestamp) <= endDate);
+      panel66Data = panel66Data.filter(d => d.timestamp && new Date(d.timestamp) <= endDate);
     }
     
-    // If we don't have data for all phases, return empty array
-    if (!rData.length && !sData.length && !tData.length) {
+    // If we don't have data for all panels, return empty array
+    if (!panel33Data.length && !panel66Data.length) {
       return [];
     }
     
@@ -253,31 +223,49 @@ export class DatabaseStorage implements IStorage {
       }
     };
     
-    // Process data for each phase and combine
-    const processPhaseData = (data: any[], phase: string) => {
-      data.forEach(record => {
-        const timeLabel = formatDate(new Date(record.time), granularity);
-        
-        // Look for existing entry with this time label
-        const existingEntry = allData.find(entry => entry.time === timeLabel);
-        
-        if (existingEntry) {
-          // Add this phase's power to the total
-          existingEntry.totalPower += record.power;
-        } else {
-          // Create new entry with this phase's power
-          allData.push({
-            time: timeLabel,
-            totalPower: record.power
-          });
-        }
-      });
-    };
+    // Process panel 33kva data
+    panel33Data.forEach(record => {
+      if (!record.timestamp) return;
+      
+      const timeLabel = formatDate(new Date(record.timestamp), granularity);
+      const netKwValue = parseFloat(record.netkw || '0');
+      
+      // Look for existing entry with this time label
+      const existingEntry = allData.find(entry => entry.time === timeLabel);
+      
+      if (existingEntry) {
+        // Add this panel's power to the total
+        existingEntry.totalPower += netKwValue * 1000; // kW to W
+      } else {
+        // Create new entry with this panel's power
+        allData.push({
+          time: timeLabel,
+          totalPower: netKwValue * 1000 // kW to W
+        });
+      }
+    });
     
-    // Process data for each phase
-    processPhaseData(rData, 'R');
-    processPhaseData(sData, 'S');
-    processPhaseData(tData, 'T');
+    // Process panel 66kva data
+    panel66Data.forEach(record => {
+      if (!record.timestamp) return;
+      
+      const timeLabel = formatDate(new Date(record.timestamp), granularity);
+      const netKwValue = parseFloat(record.netkw || '0');
+      
+      // Look for existing entry with this time label
+      const existingEntry = allData.find(entry => entry.time === timeLabel);
+      
+      if (existingEntry) {
+        // Add this panel's power to the total
+        existingEntry.totalPower += netKwValue * 1000; // kW to W
+      } else {
+        // Create new entry with this panel's power
+        allData.push({
+          time: timeLabel,
+          totalPower: netKwValue * 1000 // kW to W
+        });
+      }
+    });
     
     // Sort by time
     allData.sort((a, b) => {

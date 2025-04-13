@@ -18,79 +18,81 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Phase R table (based on provided schema)
-export const phaseR = pgTable("phasa_R", {
-  No: serial("No").primaryKey(),
-  voltage: doublePrecision("voltage").notNull(),
-  current: doublePrecision("current").notNull(),
-  power: doublePrecision("power").notNull(),
-  energy: doublePrecision("energy").notNull(),
-  frequency: integer("frequency").notNull(),
-  pf: doublePrecision("pf").notNull(),
-  time: timestamp("time").defaultNow().notNull(),
+// Panel 33KVA table
+export const panel33kva = pgTable("panel_33kva", {
+  id: serial("id").primaryKey(),
+  volt_r: text("volt_r"),
+  volt_s: text("volt_s"),
+  volt_t: text("volt_t"),
+  arus_r: text("arus_r"),
+  arus_s: text("arus_s"),
+  arus_t: text("arus_t"),
+  kvah: text("kvah"),
+  kva_r: text("kva_r"),
+  kva_s: text("kva_s"),
+  kva_t: text("kva_t"),
+  netkw: text("netkw"),
+  netkva: text("netkva"),
+  timestamp: timestamp("timestamp"),
 });
 
-export const insertPhaseRSchema = createInsertSchema(phaseR).pick({
-  voltage: true,
-  current: true,
-  power: true,
-  energy: true,
-  frequency: true,
-  pf: true,
+export const insertPanel33kvaSchema = createInsertSchema(panel33kva).pick({
+  volt_r: true,
+  volt_s: true,
+  volt_t: true,
+  arus_r: true,
+  arus_s: true,
+  arus_t: true,
+  kvah: true,
+  kva_r: true,
+  kva_s: true,
+  kva_t: true,
+  netkw: true,
+  netkva: true,
+  timestamp: true,
 });
 
-export type InsertPhaseR = z.infer<typeof insertPhaseRSchema>;
-export type PhaseR = typeof phaseR.$inferSelect;
+export type InsertPanel33kva = z.infer<typeof insertPanel33kvaSchema>;
+export type Panel33kva = typeof panel33kva.$inferSelect;
 
-// Phase S table
-export const phaseS = pgTable("phasa_S", {
-  No: serial("No").primaryKey(),
-  voltage: doublePrecision("voltage").notNull(),
-  current: doublePrecision("current").notNull(),
-  power: doublePrecision("power").notNull(),
-  energy: doublePrecision("energy").notNull(),
-  frequency: integer("frequency").notNull(),
-  pf: doublePrecision("pf").notNull(),
-  time: timestamp("time").defaultNow().notNull(),
+// Panel 66KVA table
+export const panel66kva = pgTable("panel_66kva", {
+  id: serial("id").primaryKey(),
+  volt_r: text("volt_r"),
+  volt_s: text("volt_s"),
+  volt_t: text("volt_t"),
+  arus_r: text("arus_r"),
+  arus_s: text("arus_s"),
+  arus_t: text("arus_t"),
+  kvah: text("kvah"),
+  kva_r: text("kva_r"),
+  kva_s: text("kva_s"),
+  kva_t: text("kva_t"),
+  netkw: text("netkw"),
+  netkva: text("netkva"),
+  timestamp: timestamp("timestamp"),
 });
 
-export const insertPhaseSSchema = createInsertSchema(phaseS).pick({
-  voltage: true,
-  current: true,
-  power: true,
-  energy: true,
-  frequency: true,
-  pf: true,
+export const insertPanel66kvaSchema = createInsertSchema(panel66kva).pick({
+  volt_r: true,
+  volt_s: true,
+  volt_t: true,
+  arus_r: true,
+  arus_s: true,
+  arus_t: true,
+  kvah: true,
+  kva_r: true,
+  kva_s: true,
+  kva_t: true,
+  netkw: true,
+  netkva: true,
+  timestamp: true,
 });
 
-export type InsertPhaseS = z.infer<typeof insertPhaseSSchema>;
-export type PhaseS = typeof phaseS.$inferSelect;
+export type InsertPanel66kva = z.infer<typeof insertPanel66kvaSchema>;
+export type Panel66kva = typeof panel66kva.$inferSelect;
 
-// Phase T table
-export const phaseT = pgTable("phasa_T", {
-  No: serial("No").primaryKey(),
-  voltage: doublePrecision("voltage").notNull(),
-  current: doublePrecision("current").notNull(),
-  power: doublePrecision("power").notNull(),
-  energy: doublePrecision("energy").notNull(),
-  frequency: integer("frequency").notNull(),
-  pf: doublePrecision("pf").notNull(),
-  time: timestamp("time").defaultNow().notNull(),
-});
-
-export const insertPhaseTSchema = createInsertSchema(phaseT).pick({
-  voltage: true,
-  current: true,
-  power: true,
-  energy: true,
-  frequency: true,
-  pf: true,
-});
-
-export type InsertPhaseT = z.infer<typeof insertPhaseTSchema>;
-export type PhaseT = typeof phaseT.$inferSelect;
-
-// Common interface for all phase data
+// Common interface for panel data (for compatibility with existing code)
 export interface PhaseData {
   phase: string;
   voltage: number;

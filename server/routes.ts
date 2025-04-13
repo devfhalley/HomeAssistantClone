@@ -2,13 +2,11 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
-  insertPhaseRSchema,
-  insertPhaseSSchema,
-  insertPhaseTSchema, 
+  insertPanel33kvaSchema,
+  insertPanel66kvaSchema,
   insertChartDataSchema,
-  type InsertPhaseR,
-  type InsertPhaseS,
-  type InsertPhaseT,
+  type InsertPanel33kva,
+  type InsertPanel66kva,
   type InsertChartData,
   type PhaseData
 } from "@shared/schema";
