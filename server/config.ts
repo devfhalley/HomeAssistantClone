@@ -30,11 +30,11 @@ const developmentConfig: AppConfig = {
 // Production configuration uses external database
 const productionConfig: AppConfig = {
   database: {
-    host: '165.22.50.101',
-    port: 5432,
-    database: 'postgres', // Default database name - update if different
-    user: 'admin@intek.co.id',
-    password: 'Admin*46835Intek',
+    host: '165.22.50.101', // External server IP
+    port: 5432, // Default PostgreSQL port
+    database: 'panel_utama', // Correct database name from pgAdmin
+    user: 'root', // Username from pgAdmin
+    password: 'Admin*46835Intek', // Keeping the same password
   },
   isDevelopment: false,
   isProduction: true
