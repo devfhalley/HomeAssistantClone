@@ -62,9 +62,13 @@ const forceProduction = process.env.FORCE_PRODUCTION === 'true';
 const environment = process.env.NODE_ENV || 'development';
 const useServerIp = process.env.USE_SERVER_IP === 'true';
 
+// Force development configuration (for testing)
+const forceDevelopment = process.env.FORCE_DEVELOPMENT === 'true';
+
 // Select the appropriate configuration
 let config: AppConfig;
-if (environment === 'development' && !forceProduction) {
+if ((environment === 'development' && !forceProduction) || forceDevelopment) {
+  // Use development config if in dev mode or if explicitly forcing development config
   config = developmentConfig;
 } else if (useServerIp) {
   // Use the direct server IP configuration if explicitly requested
@@ -76,6 +80,18 @@ if (environment === 'development' && !forceProduction) {
 
 // Helper function to generate a connection string
 export function getDatabaseUrl(): string {
+  // If we're forcing development config but in production mode
+  if (forceDevelopment) {
+    if (process.env.DATABASE_URL) {
+      console.log('Using development database in production mode (forced)');
+      console.log(`Database URL: ${process.env.DATABASE_URL.replace(/:[^:]*@/, ':****@')}`);
+      return process.env.DATABASE_URL;
+    } else {
+      console.log('FORCE_DEVELOPMENT is set but DATABASE_URL is missing');
+    }
+  }
+  
+  // Normal development mode case
   if (environment === 'development' && !forceProduction && process.env.DATABASE_URL) {
     // Use Replit's DATABASE_URL in development if available and not forcing production
     return process.env.DATABASE_URL;
