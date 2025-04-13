@@ -26,15 +26,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get environment information
   app.get("/api/system-info", async (req: Request, res: Response) => {
     try {
-      const isDevelopment = process.env.NODE_ENV === 'development';
+      const isDevelopment = process.env.NODE_ENV === 'development' && process.env.FORCE_PRODUCTION !== 'true';
       const isProduction = process.env.NODE_ENV === 'production' || process.env.FORCE_PRODUCTION === 'true';
       
       // If using database, check connection
       let dbStatus = "online";
       let dbHost = process.env.PGHOST || "localhost";
       
-      if (isProduction) {
+      // Force using production database for testing
+      if (isProduction || process.env.FORCE_PRODUCTION === 'true') {
         dbHost = "165.22.50.101"; // Production database host
+        console.log("Using production database at", dbHost);
       }
       
       res.json({

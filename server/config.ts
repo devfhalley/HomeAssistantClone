@@ -60,7 +60,7 @@ const forceProduction = process.env.FORCE_PRODUCTION === 'true';
 
 // Determine which config to use based on NODE_ENV and other flags
 const environment = process.env.NODE_ENV || 'development';
-const useServerIp = process.env.USE_SERVER_IP === 'true';
+const useServerIp = process.env.USE_SERVER_IP === 'true' || forceProduction;
 
 // Force development configuration (for testing)
 const forceDevelopment = process.env.FORCE_DEVELOPMENT === 'true';
@@ -71,7 +71,8 @@ if ((environment === 'development' && !forceProduction) || forceDevelopment) {
   // Use development config if in dev mode or if explicitly forcing development config
   config = developmentConfig;
 } else if (useServerIp) {
-  // Use the direct server IP configuration if explicitly requested
+  // Use the direct server IP configuration if explicitly requested or if FORCE_PRODUCTION is true
+  console.log("Using direct server IP configuration (165.22.50.101)");
   config = serverIpConfig;
 } else {
   // Default production config (Docker setup)
