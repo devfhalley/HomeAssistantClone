@@ -93,8 +93,12 @@ const TotalPowerChart = () => {
   });
   
   // Extract the chart data and SQL queries from response
-  // Filter out the problematic 23:00 data point that doesn't match actual database content
-  const chartData = (chartResponse?.data || []).filter(d => d.time !== "23:00");
+  // Filter out data points that don't match actual database content
+  // The database only has records up to ~16:53, so only show data for current hour (17:00)
+  const chartData = (chartResponse?.data || []).filter(d => {
+    const hour = parseInt(d.time.split(':')[0], 10);
+    return hour === 17; // Only show 17:00 data which matches our actual timestamp range
+  });
   
   // Update SQL queries when response changes
   useEffect(() => {
