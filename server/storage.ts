@@ -251,7 +251,16 @@ export class DatabaseStorage implements IStorage {
       const currentHour = currentDate.getHours();
       const currentMinute = currentDate.getMinutes();
       
-      console.log(`Current time in GMT+7: ${currentDate.toISOString()} (Hour: ${currentHour}, Minute: ${currentMinute})`);
+      // Debug database timestamps
+      const panel33Timestamps = panel33Data.map(d => d.timestamp);
+      console.log("First 5 timestamps from panel 33kva:", panel33Timestamps.slice(0, 5));
+      
+      // Log extensive debugging information
+      console.log(`Chart Data - System time: ${new Date().toISOString()}`);
+      console.log(`Chart Data - Adjusted time in GMT+7: ${currentDate.toISOString()}`);
+      console.log(`Chart Data - UTC Hour: ${new Date().getUTCHours()}, UTC Minute: ${new Date().getUTCMinutes()}`);
+      console.log(`Chart Data - Local Hour: ${new Date().getHours()}, Local Minute: ${new Date().getMinutes()}`);
+      console.log(`Chart Data - GMT+7 Hour: ${currentHour}, GMT+7 Minute: ${currentMinute}`);
       
       for (const record of panel33Data) {
         if (!record.timestamp) continue;
@@ -534,7 +543,12 @@ export class DatabaseStorage implements IStorage {
       const currentHour = currentDate.getHours();
       const currentMinute = currentDate.getMinutes();
       
-      console.log(`Current time in GMT+7 (total power): ${currentDate.toISOString()} (Hour: ${currentHour}, Minute: ${currentMinute})`);
+      // Log extensive debugging information
+      console.log(`System time: ${new Date().toISOString()}`);
+      console.log(`Adjusted time in GMT+7: ${currentDate.toISOString()}`);
+      console.log(`UTC Hour: ${new Date().getUTCHours()}, UTC Minute: ${new Date().getUTCMinutes()}`);
+      console.log(`Local Hour: ${new Date().getHours()}, Local Minute: ${new Date().getMinutes()}`);
+      console.log(`GMT+7 Hour: ${currentHour}, GMT+7 Minute: ${currentMinute}`);
       
       // Only keep data points that are before or equal to the current time
       const filteredData = allData.filter(dataPoint => {
