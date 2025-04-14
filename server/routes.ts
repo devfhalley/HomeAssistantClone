@@ -363,13 +363,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/chart-data/:dataType/:phase", async (req: Request, res: Response) => {
     try {
       const { dataType, phase } = req.params;
-      const data = await storage.getChartDataByType(dataType, phase);
+      const { date } = req.query;
+      
+      // Create a specific date object if date parameter is provided
+      let specificDate: Date | undefined = undefined;
+      if (date) {
+        specificDate = new Date(date as string);
+      }
+      
+      // Get chart data with the specific date filter
+      const data = await storage.getChartDataByType(dataType, phase, specificDate);
       
       // Log the SQL query for this request
       console.log(`Chart data query for ${dataType}/${phase} executed`);
       
-      // Include the SQL query in the response
-      const sqlQuery = "SELECT * FROM panel_33kva ORDER BY timestamp";
+      // Include the SQL query in the response with the correct filtering
+      let sqlQuery;
+      if (specificDate) {
+        sqlQuery = `
+          SELECT * 
+          FROM panel_33kva 
+          WHERE timestamp BETWEEN ('${specificDate.toISOString()}'::date + interval '1 minute')
+                              AND ('${specificDate.toISOString()}'::date + interval '1 day' - interval '1 second')
+          ORDER BY timestamp
+        `;
+      } else {
+        sqlQuery = `
+          SELECT * 
+          FROM panel_33kva 
+          WHERE timestamp BETWEEN date_trunc('day', current_date) + interval '1 minute'
+                              AND NOW() 
+          ORDER BY timestamp
+        `;
+      }
       
       res.json({
         data: data,

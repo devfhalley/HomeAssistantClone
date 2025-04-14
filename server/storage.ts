@@ -223,13 +223,37 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Chart data methods now use panel data
-  async getChartDataByType(dataType: string, phase: string): Promise<ChartData[]> {
+  async getChartDataByType(dataType: string, phase: string, specificDate?: Date): Promise<ChartData[]> {
     try {
-      // Use direct SQL query for consistency with production DB column names
-      const sqlQuery = "SELECT * FROM panel_33kva ORDER BY timestamp";
-      console.log("Chart data query:", sqlQuery);
+      let sqlQuery: string;
+      let params: Date[] = [];
       
-      const panel33Result = await pool.query(sqlQuery);
+      if (specificDate) {
+        // For a specific date
+        sqlQuery = `
+          SELECT * 
+          FROM panel_33kva 
+          WHERE timestamp BETWEEN ($1::date + interval '1 minute')
+                              AND ($1::date + interval '1 day' - interval '1 second')
+          ORDER BY timestamp
+        `;
+        params = [specificDate];
+      } else {
+        // For today (default)
+        sqlQuery = `
+          SELECT * 
+          FROM panel_33kva 
+          WHERE timestamp BETWEEN date_trunc('day', current_date) + interval '1 minute'
+                              AND NOW() 
+          ORDER BY timestamp
+        `;
+      }
+      
+      console.log("Chart data query:", sqlQuery, params.length ? `with date: ${params[0]}` : "(today)");
+      
+      const panel33Result = params.length ? 
+        await pool.query(sqlQuery, params) :
+        await pool.query(sqlQuery);
       
       // Format timestamp to time string with GMT+7 timezone adjustment
       const formatTime = (timestamp: Date): string => {
@@ -407,20 +431,31 @@ export class DatabaseStorage implements IStorage {
   // Total power consumption methods
   async getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]> {
     try {
-      // Use direct SQL queries with the timestamp column
-      let panel33Query = "SELECT * FROM panel_33kva ORDER BY timestamp";
-      let panel66Query = "SELECT * FROM panel_66kva ORDER BY timestamp";
+      // Use direct SQL queries with the timestamp column using the exact query requested
+      let panel33Query, panel66Query;
+      let queryParams = [];
       
-      // Apply date filters if provided
-      if (startDate && endDate) {
-        panel33Query = `SELECT * FROM panel_33kva WHERE timestamp >= $1 AND timestamp <= $2 ORDER BY timestamp`;
-        panel66Query = `SELECT * FROM panel_66kva WHERE timestamp >= $1 AND timestamp <= $2 ORDER BY timestamp`;
-      } else if (startDate) {
-        panel33Query = `SELECT * FROM panel_33kva WHERE timestamp >= $1 ORDER BY timestamp`;
-        panel66Query = `SELECT * FROM panel_66kva WHERE timestamp >= $1 ORDER BY timestamp`;
-      } else if (endDate) {
-        panel33Query = `SELECT * FROM panel_33kva WHERE timestamp <= $1 ORDER BY timestamp`;
-        panel66Query = `SELECT * FROM panel_66kva WHERE timestamp <= $1 ORDER BY timestamp`;
+      if (startDate) {
+        // For a specific date (not today)
+        panel33Query = `SELECT * FROM panel_33kva 
+                        WHERE timestamp BETWEEN ($1::date + interval '1 minute')
+                                          AND ($1::date + interval '1 day' - interval '1 second')
+                        ORDER BY timestamp`;
+        panel66Query = `SELECT * FROM panel_66kva 
+                        WHERE timestamp BETWEEN ($1::date + interval '1 minute')
+                                          AND ($1::date + interval '1 day' - interval '1 second') 
+                        ORDER BY timestamp`;
+        queryParams = [startDate];
+      } else {
+        // For today (default)
+        panel33Query = `SELECT * FROM panel_33kva 
+                        WHERE timestamp BETWEEN date_trunc('day', current_date) + interval '1 minute'
+                                          AND NOW() 
+                        ORDER BY timestamp`;
+        panel66Query = `SELECT * FROM panel_66kva 
+                        WHERE timestamp BETWEEN date_trunc('day', current_date) + interval '1 minute'
+                                          AND NOW() 
+                        ORDER BY timestamp`;
       }
       
       console.log("Panel33 Total Power Query:", panel33Query);
@@ -428,16 +463,13 @@ export class DatabaseStorage implements IStorage {
       
       // Execute queries with parameters if needed
       let panel33Result, panel66Result;
-      if (startDate && endDate) {
-        panel33Result = await pool.query(panel33Query, [startDate, endDate]);
-        panel66Result = await pool.query(panel66Query, [startDate, endDate]);
-      } else if (startDate) {
-        panel33Result = await pool.query(panel33Query, [startDate]);
-        panel66Result = await pool.query(panel66Query, [startDate]);
-      } else if (endDate) {
-        panel33Result = await pool.query(panel33Query, [endDate]);
-        panel66Result = await pool.query(panel66Query, [endDate]);
+      
+      if (startDate) {
+        // For specific date
+        panel33Result = await pool.query(panel33Query, queryParams);
+        panel66Result = await pool.query(panel66Query, queryParams);
       } else {
+        // For today (default)
         panel33Result = await pool.query(panel33Query);
         panel66Result = await pool.query(panel66Query);
       }
