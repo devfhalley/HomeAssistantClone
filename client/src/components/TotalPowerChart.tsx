@@ -31,8 +31,7 @@ interface TotalPowerResponse {
 
 const TotalPowerChart = () => {
   const [granularity, setGranularity] = useState<string>('hour');
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   
   // State to store SQL queries
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
@@ -44,17 +43,20 @@ const TotalPowerChart = () => {
   
   // Fetch the data using TanStack Query with automatic refetching
   const { data: chartResponse, isLoading, error, refetch } = useQuery({
-    queryKey: ['/api/total-power', granularity, startDate, endDate],
+    queryKey: ['/api/total-power', granularity, selectedDate],
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true, // Continue refetching even when tab is not active
     queryFn: async () => {
       // Build the query string with parameters
       let queryParams = `granularity=${granularity}`;
-      if (startDate) {
-        queryParams += `&startDate=${startDate.toISOString()}`;
-      }
-      if (endDate) {
-        queryParams += `&endDate=${endDate.toISOString()}`;
+      if (selectedDate) {
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(selectedDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        queryParams += `&startDate=${startOfDay.toISOString()}&endDate=${endOfDay.toISOString()}`;
       }
       
       const response = await fetch(`/api/total-power?${queryParams}`);
@@ -100,10 +102,9 @@ const TotalPowerChart = () => {
     }
   }, [chartResponse]);
   
-  // Clear the date filters
-  const clearDateFilters = () => {
-    setStartDate(undefined);
-    setEndDate(undefined);
+  // Clear the date filter
+  const clearDateFilter = () => {
+    setSelectedDate(undefined);
     refetch();
   };
 
@@ -142,22 +143,22 @@ const TotalPowerChart = () => {
           </div>
         </div>
         
-        {/* Date Filters */}
+        {/* Date Filter */}
         <div className="flex flex-row items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Label>Date Range:</Label>
+            <Label>Select Date:</Label>
             
-            {/* Start Date Picker */}
+            {/* Date Picker */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-[140px] pl-3 text-left font-normal"
+                  className="w-[180px] pl-3 text-left font-normal"
                 >
-                  {startDate ? (
-                    format(startDate, "PPP")
+                  {selectedDate ? (
+                    format(selectedDate, "PPP")
                   ) : (
-                    <span>From Date</span>
+                    <span>Select a date</span>
                   )}
                   <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                 </Button>
@@ -165,50 +166,19 @@ const TotalPowerChart = () => {
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  disabled={(date) => 
-                    endDate ? date > endDate : false
-                  }
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
             
-            {/* End Date Picker */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-[140px] pl-3 text-left font-normal"
-                >
-                  {endDate ? (
-                    format(endDate, "PPP")
-                  ) : (
-                    <span>To Date</span>
-                  )}
-                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={setEndDate}
-                  disabled={(date) => 
-                    startDate ? date < startDate : false
-                  }
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            
-            {/* Clear Filters Button */}
-            {(startDate || endDate) && (
+            {/* Clear Filter Button */}
+            {selectedDate && (
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={clearDateFilters}
+                onClick={clearDateFilter}
               >
                 Clear
               </Button>
