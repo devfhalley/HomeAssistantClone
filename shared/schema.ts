@@ -118,3 +118,11 @@ export interface ChartData {
   time: string;
   value: number;
 }
+
+// TotalPowerData type definition for the power consumption chart
+export interface TotalPowerData {
+  time: string;
+  panel33Power?: number;
+  panel66Power?: number;
+  totalPower: number;
+}

@@ -2,28 +2,10 @@ import {
   users, type User, type InsertUser,
   panel33kva, type Panel33kva, type InsertPanel33kva,
   panel66kva, type Panel66kva, type InsertPanel66kva,
-  type ChartData
+  type ChartData, type TotalPowerData, type PhaseData
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, desc, gte, lte } from "drizzle-orm";
-
-// Combined type for phase data response
-interface PhaseData {
-  phase: string;
-  voltage: number;
-  current: number;
-  power: number;
-  energy: number;
-  frequency: number;
-  pf: number;
-  time: Date;
-}
-
-// Interface for total power consumption data point
-interface TotalPowerData {
-  time: string;
-  totalPower: number;
-}
 
 import session from "express-session";
 
