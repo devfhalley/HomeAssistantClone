@@ -43,7 +43,7 @@ const TotalPowerChart = () => {
   
   // Fetch the data using TanStack Query with automatic refetching
   const { data: chartResponse, isLoading, error, refetch } = useQuery({
-    queryKey: ['/api/total-power', granularity, selectedDate],
+    queryKey: ['/api/total-power', granularity, selectedDate?.toISOString()], // Include date in query key for cache invalidation
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true, // Continue refetching even when tab is not active
     queryFn: async () => {
@@ -56,7 +56,11 @@ const TotalPowerChart = () => {
         const endOfDay = new Date(selectedDate);
         endOfDay.setHours(23, 59, 59, 999);
         
-        queryParams += `&startDate=${startOfDay.toISOString()}&endDate=${endOfDay.toISOString()}`;
+        // Format date as YYYY-MM-DD to ensure proper date handling
+        const formattedDate = startOfDay.toISOString().split('T')[0];
+        console.log(`Using selected date: ${formattedDate} for power chart`);
+        
+        queryParams += `&date=${formattedDate}`;
       }
       
       const response = await fetch(`/api/total-power?${queryParams}`);
