@@ -445,8 +445,22 @@ export class DatabaseStorage implements IStorage {
       const panel33Data = panel33Result.rows;
       const panel66Data = panel66Result.rows;
       
+      // Debug actual database content
+      console.log(`DB Query - Panel 33KVA result count: ${panel33Data.length}`);
+      if (panel33Data.length > 0) {
+        console.log(`DB Query - Panel 33KVA first record:`, panel33Data[0]);
+        console.log(`DB Query - Panel 33KVA last record:`, panel33Data[panel33Data.length - 1]);
+      }
+      
+      console.log(`DB Query - Panel 66KVA result count: ${panel66Data.length}`);
+      if (panel66Data.length > 0) {
+        console.log(`DB Query - Panel 66KVA first record:`, panel66Data[0]);
+        console.log(`DB Query - Panel 66KVA last record:`, panel66Data[panel66Data.length - 1]);
+      }
+      
       // If we don't have data for all panels, return empty array
       if (!panel33Data.length && !panel66Data.length) {
+        console.log("No data found for either panel, returning empty array");
         return [];
       }
       
