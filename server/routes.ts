@@ -105,18 +105,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDateObj
       );
       
-      // Since we're working with sample data from 2025-04-14,
-      // where the database timestamp shows 18:xx UTC (6 PM)
-      // we'll use 18 as our cutoff hour to show full day data
-      const maxHour = 18; // Hardcoded to 6 PM (18:00)
+      // Default to showing full 24 hours if no database timestamp available
+      let maxHour = 23; 
       
-      // Log the cutoff hour we're using
-      console.log(`Using fixed cutoff hour: ${maxHour}:00 (6 PM) to show full day data`);
-      
-      // Get the latest timestamp for informational purposes
+      // Get the latest panel data timestamp to determine how much data to show
       const panel33 = await storage.getPanel33kvaData();
       if (panel33 && panel33.timestamp) {
-        console.log(`Latest timestamp from database: ${panel33.timestamp}`);
+        const timestamp = new Date(panel33.timestamp);
+        
+        // Extract the UTC hour from the timestamp
+        const utcHour = timestamp.getUTCHours();
+        
+        // Use the current hour from the database timestamp
+        maxHour = utcHour;
+        
+        console.log(`Dynamic cutoff: Using hour ${maxHour} from latest database timestamp: ${panel33.timestamp}`);
+      } else {
+        console.log(`No timestamp found, defaulting to full day (${maxHour} hours)`);
       }
       
       // Filter data to show only up to the current hour
