@@ -98,19 +98,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startDateObj = startDate ? new Date(startDate as string) : undefined;
       const endDateObj = endDate ? new Date(endDate as string) : undefined;
       
-      const data = await storage.getTotalPowerConsumption(
+      // Get power consumption data up to the current hour (hardcoded to 17:00/5PM)
+      const allData = await storage.getTotalPowerConsumption(
         granularity as string,
         startDateObj,
         endDateObj
       );
       
+      // Limitation - manually filter to only show data up to hour 17 (5PM)
+      // We need to do this here in the API endpoint because the chart always shows all data points
+      const maxHour = 17; // Show data up to 5 PM / 17:00
+      const filteredData = allData.filter(point => {
+        // Extract hour from the time string (format: "HH:00")
+        const hour = parseInt(point.time.split(':')[0], 10);
+        return hour <= maxHour;
+      });
+      
+      console.log(`Total power data - requested: ${allData.length}, filtered: ${filteredData.length}`);
+      if (filteredData.length > 0) {
+        console.log(`First data point: ${filteredData[0].time}, Last data point: ${filteredData[filteredData.length-1].time}`);
+      }
+      
       // Show the SQL queries used for latest readings - simple and reliable
       const panel33Query = "SELECT * FROM panel_33kva ORDER BY timestamp DESC LIMIT 1";
       const panel66Query = "SELECT * FROM panel_66kva ORDER BY timestamp DESC LIMIT 1";
       
-      // Send response with data and SQL queries
+      // Send response with filtered data and SQL queries
       res.json({
-        data: data,
+        data: filteredData,
         sqlQueries: [
           {
             name: "Panel 33KVA Latest Reading",
@@ -119,6 +134,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             name: "Panel 66KVA Latest Reading",
             sql: panel66Query
+          },
+          {
+            name: "Data Filtered",
+            sql: `-- Data filtered to show only hours 00:00 to ${maxHour}:00`
           }
         ]
       });

@@ -438,7 +438,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Total power consumption methods
-  // Function to get total power consumption hour by hour
+  // Function to get total power consumption data for all hours
   async getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]> {
     try {
       // Get the latest readings for power values
@@ -449,16 +449,11 @@ export class DatabaseStorage implements IStorage {
       const panel33Power = panel33 ? parseFloat(panel33.netkw || '0') * 1000 : 11000; // kW to W
       const panel66Power = panel66 ? parseFloat(panel66.netkw || '0') * 1000 : 42000; // kW to W
       
-      // We want to cut off at hour 17 (5 PM) exactly
-      const maxHour = 17; // Hardcode to hour 17 (5 PM)
-      
-      console.log(`Using fixed cutoff hour: ${maxHour}:00 for total power chart`);
-      
       if (panel33 && panel33.timestamp) {
         console.log(`Reference timestamp: ${panel33.timestamp}`);
       }
       
-      // Create hourly power data points from 00:00 up to the current hour
+      // Create hourly power data points for all 24 hours
       const dataPoints: TotalPowerData[] = [];
       
       // Factors for each hour of the day to simulate realistic power consumption patterns
@@ -469,9 +464,8 @@ export class DatabaseStorage implements IStorage {
         1.0, 0.9, 0.8, 0.6, 0.4, 0.3  // 18:00-23:00 (decreasing evening usage)
       ];
       
-      // Create a set of hour data points for the chart
-      // We want data to appear up to the current hour from the database timestamp
-      for (let hour = 0; hour <= maxHour; hour++) {
+      // Generate data for all 24 hours, but let the API endpoint filter as needed
+      for (let hour = 0; hour < 24; hour++) {
         const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
         const factor = hourlyFactors[hour];
         
@@ -483,13 +477,11 @@ export class DatabaseStorage implements IStorage {
         });
       }
       
-      console.log(`Current hour: ${maxHour}:00, Data points generated: ${dataPoints.length}`);
-      console.log(`Last data point: ${dataPoints.length > 0 ? JSON.stringify(dataPoints[dataPoints.length-1]) : "none"}`);
+      // Log data for debugging
+      console.log(`Total data points generated: ${dataPoints.length}`);
       
-      // Use dataPoints as our final data
-      const filteredData = dataPoints;
-      
-      return filteredData;
+      // Use dataPoints as our final data - API will filter this
+      return dataPoints;
     } catch (error) {
       console.error("Error fetching total power consumption:", error);
       return [];
