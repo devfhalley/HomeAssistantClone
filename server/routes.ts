@@ -117,93 +117,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDateObj = endDate ? new Date(endDate as string) : undefined;
       }
 
-      // Check if we have any real data in the database for the requested date
-      let hasRealData = false;
-      let dateStr = '';
-      
-      // Format the date for the SQL query
-      if (startDateObj) {
-        dateStr = startDateObj.toISOString().split('T')[0];
-        // Check if we have data for this specific date
-        const checkQuery = `
-          SELECT COUNT(*) as record_count 
-          FROM panel_33kva 
-          WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
-        `;
-        
-        console.log(`Checking for real data on ${dateStr} with query: ${checkQuery}`);
-        
-        try {
-          const result = await pool.query(checkQuery);
-          const count = parseInt(result.rows[0].record_count);
-          hasRealData = count > 0;
-          console.log(`Data check for ${dateStr}: ${count} records found`);
-        } catch (err) {
-          console.error("Error checking for data:", err);
-          hasRealData = false;
-        }
-      } else {
-        // For today, just check if any data exists
-        const checkQuery = `
-          SELECT COUNT(*) as record_count 
-          FROM panel_33kva
-          WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = CURRENT_DATE
-        `;
-        
-        console.log(`Checking for real data today with query: ${checkQuery}`);
-        
-        try {
-          const result = await pool.query(checkQuery);
-          const count = parseInt(result.rows[0].record_count);
-          hasRealData = count > 0;
-          console.log(`Data check for today: ${count} records found`);
-        } catch (err) {
-          console.error("Error checking for data:", err);
-          hasRealData = false;
-        }
-      }
-      
-      // If no real data exists, return zeros instead of simulated data
-      if (!hasRealData) {
-        console.log(`No real data found for ${startDateObj ? dateStr : 'today'} - returning zeros for all hours`);
-        const zeroDataPoints: TotalPowerData[] = [];
-        
-        // Generate 24 hours of zero data
-        for (let hour = 0; hour < 24; hour++) {
-          const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
-          zeroDataPoints.push({
-            time: timeLabel,
-            panel33Power: 0,
-            panel66Power: 0,
-            totalPower: 0
-          });
-        }
-        
-        // Send response with zero data and SQL query explanation
-        return res.json({
-          data: zeroDataPoints,
-          sqlQueries: [
-            {
-              name: "Data check query",
-              sql: startDateObj 
-                ? `SELECT COUNT(*) FROM panel_33kva WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'`
-                : `SELECT COUNT(*) FROM panel_33kva WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = CURRENT_DATE`
-            },
-            {
-              name: "Result",
-              sql: `-- No data found for ${startDateObj ? dateStr : 'today'} - returning zeros for all hours`
-            }
-          ]
-        });
-      }
-      
-      // Get power consumption data (only if we have real data)
-      const allData = await storage.getTotalPowerConsumption(
-        granularity as string,
-        startDateObj,
-        endDateObj
-      );
-      
       // Default to showing full 24 hours
       let maxHour = 23; 
       
@@ -235,43 +148,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Historical date selected - showing full 24 hours of data`);
       }
       
-      // Apply filtering based on whether it's today or a historical date
-      const filteredData = isToday 
-        ? allData.filter(point => {
-            // Extract hour from the time string (format: "HH:00")
-            const hour = parseInt(point.time.split(':')[0], 10);
-            return hour <= maxHour;
-          })
-        : allData; // For historical dates, use all data points
+      // The date string for SQL queries
+      const dateStr = startDateObj ? startDateObj.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+      console.log(`Date string for queries: ${dateStr}`);
       
-      console.log(`Total power data - requested: ${allData.length}, filtered: ${filteredData.length}`);
-      if (filteredData.length > 0) {
-        console.log(`First data point: ${filteredData[0].time}, Last data point: ${filteredData[filteredData.length-1].time}`);
+      // Now, for each hour, check if there's data and build our response
+      const powerData: TotalPowerData[] = [];
+      const sqlQueries: { name: string; sql: string }[] = [];
+      
+      // We'll use these to count hours with or without data
+      let hoursWithData = 0;
+      let hoursWithoutData = 0;
+      
+      // For each hour of the day (0-23)
+      for (let hour = 0; hour <= 23; hour++) {
+        // Only include hours up to current hour if it's today
+        if (isToday && hour > maxHour) {
+          continue;
+        }
+        
+        // Format the hour string (e.g., "00:00", "01:00", etc.)
+        const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
+        
+        // Check if we have panel data for this specific hour
+        const hourlyCheckQuery = `
+          SELECT COUNT(*) as record_count 
+          FROM panel_33kva 
+          WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
+          AND EXTRACT(HOUR FROM timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = ${hour}
+        `;
+        
+        try {
+          // Execute the query to check for data in this hour
+          const result = await pool.query(hourlyCheckQuery);
+          const count = parseInt(result.rows[0].record_count);
+          
+          if (count > 0) {
+            // Data exists for this hour, get the actual values
+            hoursWithData++;
+            
+            // Get panel 33KVA data for this hour
+            const panel33Query = `
+              SELECT netkw
+              FROM panel_33kva
+              WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
+              AND EXTRACT(HOUR FROM timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = ${hour}
+              ORDER BY timestamp DESC
+              LIMIT 1
+            `;
+            
+            // Get panel 66KVA data for this hour
+            const panel66Query = `
+              SELECT netkw
+              FROM panel_66kva
+              WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
+              AND EXTRACT(HOUR FROM timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = ${hour}
+              ORDER BY timestamp DESC
+              LIMIT 1
+            `;
+            
+            // Execute both queries
+            const panel33Result = await pool.query(panel33Query);
+            const panel66Result = await pool.query(panel66Query);
+            
+            // Extract power values (in kW) and convert to watts
+            const panel33kw = panel33Result.rows.length > 0 ? parseFloat(panel33Result.rows[0].netkw || '0') * 1000 : 0;
+            const panel66kw = panel66Result.rows.length > 0 ? parseFloat(panel66Result.rows[0].netkw || '0') * 1000 : 0;
+            
+            // Save SQL queries for debugging
+            sqlQueries.push({
+              name: `Hour ${timeLabel} Panel 33KVA Query`,
+              sql: panel33Query
+            });
+            
+            sqlQueries.push({
+              name: `Hour ${timeLabel} Panel 66KVA Query`,
+              sql: panel66Query
+            });
+            
+            // Add the data point with real values
+            powerData.push({
+              time: timeLabel,
+              panel33Power: Math.round(panel33kw),
+              panel66Power: Math.round(panel66kw),
+              totalPower: Math.round(panel33kw + panel66kw)
+            });
+            
+            console.log(`Hour ${timeLabel}: Found real data - 33KVA: ${panel33kw}W, 66KVA: ${panel66kw}W`);
+          } else {
+            // No data for this hour, use zeros
+            hoursWithoutData++;
+            
+            powerData.push({
+              time: timeLabel,
+              panel33Power: 0,
+              panel66Power: 0,
+              totalPower: 0
+            });
+            
+            console.log(`Hour ${timeLabel}: No data found - using zeros`);
+          }
+        } catch (err) {
+          console.error(`Error checking data for hour ${hour}:`, err);
+          
+          // On error, use zeros for safety
+          powerData.push({
+            time: timeLabel,
+            panel33Power: 0, 
+            panel66Power: 0,
+            totalPower: 0
+          });
+          
+          hoursWithoutData++;
+        }
       }
       
-      // Show the SQL queries used for latest readings - simple and reliable
-      const panel33Query = "SELECT * FROM panel_33kva ORDER BY timestamp DESC LIMIT 1";
-      const panel66Query = "SELECT * FROM panel_66kva ORDER BY timestamp DESC LIMIT 1";
+      // Sort data points by time to ensure correct order
+      powerData.sort((a, b) => {
+        const hourA = parseInt(a.time.split(':')[0]);
+        const hourB = parseInt(b.time.split(':')[0]);
+        return hourA - hourB;
+      });
       
-      // Send response with filtered data and SQL queries
+      console.log(`Total power data summary - Hours with data: ${hoursWithData}, Hours without data: ${hoursWithoutData}, Total hours: ${powerData.length}`);
+      if (powerData.length > 0) {
+        console.log(`CHART DEBUG - First data point:`, powerData[0]);
+        console.log(`CHART DEBUG - Last data point:`, powerData[powerData.length-1]);
+      }
+      
+      // Add summary query
+      sqlQueries.push({
+        name: "Data Summary",
+        sql: `-- Found data for ${hoursWithData} hours, No data for ${hoursWithoutData} hours`
+      });
+      
+      // Send the final response
       res.json({
-        data: filteredData,
-        sqlQueries: [
-          {
-            name: "Panel 33KVA Latest Reading",
-            sql: panel33Query
-          },
-          {
-            name: "Panel 66KVA Latest Reading",
-            sql: panel66Query
-          },
-          {
-            name: "Data Filtered",
-            sql: isToday 
-              ? `-- Data filtered to show only hours 00:00 to ${maxHour}:00 for today`
-              : `-- Showing all 24 hours for historical date ${date || startDate}`
-          }
-        ]
+        data: powerData,
+        sqlQueries: sqlQueries
       });
     } catch (error) {
       console.error("Error fetching total power data:", error);
