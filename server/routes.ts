@@ -166,12 +166,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Panel 33KVA data:", panel33DataQuery);
       console.log("Panel 66KVA data:", panel66DataQuery);
       
-      // Use the exact SQL query format requested by the user
+      // Use the timezone-aware SQL query format requested by the user
       const panel33QueryText = `
         SELECT * 
         FROM panel_33kva 
-        WHERE timestamp BETWEEN (date_trunc('day', current_date) + interval '1 minute')
-                            AND NOW() 
+        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
+          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
         ORDER BY netkw DESC
       `;
       const panel33Result = await pool.query(panel33QueryText);
@@ -181,8 +181,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const panel66QueryText = `
         SELECT * 
         FROM panel_66kva 
-        WHERE timestamp BETWEEN (date_trunc('day', current_date) + interval '1 minute')
-                            AND NOW() 
+        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
+          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
         ORDER BY netkw DESC
       `;
       const panel66Result = await pool.query(panel66QueryText);
@@ -384,22 +384,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log the SQL query for this request
       console.log(`Chart data query for ${dataType}/${phase} executed`);
       
-      // Include the SQL query in the response with the correct filtering
+      // Include the SQL query in the response with the correct timezone-aware filtering
       let sqlQuery;
       if (specificDate) {
+        const dateStr = specificDate.toISOString().split('T')[0]; // Get just the date part (YYYY-MM-DD)
         sqlQuery = `
-          SELECT * 
-          FROM panel_33kva 
-          WHERE timestamp BETWEEN ('${specificDate.toISOString()}'::date + interval '1 minute')
-                              AND ('${specificDate.toISOString()}'::date + interval '1 day' - interval '1 second')
+          SELECT *
+          FROM panel_33kva
+          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
+            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
           ORDER BY timestamp
         `;
       } else {
         sqlQuery = `
-          SELECT * 
-          FROM panel_33kva 
-          WHERE timestamp BETWEEN date_trunc('day', current_date) + interval '1 minute'
-                              AND NOW() 
+          SELECT *
+          FROM panel_33kva
+          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
+            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
           ORDER BY timestamp
         `;
       }

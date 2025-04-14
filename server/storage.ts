@@ -237,22 +237,23 @@ export class DatabaseStorage implements IStorage {
       let params: Date[] = [];
       
       if (specificDate) {
-        // For a specific date
+        // For a specific date using Asia/Jakarta timezone
+        const dateStr = specificDate.toISOString().split('T')[0]; // Get just the date part (YYYY-MM-DD)
         sqlQuery = `
-          SELECT * 
-          FROM panel_33kva 
-          WHERE timestamp BETWEEN ($1::date + interval '1 minute')
-                              AND ($1::date + interval '1 day' - interval '1 second')
+          SELECT *
+          FROM panel_33kva
+          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
+            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
           ORDER BY timestamp
         `;
-        params = [specificDate];
+        params = []; // No bind params needed as we've embedded the date directly
       } else {
-        // For today (default)
+        // For today (default) using Asia/Jakarta timezone
         sqlQuery = `
-          SELECT * 
-          FROM panel_33kva 
-          WHERE timestamp BETWEEN date_trunc('day', current_date) + interval '1 minute'
-                              AND NOW() 
+          SELECT *
+          FROM panel_33kva
+          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
+            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
           ORDER BY timestamp
         `;
       }
@@ -444,25 +445,30 @@ export class DatabaseStorage implements IStorage {
       let queryParams: Date[] = [];
       
       if (startDate) {
-        // For a specific date (not today)
-        panel33Query = `SELECT * FROM panel_33kva 
-                        WHERE timestamp BETWEEN ($1::date + interval '1 minute')
-                                          AND ($1::date + interval '1 day' - interval '1 second')
+        // For a specific date using Asia/Jakarta timezone
+        const dateStr = startDate.toISOString().split('T')[0]; // Get just the date part (YYYY-MM-DD)
+        panel33Query = `SELECT *
+                        FROM panel_33kva
+                        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
+                          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
                         ORDER BY timestamp`;
-        panel66Query = `SELECT * FROM panel_66kva 
-                        WHERE timestamp BETWEEN ($1::date + interval '1 minute')
-                                          AND ($1::date + interval '1 day' - interval '1 second') 
+        panel66Query = `SELECT *
+                        FROM panel_66kva
+                        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
+                          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
                         ORDER BY timestamp`;
-        queryParams = [startDate];
+        queryParams = []; // No bind params needed as we've embedded the date directly
       } else {
-        // For today (default)
-        panel33Query = `SELECT * FROM panel_33kva 
-                        WHERE timestamp BETWEEN date_trunc('day', current_date) + interval '1 minute'
-                                          AND NOW() 
+        // For today (default) with Asia/Jakarta timezone
+        panel33Query = `SELECT *
+                        FROM panel_33kva
+                        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
+                          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
                         ORDER BY timestamp`;
-        panel66Query = `SELECT * FROM panel_66kva 
-                        WHERE timestamp BETWEEN date_trunc('day', current_date) + interval '1 minute'
-                                          AND NOW() 
+        panel66Query = `SELECT *
+                        FROM panel_66kva
+                        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
+                          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
                         ORDER BY timestamp`;
       }
       
