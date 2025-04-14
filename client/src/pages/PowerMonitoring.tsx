@@ -62,10 +62,12 @@ const PowerMonitoring = () => {
   // State to store SQL queries
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
   
-  // Fetch all phases data at once
+  // Fetch all phases data at once with auto-refresh
   const { data: allPhasesResponse, isLoading: isLoadingAllPhases } = useQuery({
     queryKey: ['/api/phase-data'],
-    queryFn: () => apiRequest<{data: PhaseData[], sqlQueries: SqlQuery[]}>("GET", '/api/phase-data')
+    queryFn: () => apiRequest<{data: PhaseData[], sqlQueries: SqlQuery[]}>("GET", '/api/phase-data'),
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true // Continue refetching even when tab is not active
   });
   
   // Store SQL queries from all phases response
@@ -75,10 +77,12 @@ const PowerMonitoring = () => {
     }
   }, [allPhasesResponse]);
   
-  // Fetch individual phase data with SQL query
+  // Fetch individual phase data with SQL query and auto-refresh
   const { data: phaseRResponse, isLoading: isLoadingPhaseR } = useQuery({
     queryKey: ['/api/phase-data', 'R'],
-    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/R')
+    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/R'),
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true
   });
   
   // Fetch phase S data with SQL query
@@ -102,10 +106,12 @@ const PowerMonitoring = () => {
   // Define loading state for all phase data
   const isLoadingPhaseData = isLoadingPhaseR || isLoadingPhaseS || isLoadingPhaseT || isLoadingAllPhases;
   
-  // Fetch chart data for each type and phase
+  // Fetch chart data for each type and phase with auto-refresh
   const { data: voltageDataRResponse } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/R')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/R'),
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true
   });
   
   // Extract the chart data from the response
