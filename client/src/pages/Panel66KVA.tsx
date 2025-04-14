@@ -47,10 +47,12 @@ const processChartData = (data: ChartData[] | undefined): ChartDataPoint[] => {
 };
 
 const Panel66KVA = () => {
-  // Fetch phase data
+  // Fetch phase data with automatic refetching every 10 seconds
   const { data: phaseDataArray, isLoading: isLoadingPhaseData } = useQuery({
     queryKey: ['/api/phase-data'],
-    queryFn: () => apiRequest<PhaseData[]>("GET", '/api/phase-data')
+    queryFn: () => apiRequest<PhaseData[]>("GET", '/api/phase-data'),
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true // Continue refetching even when tab is not active
   });
 
   // State to store SQL queries
@@ -65,7 +67,9 @@ const Panel66KVA = () => {
   // Fetch chart data for each type and phase
   const { data: voltageDataRResponse } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/R')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/R'),
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true
   });
   
   // Extract the chart data from the response

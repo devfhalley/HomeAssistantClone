@@ -42,9 +42,11 @@ const TotalPowerChart = () => {
   const showPanel33 = location === "/" || location === "/wo-08";
   const showPanel66 = location === "/" || location === "/panel-66kva";
   
-  // Fetch the data using TanStack Query
+  // Fetch the data using TanStack Query with automatic refetching
   const { data: chartResponse, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/total-power', granularity, startDate, endDate],
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true, // Continue refetching even when tab is not active
     queryFn: async () => {
       // Build the query string with parameters
       let queryParams = `granularity=${granularity}`;
