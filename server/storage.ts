@@ -438,10 +438,10 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Total power consumption methods
-  // Function to get total power consumption with a full day of data
+  // Function to get total power consumption hour by hour
   async getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]> {
     try {
-      // Get the latest readings for power values but use fixed time range
+      // Get the latest readings for power values
       const panel33 = await this.getPanel33kvaData();
       const panel66 = await this.getPanel66kvaData();
       
@@ -449,58 +449,49 @@ export class DatabaseStorage implements IStorage {
       const panel33Power = panel33 ? parseFloat(panel33.netkw || '0') * 1000 : 11000; // kW to W
       const panel66Power = panel66 ? parseFloat(panel66.netkw || '0') * 1000 : 42000; // kW to W
       
-      // Log timestamp information from the database
+      // Get hour from the timestamp in database (panel33 data)
+      let maxHour = 17; // Default to 17 if we can't extract from timestamp
+      
+      // Log timestamp information for debugging
       if (panel33 && panel33.timestamp) {
-        console.log(`Latest panel33 timestamp: ${panel33.timestamp}`);
+        // Convert UTC timestamp to GMT+7 (Asia/Jakarta)
+        const timestamp = new Date(panel33.timestamp);
+        const hourInGMT7 = (timestamp.getUTCHours() + 7) % 24; // Add 7 for GMT+7, wrap around 24
+        maxHour = hourInGMT7;
+        
+        console.log(`Using timestamp: ${panel33.timestamp}`);
+        console.log(`Converted to GMT+7 hour: ${maxHour}:00`);
       }
       
-      // Create a full day of time points (00:00 to 23:00)
+      // Create hourly power data points from 00:00 up to the current hour
       const dataPoints: TotalPowerData[] = [];
       
-      // Hard-coded data for all 24 hours of the day - this ensures we always show a full day
-      const fullDayData = [
-        { time: "00:00", factor: 0.3 },
-        { time: "01:00", factor: 0.3 },
-        { time: "02:00", factor: 0.3 },
-        { time: "03:00", factor: 0.3 },
-        { time: "04:00", factor: 0.3 },
-        { time: "05:00", factor: 0.4 },
-        { time: "06:00", factor: 0.5 },
-        { time: "07:00", factor: 0.7 },
-        { time: "08:00", factor: 0.9 },
-        { time: "09:00", factor: 1.0 },
-        { time: "10:00", factor: 1.0 },
-        { time: "11:00", factor: 1.0 },
-        { time: "12:00", factor: 1.0 },
-        { time: "13:00", factor: 1.0 },
-        { time: "14:00", factor: 0.9 },
-        { time: "15:00", factor: 0.8 },
-        { time: "16:00", factor: 0.8 },
-        { time: "17:00", factor: 0.9 },
-        { time: "18:00", factor: 1.0 },
-        { time: "19:00", factor: 0.9 },
-        { time: "20:00", factor: 0.8 },
-        { time: "21:00", factor: 0.6 },
-        { time: "22:00", factor: 0.4 },
-        { time: "23:00", factor: 0.3 },
+      // Factors for each hour of the day to simulate realistic power consumption patterns
+      const hourlyFactors = [
+        0.3, 0.3, 0.3, 0.3, 0.3, 0.4, // 0:00-5:00 (low usage)
+        0.5, 0.7, 0.9, 1.0, 1.0, 1.0, // 6:00-11:00 (increasing morning usage)
+        1.0, 1.0, 0.9, 0.8, 0.8, 0.9, // 12:00-17:00 (afternoon usage)
+        1.0, 0.9, 0.8, 0.6, 0.4, 0.3  // 18:00-23:00 (decreasing evening usage)
       ];
       
-      // Add all time points to our data
-      fullDayData.forEach(hourData => {
+      // Create a set of hour data points for the chart
+      // We want data to appear up to the current hour from the database timestamp
+      for (let hour = 0; hour <= maxHour; hour++) {
+        const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
+        const factor = hourlyFactors[hour];
+        
         dataPoints.push({
-          time: hourData.time,
-          panel33Power: Math.round(panel33Power * hourData.factor),
-          panel66Power: Math.round(panel66Power * hourData.factor),
-          totalPower: Math.round((panel33Power + panel66Power) * hourData.factor)
+          time: timeLabel,
+          panel33Power: Math.round(panel33Power * factor),
+          panel66Power: Math.round(panel66Power * factor),
+          totalPower: Math.round((panel33Power + panel66Power) * factor)
         });
-      });
+      }
       
-      // Console log all data points to verify
-      console.log(`Data points generated for power chart: ${dataPoints.length}`);
-      console.log(`First data point: ${JSON.stringify(dataPoints[0])}`);
-      console.log(`Last data point: ${JSON.stringify(dataPoints[dataPoints.length-1])}`);
+      console.log(`Current hour: ${maxHour}:00, Data points generated: ${dataPoints.length}`);
+      console.log(`Last data point: ${dataPoints.length > 0 ? JSON.stringify(dataPoints[dataPoints.length-1]) : "none"}`);
       
-      // Return all data points without filtering
+      // Use dataPoints as our final data
       const filteredData = dataPoints;
       
       return filteredData;

@@ -248,10 +248,12 @@ const TotalPowerChart = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="time" 
-                  // Force XAxis to show all hours from 00-23
-                  domain={['00:00', '23:00']}
+                  // Use dynamic range based on current data
                   type="category"
-                  allowDataOverflow={true}
+                  // Display all ticks, even if there are many
+                  interval={0}
+                  // Increase tick size for better readability
+                  tick={{ fontSize: 10 }}
                 />
                 <YAxis 
                   tickFormatter={(value) => formatPower(value)} 
