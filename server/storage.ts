@@ -132,15 +132,14 @@ export class DatabaseStorage implements IStorage {
     try {
       // Use direct SQL query for consistency with production DB column names
       const result = await pool.query(
-        "SELECT * FROM panel_33kva ORDER BY created_at DESC LIMIT 1"
+        "SELECT * FROM panel_33kva ORDER BY timestamp DESC LIMIT 1"
       );
       
       if (result.rows.length === 0) return undefined;
       
-      // Map created_at to timestamp for compatibility
+      // Use timestamp field directly
       const data = {
-        ...result.rows[0],
-        timestamp: result.rows[0].created_at  // Map to expected property name
+        ...result.rows[0]
       };
       
       return data;
