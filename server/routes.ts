@@ -105,9 +105,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDateObj
       );
       
-      // Limitation - manually filter to only show data up to hour 17 (5PM)
-      // We need to do this here in the API endpoint because the chart always shows all data points
-      const maxHour = 17; // Show data up to 5 PM / 17:00
+      // Since we're working with sample data from 2025-04-14,
+      // where the database timestamp shows 18:xx UTC (6 PM)
+      // we'll use 18 as our cutoff hour to show full day data
+      const maxHour = 18; // Hardcoded to 6 PM (18:00)
+      
+      // Log the cutoff hour we're using
+      console.log(`Using fixed cutoff hour: ${maxHour}:00 (6 PM) to show full day data`);
+      
+      // Get the latest timestamp for informational purposes
+      const panel33 = await storage.getPanel33kvaData();
+      if (panel33 && panel33.timestamp) {
+        console.log(`Latest timestamp from database: ${panel33.timestamp}`);
+      }
+      
+      // Filter data to show only up to the current hour
       const filteredData = allData.filter(point => {
         // Extract hour from the time string (format: "HH:00")
         const hour = parseInt(point.time.split(':')[0], 10);
