@@ -431,8 +431,12 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
       
-      // Combine and process data based on granularity
-      const allData: TotalPowerData[] = [];
+      // Create a map to store aggregated data by time
+      const timeMap = new Map<string, {
+        panel33Power: number;
+        panel66Power: number;
+        totalPower: number;
+      }>();
       
       // Helper function to format date based on granularity
       const formatDate = (date: Date, gran: string): string => {
@@ -452,20 +456,22 @@ export class DatabaseStorage implements IStorage {
         
         const timeLabel = formatDate(new Date(record.timestamp), granularity);
         const netKwValue = parseFloat(record.netkw || '0');
+        const powerValue = netKwValue * 1000; // kW to W
         
-        // Look for existing entry with this time label
-        const existingEntry = allData.find(entry => entry.time === timeLabel);
-        
-        if (existingEntry) {
-          // Add this panel's power to the total
-          existingEntry.totalPower += netKwValue * 1000; // kW to W
-        } else {
-          // Create new entry with this panel's power
-          allData.push({
-            time: timeLabel,
-            totalPower: netKwValue * 1000 // kW to W
-          });
+        // Get or create the entry for this time
+        let entry = timeMap.get(timeLabel);
+        if (!entry) {
+          entry = {
+            panel33Power: 0,
+            panel66Power: 0,
+            totalPower: 0
+          };
+          timeMap.set(timeLabel, entry);
         }
+        
+        // Add this panel's power
+        entry.panel33Power = powerValue; // Use the latest value for this time period
+        entry.totalPower = entry.panel33Power + entry.panel66Power;
       });
       
       // Process panel 66kva data
@@ -474,21 +480,31 @@ export class DatabaseStorage implements IStorage {
         
         const timeLabel = formatDate(new Date(record.timestamp), granularity);
         const netKwValue = parseFloat(record.netkw || '0');
+        const powerValue = netKwValue * 1000; // kW to W
         
-        // Look for existing entry with this time label
-        const existingEntry = allData.find(entry => entry.time === timeLabel);
-        
-        if (existingEntry) {
-          // Add this panel's power to the total
-          existingEntry.totalPower += netKwValue * 1000; // kW to W
-        } else {
-          // Create new entry with this panel's power
-          allData.push({
-            time: timeLabel,
-            totalPower: netKwValue * 1000 // kW to W
-          });
+        // Get or create the entry for this time
+        let entry = timeMap.get(timeLabel);
+        if (!entry) {
+          entry = {
+            panel33Power: 0,
+            panel66Power: 0,
+            totalPower: 0
+          };
+          timeMap.set(timeLabel, entry);
         }
+        
+        // Add this panel's power
+        entry.panel66Power = powerValue; // Use the latest value for this time period
+        entry.totalPower = entry.panel33Power + entry.panel66Power;
       });
+      
+      // Convert the Map to an array of TotalPowerData
+      const allData: TotalPowerData[] = Array.from(timeMap.entries()).map(([time, data]) => ({
+        time,
+        panel33Power: data.panel33Power,
+        panel66Power: data.panel66Power,
+        totalPower: data.totalPower
+      }));
       
       // Sort by time
       allData.sort((a, b) => {

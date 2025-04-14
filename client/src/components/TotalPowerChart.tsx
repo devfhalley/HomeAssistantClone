@@ -13,6 +13,8 @@ import SqlQueryDisplay from '@/components/SqlQueryDisplay';
 
 interface TotalPowerData {
   time: string;
+  panel33Power?: number;
+  panel66Power?: number;
   totalPower: number;
 }
 
@@ -233,11 +235,30 @@ const TotalPowerChart = () => {
                 <Tooltip formatter={(value: any) => formatPower(value as number)} />
                 <Area 
                   type="monotone" 
+                  dataKey="panel33Power" 
+                  name="Panel 1 33KVA"
+                  stroke="#4caf50" 
+                  fill="#4caf50" 
+                  fillOpacity={0.3} 
+                  stackId="1"
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="panel66Power" 
+                  name="Panel 2 66KVA"
+                  stroke="#ff9800" 
+                  fill="#ff9800" 
+                  fillOpacity={0.3}
+                  stackId="1" 
+                />
+                <Area 
+                  type="monotone" 
                   dataKey="totalPower" 
                   name="Total Power"
                   stroke="#03a9f4" 
                   fill="#03a9f4" 
-                  fillOpacity={0.3} 
+                  fillOpacity={0.3}
+                  hide={true} 
                 />
               </AreaChart>
             </ResponsiveContainer>
