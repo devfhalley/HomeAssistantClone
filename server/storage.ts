@@ -442,7 +442,6 @@ export class DatabaseStorage implements IStorage {
     try {
       // Use direct SQL queries with the timestamp column using the exact query requested
       let panel33Query: string, panel66Query: string;
-      let queryParams: Date[] = [];
       
       if (startDate) {
         // For a specific date using Asia/Jakarta timezone
@@ -457,36 +456,27 @@ export class DatabaseStorage implements IStorage {
                         WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
                           AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
                         ORDER BY timestamp`;
-        queryParams = []; // No bind params needed as we've embedded the date directly
       } else {
         // For today (default) with Asia/Jakarta timezone
         panel33Query = `SELECT *
                         FROM panel_33kva
-                        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
-                          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
+                        WHERE timestamp >= date_trunc('day', CURRENT_DATE)
                         ORDER BY timestamp`;
         panel66Query = `SELECT *
                         FROM panel_66kva
-                        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
-                          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
+                        WHERE timestamp >= date_trunc('day', CURRENT_DATE)
                         ORDER BY timestamp`;
       }
       
       console.log("Panel33 Total Power Query:", panel33Query);
       console.log("Panel66 Total Power Query:", panel66Query);
       
-      // Execute queries with parameters if needed
+      // Execute queries directly without parameters - we've embedded any values needed into the query string
       let panel33Result, panel66Result;
       
-      if (startDate) {
-        // For specific date
-        panel33Result = await pool.query(panel33Query, queryParams);
-        panel66Result = await pool.query(panel66Query, queryParams);
-      } else {
-        // For today (default)
-        panel33Result = await pool.query(panel33Query);
-        panel66Result = await pool.query(panel66Query);
-      }
+      // Execute directly - parameters already embedded in the query string
+      panel33Result = await pool.query(panel33Query);
+      panel66Result = await pool.query(panel66Query);
       
       const panel33Data = panel33Result.rows;
       const panel66Data = panel66Result.rows;

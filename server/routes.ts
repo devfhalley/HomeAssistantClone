@@ -104,24 +104,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDateObj
       );
       
-      // Get the SQL queries used for debugging
-      let panel33Query = "SELECT * FROM panel_33kva ORDER BY timestamp";
-      let panel66Query = "SELECT * FROM panel_66kva ORDER BY timestamp";
+      // Get the SQL queries used for debugging - using the Asia/Jakarta timezone format
+      let panel33Query, panel66Query;
       
-      // Add filters if dates were provided
       if (startDateObj) {
-        panel33Query = panel33Query.replace("ORDER BY", `WHERE timestamp >= '${startDateObj.toISOString()}' ORDER BY`);
-        panel66Query = panel66Query.replace("ORDER BY", `WHERE timestamp >= '${startDateObj.toISOString()}' ORDER BY`);
-      }
-      
-      if (endDateObj) {
-        if (startDateObj) {
-          panel33Query = panel33Query.replace("ORDER BY", `AND timestamp <= '${endDateObj.toISOString()}' ORDER BY`);
-          panel66Query = panel66Query.replace("ORDER BY", `AND timestamp <= '${endDateObj.toISOString()}' ORDER BY`);
-        } else {
-          panel33Query = panel33Query.replace("ORDER BY", `WHERE timestamp <= '${endDateObj.toISOString()}' ORDER BY`);
-          panel66Query = panel66Query.replace("ORDER BY", `WHERE timestamp <= '${endDateObj.toISOString()}' ORDER BY`);
-        }
+        // For a specific date
+        const dateStr = startDateObj.toISOString().split('T')[0]; // Get just the date part (YYYY-MM-DD)
+        panel33Query = `
+          SELECT *
+          FROM panel_33kva
+          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
+            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
+          ORDER BY timestamp
+        `;
+        panel66Query = `
+          SELECT *
+          FROM panel_66kva
+          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
+            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
+          ORDER BY timestamp
+        `;
+      } else {
+        // For today (default)
+        panel33Query = `
+          SELECT *
+          FROM panel_33kva
+          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
+            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
+          ORDER BY timestamp
+        `;
+        panel66Query = `
+          SELECT *
+          FROM panel_66kva
+          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
+            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
+          ORDER BY timestamp
+        `;
       }
       
       // Send response with data and SQL queries
