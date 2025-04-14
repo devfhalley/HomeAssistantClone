@@ -96,6 +96,15 @@ const TotalPowerChart = () => {
   // Show all data points from 00:00 to 23:59 as requested by user
   const chartData = chartResponse?.data || [];
   
+  // Debug data received from the API
+  useEffect(() => {
+    if (chartData.length > 0) {
+      console.log("CHART DEBUG - Total power chart data points received:", chartData.length);
+      console.log("CHART DEBUG - First data point:", chartData[0]);
+      console.log("CHART DEBUG - Last data point:", chartData[chartData.length - 1]);
+    }
+  }, [chartData]);
+  
   // Update SQL queries when response changes
   useEffect(() => {
     if (chartResponse?.sqlQueries?.length) {
@@ -116,6 +125,20 @@ const TotalPowerChart = () => {
     return `${value.toFixed(2)} W`;
   };
 
+  // Debug function to print all data
+  const printFullData = () => {
+    console.log("FULL DATA POINTS:", chartData);
+    console.log("Data length:", chartData.length);
+    
+    // Print each hour explicitly to see if any hours are missing
+    const hourMap: {[hour: string]: boolean} = {};
+    chartData.forEach(item => {
+      hourMap[item.time] = true;
+    });
+    
+    console.log("Hours present in data:", Object.keys(hourMap));
+  };
+
   return (
     <Card className="col-span-3">
       <CardHeader className="flex flex-col space-y-2 pb-2">
@@ -128,6 +151,14 @@ const TotalPowerChart = () => {
                 : "Panel 2 66KVA Daily Consumption"}
           </CardTitle>
           <div className="flex items-center space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={printFullData}
+              className="mr-2"
+            >
+              Debug Data
+            </Button>
             <Label htmlFor="granularity">Granularity:</Label>
             <Select
               value={granularity}
@@ -215,8 +246,18 @@ const TotalPowerChart = () => {
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" />
-                <YAxis tickFormatter={(value) => formatPower(value)} />
+                <XAxis 
+                  dataKey="time" 
+                  // Force XAxis to show all hours from 00-23
+                  domain={['00:00', '23:00']}
+                  type="category"
+                  allowDataOverflow={true}
+                />
+                <YAxis 
+                  tickFormatter={(value) => formatPower(value)} 
+                  // Set explicit domain for better visualization
+                  domain={[0, 'dataMax + 5000']}
+                />
                 <Tooltip formatter={(value: any) => formatPower(value as number)} />
                 {showPanel33 && (
                   <Area 
