@@ -153,15 +153,14 @@ export class DatabaseStorage implements IStorage {
     try {
       // Use direct SQL query for consistency with production DB column names
       const result = await pool.query(
-        "SELECT * FROM panel_66kva ORDER BY created_at DESC LIMIT 1"
+        "SELECT * FROM panel_66kva ORDER BY timestamp DESC LIMIT 1"
       );
       
       if (result.rows.length === 0) return undefined;
       
-      // Map created_at to timestamp for compatibility
+      // Use timestamp field directly
       const data = {
-        ...result.rows[0],
-        timestamp: result.rows[0].created_at  // Map to expected property name
+        ...result.rows[0]
       };
       
       return data;
@@ -242,7 +241,7 @@ export class DatabaseStorage implements IStorage {
     try {
       // Use direct SQL query for consistency with production DB column names
       const panel33Result = await pool.query(
-        "SELECT * FROM panel_33kva ORDER BY created_at"
+        "SELECT * FROM panel_33kva ORDER BY timestamp"
       );
       
       // Format timestamp to time string
@@ -256,9 +255,9 @@ export class DatabaseStorage implements IStorage {
       // Process panel33 data
       const panel33Data = panel33Result.rows;
       for (const record of panel33Data) {
-        if (!record.created_at) continue;
+        if (!record.timestamp) continue;
         
-        const time = formatTime(new Date(record.created_at));
+        const time = formatTime(new Date(record.timestamp));
         
         if (phase === 'R') {
           if (dataType === 'voltage') {
@@ -384,20 +383,20 @@ export class DatabaseStorage implements IStorage {
   // Total power consumption methods
   async getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]> {
     try {
-      // Use direct SQL queries with the created_at column instead of timestamp
-      let panel33Query = "SELECT * FROM panel_33kva ORDER BY created_at";
-      let panel66Query = "SELECT * FROM panel_66kva ORDER BY created_at";
+      // Use direct SQL queries with the timestamp column
+      let panel33Query = "SELECT * FROM panel_33kva ORDER BY timestamp";
+      let panel66Query = "SELECT * FROM panel_66kva ORDER BY timestamp";
       
       // Apply date filters if provided
       if (startDate && endDate) {
-        panel33Query = `SELECT * FROM panel_33kva WHERE created_at >= $1 AND created_at <= $2 ORDER BY created_at`;
-        panel66Query = `SELECT * FROM panel_66kva WHERE created_at >= $1 AND created_at <= $2 ORDER BY created_at`;
+        panel33Query = `SELECT * FROM panel_33kva WHERE timestamp >= $1 AND timestamp <= $2 ORDER BY timestamp`;
+        panel66Query = `SELECT * FROM panel_66kva WHERE timestamp >= $1 AND timestamp <= $2 ORDER BY timestamp`;
       } else if (startDate) {
-        panel33Query = `SELECT * FROM panel_33kva WHERE created_at >= $1 ORDER BY created_at`;
-        panel66Query = `SELECT * FROM panel_66kva WHERE created_at >= $1 ORDER BY created_at`;
+        panel33Query = `SELECT * FROM panel_33kva WHERE timestamp >= $1 ORDER BY timestamp`;
+        panel66Query = `SELECT * FROM panel_66kva WHERE timestamp >= $1 ORDER BY timestamp`;
       } else if (endDate) {
-        panel33Query = `SELECT * FROM panel_33kva WHERE created_at <= $1 ORDER BY created_at`;
-        panel66Query = `SELECT * FROM panel_66kva WHERE created_at <= $1 ORDER BY created_at`;
+        panel33Query = `SELECT * FROM panel_33kva WHERE timestamp <= $1 ORDER BY timestamp`;
+        panel66Query = `SELECT * FROM panel_66kva WHERE timestamp <= $1 ORDER BY timestamp`;
       }
       
       // Execute queries with parameters if needed
@@ -441,9 +440,9 @@ export class DatabaseStorage implements IStorage {
       
       // Process panel 33kva data
       panel33Data.forEach(record => {
-        if (!record.created_at) return;
+        if (!record.timestamp) return;
         
-        const timeLabel = formatDate(new Date(record.created_at), granularity);
+        const timeLabel = formatDate(new Date(record.timestamp), granularity);
         const netKwValue = parseFloat(record.netkw || '0');
         
         // Look for existing entry with this time label
@@ -463,9 +462,9 @@ export class DatabaseStorage implements IStorage {
       
       // Process panel 66kva data
       panel66Data.forEach(record => {
-        if (!record.created_at) return;
+        if (!record.timestamp) return;
         
-        const timeLabel = formatDate(new Date(record.created_at), granularity);
+        const timeLabel = formatDate(new Date(record.timestamp), granularity);
         const netKwValue = parseFloat(record.netkw || '0');
         
         // Look for existing entry with this time label

@@ -184,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let data: PhaseData | null = null;
       
       // Get panel 33kva data
-      // Use 'any' type to handle both timestamp and created_at column names
+      // Get panel data with timestamp
       const panel33kvaData = await storage.getPanel33kvaData() as any;
       
       if (panel33kvaData) {
@@ -197,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             energy: parseFloat(panel33kvaData.kvah || '0'),
             frequency: 50, // Default frequency
             pf: 0.9, // Default power factor
-            time: panel33kvaData.created_at || panel33kvaData.timestamp || new Date() // Check created_at first, then timestamp
+            time: panel33kvaData.timestamp || new Date() // Using timestamp field
           };
         } else if (phase === 'S') {
           data = {
@@ -208,7 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             energy: parseFloat(panel33kvaData.kvah || '0'),
             frequency: 50, // Default frequency
             pf: 0.9, // Default power factor
-            time: panel33kvaData.created_at || panel33kvaData.timestamp || new Date() // Check created_at first, then timestamp
+            time: panel33kvaData.timestamp || new Date() // Using timestamp field
           };
         } else if (phase === 'T') {
           data = {
@@ -219,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             energy: parseFloat(panel33kvaData.kvah || '0'),
             frequency: 50, // Default frequency
             pf: 0.9, // Default power factor
-            time: panel33kvaData.created_at || panel33kvaData.timestamp || new Date() // Check created_at first, then timestamp
+            time: panel33kvaData.timestamp || new Date() // Using timestamp field
           };
         }
       }
@@ -307,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Seed panel data
-      // Use created_at instead of timestamp for compatibility with production database
+      // Using timestamp field
       const panel33kvaData: any = {
         volt_r: "218.6",
         volt_s: "228.2",
@@ -321,7 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         kva_t: "5.86",
         netkw: "12.25",
         netkva: "13.67",
-        created_at: new Date() // Changed from timestamp to created_at
+        timestamp: new Date() // Using timestamp field
       };
       
       const panel66kvaData: any = {
