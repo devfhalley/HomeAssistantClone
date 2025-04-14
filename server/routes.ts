@@ -104,42 +104,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDateObj
       );
       
-      // Get the SQL queries used for debugging - using the Asia/Jakarta timezone format
-      let panel33Query, panel66Query;
-      
-      if (startDateObj) {
-        // For a specific date
-        const dateStr = startDateObj.toISOString().split('T')[0]; // Get just the date part (YYYY-MM-DD)
-        panel33Query = `SELECT *
-                        FROM panel_33kva
-                        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
-                          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
-                        ORDER BY timestamp`;
-        panel66Query = `SELECT *
-                        FROM panel_66kva
-                        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
-                          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
-                        ORDER BY timestamp`;
-      } else {
-        // For today (default)
-        panel33Query = `SELECT * 
-                        FROM panel_33kva 
-                        ORDER BY timestamp`;
-        panel66Query = `SELECT * 
-                        FROM panel_66kva 
-                        ORDER BY timestamp`;
-      }
+      // Show the SQL queries used for latest readings - simple and reliable
+      const panel33Query = "SELECT * FROM panel_33kva ORDER BY timestamp DESC LIMIT 1";
+      const panel66Query = "SELECT * FROM panel_66kva ORDER BY timestamp DESC LIMIT 1";
       
       // Send response with data and SQL queries
       res.json({
         data: data,
         sqlQueries: [
           {
-            name: "Panel 33KVA Power Query",
+            name: "Panel 33KVA Latest Reading",
             sql: panel33Query
           },
           {
-            name: "Panel 66KVA Power Query",
+            name: "Panel 66KVA Latest Reading",
             sql: panel66Query
           }
         ]
