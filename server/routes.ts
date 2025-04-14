@@ -91,7 +91,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDateObj
       );
       
-      res.json(data);
+      // Get the SQL queries used for debugging
+      let panel33Query = "SELECT * FROM panel_33kva ORDER BY timestamp";
+      let panel66Query = "SELECT * FROM panel_66kva ORDER BY timestamp";
+      
+      // Add filters if dates were provided
+      if (startDateObj) {
+        panel33Query = panel33Query.replace("ORDER BY", `WHERE timestamp >= '${startDateObj.toISOString()}' ORDER BY`);
+        panel66Query = panel66Query.replace("ORDER BY", `WHERE timestamp >= '${startDateObj.toISOString()}' ORDER BY`);
+      }
+      
+      if (endDateObj) {
+        if (startDateObj) {
+          panel33Query = panel33Query.replace("ORDER BY", `AND timestamp <= '${endDateObj.toISOString()}' ORDER BY`);
+          panel66Query = panel66Query.replace("ORDER BY", `AND timestamp <= '${endDateObj.toISOString()}' ORDER BY`);
+        } else {
+          panel33Query = panel33Query.replace("ORDER BY", `WHERE timestamp <= '${endDateObj.toISOString()}' ORDER BY`);
+          panel66Query = panel66Query.replace("ORDER BY", `WHERE timestamp <= '${endDateObj.toISOString()}' ORDER BY`);
+        }
+      }
+      
+      // Send response with data and SQL queries
+      res.json({
+        data: data,
+        sqlQueries: [
+          {
+            name: "Panel 33KVA Power Query",
+            sql: panel33Query
+          },
+          {
+            name: "Panel 66KVA Power Query",
+            sql: panel66Query
+          }
+        ]
+      });
     } catch (error) {
       console.error("Error fetching total power data:", error);
       res.status(500).json({ error: "Failed to fetch total power data" });
