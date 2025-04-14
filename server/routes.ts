@@ -65,7 +65,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/phase-data", async (req: Request, res: Response) => {
     try {
       const data = await storage.getAllPhaseData();
-      res.json(data);
+      
+      // Get the SQL query used
+      const sqlQuery = "SELECT * FROM panel_33kva ORDER BY timestamp DESC LIMIT 1";
+      
+      // Include both data and SQL queries in the response
+      res.json({
+        data: data,
+        sqlQueries: [
+          {
+            name: "All Phases Data Query",
+            sql: sqlQuery
+          }
+        ]
+      });
     } catch (error) {
       console.error("Error fetching phase data:", error);
       res.status(500).json({ error: "Failed to fetch phase data" });
@@ -190,19 +203,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
+      // Response with data and SQL queries
       res.json({
-        panel33: {
-          peak: panel33PeakValue,
-          peakTime: panel33PeakTime,
-          totalUsage: panel33TotalUsage
+        data: {
+          panel33: {
+            peak: panel33PeakValue,
+            peakTime: panel33PeakTime,
+            totalUsage: panel33TotalUsage
+          },
+          panel66: {
+            peak: panel66PeakValue,
+            peakTime: panel66PeakTime,
+            totalUsage: panel66TotalUsage
+          },
+          totalPeak: panel33PeakValue + panel66PeakValue,
+          totalUsage: panel33TotalUsage + panel66TotalUsage
         },
-        panel66: {
-          peak: panel66PeakValue,
-          peakTime: panel66PeakTime,
-          totalUsage: panel66TotalUsage
-        },
-        totalPeak: panel33PeakValue + panel66PeakValue,
-        totalUsage: panel33TotalUsage + panel66TotalUsage
+        sqlQueries: [
+          {
+            name: "Panel 33KVA Peak Power Query",
+            sql: panel33Query.text
+          },
+          {
+            name: "Panel 66KVA Peak Power Query",
+            sql: panel66Query.text
+          }
+        ]
       });
     } catch (error) {
       console.error("Error fetching peak power data:", error);

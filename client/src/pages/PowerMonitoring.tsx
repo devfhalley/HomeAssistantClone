@@ -56,7 +56,20 @@ const PowerMonitoring = () => {
   // State to store SQL queries
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
   
-  // Fetch phase R data with SQL query
+  // Fetch all phases data at once
+  const { data: allPhasesResponse, isLoading: isLoadingAllPhases } = useQuery({
+    queryKey: ['/api/phase-data'],
+    queryFn: () => apiRequest<{data: PhaseData[], sqlQueries: SqlQuery[]}>("GET", '/api/phase-data')
+  });
+  
+  // Store SQL queries from all phases response
+  useEffect(() => {
+    if (allPhasesResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...allPhasesResponse.sqlQueries]);
+    }
+  }, [allPhasesResponse]);
+  
+  // Fetch individual phase data with SQL query
   const { data: phaseRResponse, isLoading: isLoadingPhaseR } = useQuery({
     queryKey: ['/api/phase-data', 'R'],
     queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/R')
@@ -74,13 +87,14 @@ const PowerMonitoring = () => {
     queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/T')
   });
   
-  const isLoadingPhaseData = isLoadingPhaseR || isLoadingPhaseS || isLoadingPhaseT;
-
-  // Create an interface for the new chart data response format
+  // Create interfaces for the new response formats
   interface ChartDataResponse {
     data: ChartData[];
     sqlQueries: SqlQuery[];
   }
+  
+  // Define loading state for all phase data
+  const isLoadingPhaseData = isLoadingPhaseR || isLoadingPhaseS || isLoadingPhaseT || isLoadingAllPhases;
   
   // Fetch chart data for each type and phase
   const { data: voltageDataRResponse } = useQuery({
