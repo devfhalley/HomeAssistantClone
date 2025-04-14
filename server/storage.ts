@@ -500,7 +500,17 @@ export class DatabaseStorage implements IStorage {
         return (aMinute || 0) - (bMinute || 0);
       });
       
-      return allData;
+      // Filter out future hours beyond the current time
+      const currentHour = new Date().getHours();
+      const currentMinute = new Date().getMinutes();
+      
+      // Only keep data points that are before or equal to the current time
+      const filteredData = allData.filter(dataPoint => {
+        const [hour, minute] = dataPoint.time.split(':').map(Number);
+        return hour < currentHour || (hour === currentHour && (minute || 0) <= currentMinute);
+      });
+      
+      return filteredData; // Return the filtered data instead of the full data
     } catch (error) {
       console.error("Error fetching total power consumption:", error);
       return [];
