@@ -156,29 +156,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Fetching peak power data for date:", today);
       
       // Get current panel data for quick monitoring display
-      const panel33DataQuery = await storage.getPanel33kvaData();
-      const panel66DataQuery = await storage.getPanel66kvaData();
+      const panel33DataQuery = await storage.getPanel33kvaData() as any;
+      const panel66DataQuery = await storage.getPanel66kvaData() as any;
       
-      console.log("Panel33kva Query:", panel33DataQuery?._sqlQuery || "No SQL query available");
-      console.log("Panel66kva Query:", panel66DataQuery?._sqlQuery || "No SQL query available");
+      // Log information about the SQL queries (with type assertions)
+      console.log("Panel33kva Query:", panel33DataQuery?._sqlQuery || "SELECT * FROM panel_33kva ORDER BY timestamp DESC LIMIT 1");
+      console.log("Panel66kva Query:", panel66DataQuery?._sqlQuery || "SELECT * FROM panel_66kva ORDER BY timestamp DESC LIMIT 1");
       
       console.log("Panel 33KVA data:", panel33DataQuery);
       console.log("Panel 66KVA data:", panel66DataQuery);
       
-      // Use the pool directly for raw SQL queries for daily stats
-      const panel33Query = {
-        text: "SELECT * FROM panel_33kva WHERE timestamp >= $1 AND timestamp < $2 ORDER BY netkw DESC",
-        values: [today, tomorrow]
-      };
-      const panel33Result = await pool.query(panel33Query);
+      // Use the exact SQL query format requested by the user
+      const panel33QueryText = `
+        SELECT * 
+        FROM panel_33kva 
+        WHERE timestamp BETWEEN (date_trunc('day', current_date) + interval '1 minute')
+                            AND NOW() 
+        ORDER BY netkw DESC
+      `;
+      const panel33Result = await pool.query(panel33QueryText);
       const panel33Data = panel33Result.rows;
       console.log("Panel 33KVA data count:", panel33Data.length);
       
-      const panel66Query = {
-        text: "SELECT * FROM panel_66kva WHERE timestamp >= $1 AND timestamp < $2 ORDER BY netkw DESC",
-        values: [today, tomorrow]
-      };
-      const panel66Result = await pool.query(panel66Query);
+      const panel66QueryText = `
+        SELECT * 
+        FROM panel_66kva 
+        WHERE timestamp BETWEEN (date_trunc('day', current_date) + interval '1 minute')
+                            AND NOW() 
+        ORDER BY netkw DESC
+      `;
+      const panel66Result = await pool.query(panel66QueryText);
       const panel66Data = panel66Result.rows;
       console.log("Panel 66KVA data count:", panel66Data.length);
       
@@ -232,11 +239,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sqlQueries: [
           {
             name: "Panel 33KVA Peak Power Query",
-            sql: panel33Query.text
+            sql: panel33QueryText
           },
           {
             name: "Panel 66KVA Peak Power Query",
-            sql: panel66Query.text
+            sql: panel66QueryText
           }
         ]
       });

@@ -9,6 +9,14 @@ import { eq, and, desc, gte, lte } from "drizzle-orm";
 
 import session from "express-session";
 
+// Define the extended panel types with _sqlQuery property
+interface PanelWithSqlQuery {
+  _sqlQuery?: string;
+}
+
+type Panel33kvaWithQuery = Panel33kva & PanelWithSqlQuery;
+type Panel66kvaWithQuery = Panel66kva & PanelWithSqlQuery;
+
 export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -16,14 +24,14 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   
   // Panel data methods 
-  getPanel33kvaData(): Promise<Panel33kva | undefined>;
-  getPanel66kvaData(): Promise<Panel66kva | undefined>;
+  getPanel33kvaData(): Promise<Panel33kvaWithQuery | undefined>;
+  getPanel66kvaData(): Promise<Panel66kvaWithQuery | undefined>;
   getAllPhaseData(): Promise<PhaseData[]>;
   createPanel33kvaData(data: InsertPanel33kva): Promise<Panel33kva>;
   createPanel66kvaData(data: InsertPanel66kva): Promise<Panel66kva>;
   
   // Chart data methods (now using panel data)
-  getChartDataByType(dataType: string, phase: string): Promise<ChartData[]>;
+  getChartDataByType(dataType: string, phase: string, specificDate?: Date): Promise<ChartData[]>;
   
   // Total power consumption methods
   getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]>;
@@ -432,8 +440,8 @@ export class DatabaseStorage implements IStorage {
   async getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]> {
     try {
       // Use direct SQL queries with the timestamp column using the exact query requested
-      let panel33Query, panel66Query;
-      let queryParams = [];
+      let panel33Query: string, panel66Query: string;
+      let queryParams: Date[] = [];
       
       if (startDate) {
         // For a specific date (not today)
