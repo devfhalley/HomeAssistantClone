@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import SqlQueryDisplay from '@/components/SqlQueryDisplay';
+import { useLocation } from 'wouter';
 
 interface TotalPowerData {
   time: string;
@@ -35,6 +36,11 @@ const TotalPowerChart = () => {
   
   // State to store SQL queries
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
+  
+  // Get current route to determine which panel data to show
+  const [location] = useLocation();
+  const showPanel33 = location === "/" || location === "/wo-08";
+  const showPanel66 = location === "/" || location === "/panel-66kva";
   
   // Fetch the data using TanStack Query
   const { data: chartResponse, isLoading, error, refetch } = useQuery({
@@ -111,7 +117,11 @@ const TotalPowerChart = () => {
       <CardHeader className="flex flex-col space-y-2 pb-2">
         <div className="flex flex-row items-center justify-between">
           <CardTitle className="text-md font-medium">
-            Daily Total Power Consumption
+            {showPanel33 && showPanel66 
+              ? "Daily Total Power Consumption" 
+              : showPanel33 
+                ? "Panel 1 33KVA Power Consumption" 
+                : "Panel 2 66KVA Power Consumption"}
           </CardTitle>
           <div className="flex items-center space-x-2">
             <Label htmlFor="granularity">Granularity:</Label>
@@ -233,24 +243,28 @@ const TotalPowerChart = () => {
                 <XAxis dataKey="time" />
                 <YAxis tickFormatter={(value) => formatPower(value)} />
                 <Tooltip formatter={(value: any) => formatPower(value as number)} />
-                <Area 
-                  type="monotone" 
-                  dataKey="panel33Power" 
-                  name="Panel 1 33KVA"
-                  stroke="#4caf50" 
-                  fill="#4caf50" 
-                  fillOpacity={0.3} 
-                  stackId="1"
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="panel66Power" 
-                  name="Panel 2 66KVA"
-                  stroke="#ff9800" 
-                  fill="#ff9800" 
-                  fillOpacity={0.3}
-                  stackId="1" 
-                />
+                {showPanel33 && (
+                  <Area 
+                    type="monotone" 
+                    dataKey="panel33Power" 
+                    name="Panel 1 33KVA"
+                    stroke="#4caf50" 
+                    fill="#4caf50" 
+                    fillOpacity={0.3} 
+                    stackId="1"
+                  />
+                )}
+                {showPanel66 && (
+                  <Area 
+                    type="monotone" 
+                    dataKey="panel66Power" 
+                    name="Panel 2 66KVA"
+                    stroke="#ff9800" 
+                    fill="#ff9800" 
+                    fillOpacity={0.3}
+                    stackId="1" 
+                  />
+                )}
                 <Area 
                   type="monotone" 
                   dataKey="totalPower" 
@@ -258,7 +272,7 @@ const TotalPowerChart = () => {
                   stroke="#03a9f4" 
                   fill="#03a9f4" 
                   fillOpacity={0.3}
-                  hide={true} 
+                  hide={!showPanel33 || !showPanel66} 
                 />
               </AreaChart>
             </ResponsiveContainer>
