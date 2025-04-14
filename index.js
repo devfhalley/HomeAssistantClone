@@ -6,7 +6,7 @@ const ws = require('ws');
 
 // Database configuration
 const dbConfig = {
-  connectionString: "postgres://root:Panelutama22.@165.22.50.101:5432/panel_utama"
+  connectionString: "postgres://root:panel_utama@165.22.50.101:5432/panel_utama"
 };
 
 // Create PostgreSQL pool
