@@ -9,6 +9,7 @@ import {
   type InsertPanel66kva,
   type PhaseData,
   type ChartData,
+  type TotalPowerData,
   panel33kva,
   panel66kva
 } from "@shared/schema";
@@ -115,8 +116,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startDateObj = startDate ? new Date(startDate as string) : undefined;
         endDateObj = endDate ? new Date(endDate as string) : undefined;
       }
+
+      // Check if we have any real data in the database for the requested date
+      let hasRealData = false;
+      let dateStr = '';
       
-      // Get power consumption data
+      // Format the date for the SQL query
+      if (startDateObj) {
+        dateStr = startDateObj.toISOString().split('T')[0];
+        // Check if we have data for this specific date
+        const checkQuery = `
+          SELECT COUNT(*) as record_count 
+          FROM panel_33kva 
+          WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
+        `;
+        
+        console.log(`Checking for real data on ${dateStr} with query: ${checkQuery}`);
+        
+        try {
+          const result = await pool.query(checkQuery);
+          const count = parseInt(result.rows[0].record_count);
+          hasRealData = count > 0;
+          console.log(`Data check for ${dateStr}: ${count} records found`);
+        } catch (err) {
+          console.error("Error checking for data:", err);
+          hasRealData = false;
+        }
+      } else {
+        // For today, just check if any data exists
+        const checkQuery = `
+          SELECT COUNT(*) as record_count 
+          FROM panel_33kva
+          WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = CURRENT_DATE
+        `;
+        
+        console.log(`Checking for real data today with query: ${checkQuery}`);
+        
+        try {
+          const result = await pool.query(checkQuery);
+          const count = parseInt(result.rows[0].record_count);
+          hasRealData = count > 0;
+          console.log(`Data check for today: ${count} records found`);
+        } catch (err) {
+          console.error("Error checking for data:", err);
+          hasRealData = false;
+        }
+      }
+      
+      // If no real data exists, return zeros instead of simulated data
+      if (!hasRealData) {
+        console.log(`No real data found for ${startDateObj ? dateStr : 'today'} - returning zeros for all hours`);
+        const zeroDataPoints: TotalPowerData[] = [];
+        
+        // Generate 24 hours of zero data
+        for (let hour = 0; hour < 24; hour++) {
+          const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
+          zeroDataPoints.push({
+            time: timeLabel,
+            panel33Power: 0,
+            panel66Power: 0,
+            totalPower: 0
+          });
+        }
+        
+        // Send response with zero data and SQL query explanation
+        return res.json({
+          data: zeroDataPoints,
+          sqlQueries: [
+            {
+              name: "Data check query",
+              sql: startDateObj 
+                ? `SELECT COUNT(*) FROM panel_33kva WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'`
+                : `SELECT COUNT(*) FROM panel_33kva WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = CURRENT_DATE`
+            },
+            {
+              name: "Result",
+              sql: `-- No data found for ${startDateObj ? dateStr : 'today'} - returning zeros for all hours`
+            }
+          ]
+        });
+      }
+      
+      // Get power consumption data (only if we have real data)
       const allData = await storage.getTotalPowerConsumption(
         granularity as string,
         startDateObj,
