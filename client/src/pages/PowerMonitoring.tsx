@@ -3,10 +3,11 @@ import HomeAssistant from "@/components/HomeAssistant";
 import PowerMonitorCard from "@/components/PowerMonitorCard";
 import ChartCard from "@/components/ChartCard";
 import TotalPowerChart from "@/components/TotalPowerChart";
-import SqlQueryDisplay from "@/components/SqlQueryDisplay";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { type ChartData } from "@shared/schema";
+import SqlQueryDisplay from "@/components/SqlQueryDisplay";
+import { RefreshCw } from "lucide-react";
 
 // Interface for phase data from API
 interface PhaseData {
@@ -20,13 +21,13 @@ interface PhaseData {
   time: Date;
 }
 
-// SQL query interface
+// Interface for SQL queries
 interface SqlQuery {
   name: string;
   sql: string;
 }
 
-// API response including SQL queries
+// Interface for API response
 interface ApiResponse {
   data: PhaseData;
   sqlQueries: SqlQuery[];
@@ -59,401 +60,168 @@ const processChartData = (data: ChartData[] | undefined): ChartDataPoint[] => {
 };
 
 const PowerMonitoring = () => {
+  useEffect(() => {
+    document.title = "Home Assistant - Power Monitoring";
+  }, []);
+
   // State to store SQL queries
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
   
-  // Fetch all phases data at once with auto-refresh
-  const { data: allPhasesResponse, isLoading: isLoadingAllPhases } = useQuery({
-    queryKey: ['/api/phase-data'],
-    queryFn: () => apiRequest<{data: PhaseData[], sqlQueries: SqlQuery[]}>("GET", '/api/phase-data'),
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true // Continue refetching even when tab is not active
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  // Store SQL queries from all phases response
-  useEffect(() => {
-    if (allPhasesResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...allPhasesResponse.sqlQueries]);
-    }
-  }, [allPhasesResponse]);
-  
-  // Fetch individual phase data with SQL query and auto-refresh
-  const { data: phaseRResponse, isLoading: isLoadingPhaseR } = useQuery({
-    queryKey: ['/api/phase-data', 'R'],
+  // Fetch phase R data with automatic refetching every 10 seconds
+  const { 
+    data: phaseRData, 
+    isLoading: isLoadingPhaseR, 
+    isFetching: isFetchingPhaseR 
+  } = useQuery<ApiResponse>({
+    queryKey: ['/api/phase-data/R'],
     queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/R'),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+  });
   
-  // Fetch phase S data with SQL query
-  const { data: phaseSResponse, isLoading: isLoadingPhaseS } = useQuery({
-    queryKey: ['/api/phase-data', 'S'],
+  // Fetch phase S data
+  const { 
+    data: phaseSData, 
+    isLoading: isLoadingPhaseS, 
+    isFetching: isFetchingPhaseS 
+  } = useQuery<ApiResponse>({
+    queryKey: ['/api/phase-data/S'],
     queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/S'),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+  });
   
-  // Fetch phase T data with SQL query
-  const { data: phaseTResponse, isLoading: isLoadingPhaseT } = useQuery({
-    queryKey: ['/api/phase-data', 'T'],
+  // Fetch phase T data
+  const { 
+    data: phaseTData, 
+    isLoading: isLoadingPhaseT, 
+    isFetching: isFetchingPhaseT 
+  } = useQuery<ApiResponse>({
+    queryKey: ['/api/phase-data/T'],
     queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/T'),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+  });
   
-  // Create interfaces for the new response formats
+  // Create an interface for the new response format
   interface ChartDataResponse {
     data: ChartData[];
     sqlQueries: SqlQuery[];
   }
   
-  // Define loading state for all phase data
-  const isLoadingPhaseData = isLoadingPhaseR || isLoadingPhaseS || isLoadingPhaseT || isLoadingAllPhases;
-  
-  // Fetch chart data for each type and phase with auto-refresh
-  const { data: voltageDataRResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'voltage', 'R'],
+  // Fetch voltage chart data
+  const { 
+    data: voltageChartData, 
+    isLoading: isLoadingVoltageChart, 
+    isFetching: isFetchingVoltageChart 
+  } = useQuery<ChartDataResponse>({
+    queryKey: ['/api/chart-data/voltage/R'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/R'),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+  });
   
-  // Extract the chart data from the response
-  const voltageDataR = voltageDataRResponse?.data;
-  
-  // Collect SQL queries
-  useEffect(() => {
-    if (voltageDataRResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...voltageDataRResponse.sqlQueries]);
-    }
-  }, [voltageDataRResponse]);
-
-  const { data: voltageDataSResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'voltage', 'S'],
+  // Fetch voltage S chart data
+  const { 
+    data: voltageSChartData, 
+    isLoading: isLoadingVoltageSChart, 
+    isFetching: isFetchingVoltageSChart 
+  } = useQuery<ChartDataResponse>({
+    queryKey: ['/api/chart-data/voltage/S'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/S'),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
-  ,
+  });
+  
+  // Fetch voltage T chart data
+  const { 
+    data: voltageTChartData, 
+    isLoading: isLoadingVoltageTChart, 
+    isFetching: isFetchingVoltageTChart 
+  } = useQuery<ChartDataResponse>({
+    queryKey: ['/api/chart-data/voltage/T'],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/T'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
-  // Extract data and collect SQL queries
-  const voltageDataS = voltageDataSResponse?.data;
-  
+  // Process and collect SQL queries
   useEffect(() => {
-    if (voltageDataSResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...voltageDataSResponse.sqlQueries]);
-    }
-  }, [voltageDataSResponse]);
-
-  const { data: voltageDataTResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'voltage', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/T')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  // Extract data and collect SQL queries
-  const voltageDataT = voltageDataTResponse?.data;
-  
-  useEffect(() => {
-    if (voltageDataTResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...voltageDataTResponse.sqlQueries]);
-    }
-  }, [voltageDataTResponse]);
-
-  const { data: currentDataRResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'current', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/R')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const currentDataR = currentDataRResponse?.data;
-  
-  useEffect(() => {
-    if (currentDataRResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...currentDataRResponse.sqlQueries]);
-    }
-  }, [currentDataRResponse]);
-
-  const { data: currentDataSResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'current', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/S')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const currentDataS = currentDataSResponse?.data;
-  
-  useEffect(() => {
-    if (currentDataSResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...currentDataSResponse.sqlQueries]);
-    }
-  }, [currentDataSResponse]);
-
-  const { data: currentDataTResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'current', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/T')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const currentDataT = currentDataTResponse?.data;
-  
-  useEffect(() => {
-    if (currentDataTResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...currentDataTResponse.sqlQueries]);
-    }
-  }, [currentDataTResponse]);
-
-  const { data: powerDataRResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'power', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/R')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const powerDataR = powerDataRResponse?.data;
-  
-  useEffect(() => {
-    if (powerDataRResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...powerDataRResponse.sqlQueries]);
-    }
-  }, [powerDataRResponse]);
-
-  const { data: powerDataSResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'power', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/S')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const powerDataS = powerDataSResponse?.data;
-  
-  useEffect(() => {
-    if (powerDataSResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...powerDataSResponse.sqlQueries]);
-    }
-  }, [powerDataSResponse]);
-
-  const { data: powerDataTResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'power', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/T')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const powerDataT = powerDataTResponse?.data;
-  
-  useEffect(() => {
-    if (powerDataTResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...powerDataTResponse.sqlQueries]);
-    }
-  }, [powerDataTResponse]);
-  
-  const { data: frequencyDataRResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'frequency', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/R')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const frequencyDataR = frequencyDataRResponse?.data;
-  
-  useEffect(() => {
-    if (frequencyDataRResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...frequencyDataRResponse.sqlQueries]);
-    }
-  }, [frequencyDataRResponse]);
-
-  const { data: frequencyDataSResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'frequency', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/S')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const frequencyDataS = frequencyDataSResponse?.data;
-  
-  useEffect(() => {
-    if (frequencyDataSResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...frequencyDataSResponse.sqlQueries]);
-    }
-  }, [frequencyDataSResponse]);
-
-  const { data: frequencyDataTResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'frequency', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/T')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const frequencyDataT = frequencyDataTResponse?.data;
-  
-  useEffect(() => {
-    if (frequencyDataTResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...frequencyDataTResponse.sqlQueries]);
-    }
-  }, [frequencyDataTResponse]);
-  
-  const { data: pfDataRResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'pf', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/R')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const pfDataR = pfDataRResponse?.data;
-  
-  useEffect(() => {
-    if (pfDataRResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...pfDataRResponse.sqlQueries]);
-    }
-  }, [pfDataRResponse]);
-
-  const { data: pfDataSResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'pf', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/S')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const pfDataS = pfDataSResponse?.data;
-  
-  useEffect(() => {
-    if (pfDataSResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...pfDataSResponse.sqlQueries]);
-    }
-  }, [pfDataSResponse]);
-
-  const { data: pfDataTResponse } = useQuery({
-    queryKey: ['/api/chart-data', 'pf', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/T')
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
-  
-  const pfDataT = pfDataTResponse?.data;
-  
-  useEffect(() => {
-    if (pfDataTResponse?.sqlQueries) {
-      setSqlQueries(prev => [...prev, ...pfDataTResponse.sqlQueries]);
-    }
-  }, [pfDataTResponse]);
-  
-  // Process and collect phase data + SQL queries
-  const [processedPhaseData, setProcessedPhaseData] = useState(defaultPhaseData);
-  
-  useEffect(() => {
-    // Process phase data
-    const newProcessedData = { ...defaultPhaseData };
-    const newSqlQueries: SqlQuery[] = [];
+    // Collect SQL queries from all responses
+    const allQueries: SqlQuery[] = [];
     
-    // Process individual phase responses
-    if (phaseRResponse?.data) {
-      newProcessedData.R = {
-        voltage: phaseRResponse.data.voltage,
-        current: phaseRResponse.data.current,
-        power: phaseRResponse.data.power,
-        energy: phaseRResponse.data.energy,
-        frequency: phaseRResponse.data.frequency,
-        pf: phaseRResponse.data.pf
-      };
-      
-      // Collect SQL queries
-      if (phaseRResponse.sqlQueries) {
-        newSqlQueries.push(...phaseRResponse.sqlQueries);
-      }
-    }
+    if (phaseRData?.sqlQueries) allQueries.push(...phaseRData.sqlQueries);
+    if (phaseSData?.sqlQueries) allQueries.push(...phaseSData.sqlQueries);
+    if (phaseTData?.sqlQueries) allQueries.push(...phaseTData.sqlQueries);
     
-    if (phaseSResponse?.data) {
-      newProcessedData.S = {
-        voltage: phaseSResponse.data.voltage,
-        current: phaseSResponse.data.current,
-        power: phaseSResponse.data.power,
-        energy: phaseSResponse.data.energy,
-        frequency: phaseSResponse.data.frequency,
-        pf: phaseSResponse.data.pf
-      };
-      
-      // Collect SQL queries
-      if (phaseSResponse.sqlQueries) {
-        newSqlQueries.push(...phaseSResponse.sqlQueries);
-      }
-    }
+    if (voltageChartData?.sqlQueries) allQueries.push(...voltageChartData.sqlQueries);
+    if (voltageSChartData?.sqlQueries) allQueries.push(...voltageSChartData.sqlQueries);
+    if (voltageTChartData?.sqlQueries) allQueries.push(...voltageTChartData.sqlQueries);
     
-    if (phaseTResponse?.data) {
-      newProcessedData.T = {
-        voltage: phaseTResponse.data.voltage,
-        current: phaseTResponse.data.current,
-        power: phaseTResponse.data.power,
-        energy: phaseTResponse.data.energy,
-        frequency: phaseTResponse.data.frequency,
-        pf: phaseTResponse.data.pf
-      };
-      
-      // Collect SQL queries
-      if (phaseTResponse.sqlQueries) {
-        newSqlQueries.push(...phaseTResponse.sqlQueries);
-      }
-    }
+    // Remove duplicates by query string
+    const uniqueQueries = Array.from(
+      new Map(allQueries.map(q => [q.sql, q])).values()
+    );
     
-    // Process all phases response
-    if (allPhasesResponse?.data && Array.isArray(allPhasesResponse.data)) {
-      // Update phase data from all phases response
-      for (const phaseData of allPhasesResponse.data) {
-        if (phaseData.phase === 'R') {
-          newProcessedData.R = {
-            voltage: phaseData.voltage,
-            current: phaseData.current,
-            power: phaseData.power,
-            energy: phaseData.energy,
-            frequency: phaseData.frequency,
-            pf: phaseData.pf
-          };
-        } else if (phaseData.phase === 'S') {
-          newProcessedData.S = {
-            voltage: phaseData.voltage,
-            current: phaseData.current,
-            power: phaseData.power,
-            energy: phaseData.energy,
-            frequency: phaseData.frequency,
-            pf: phaseData.pf
-          };
-        } else if (phaseData.phase === 'T') {
-          newProcessedData.T = {
-            voltage: phaseData.voltage,
-            current: phaseData.current,
-            power: phaseData.power,
-            energy: phaseData.energy,
-            frequency: phaseData.frequency,
-            pf: phaseData.pf
-          };
-        }
-      }
-    }
+    // Update state
+    setSqlQueries(uniqueQueries);
+  }, [
+    phaseRData, phaseSData, phaseTData, 
+    voltageChartData, voltageSChartData, voltageTChartData
+  ]);
+  
+  // Process phase data for display
+  const processedPhaseData = {
+    R: phaseRData?.data ? {
+      voltage: phaseRData.data.voltage,
+      current: phaseRData.data.current,
+      power: phaseRData.data.power,
+      energy: phaseRData.data.energy,
+      frequency: phaseRData.data.frequency,
+      pf: phaseRData.data.pf
+    } : defaultPhaseData.R,
     
-    setProcessedPhaseData(newProcessedData);
-    setSqlQueries(newSqlQueries);
-  }, [phaseRResponse, phaseSResponse, phaseTResponse, allPhasesResponse]);
+    S: phaseSData?.data ? {
+      voltage: phaseSData.data.voltage,
+      current: phaseSData.data.current,
+      power: phaseSData.data.power,
+      energy: phaseSData.data.energy,
+      frequency: phaseSData.data.frequency,
+      pf: phaseSData.data.pf
+    } : defaultPhaseData.S,
+    
+    T: phaseTData?.data ? {
+      voltage: phaseTData.data.voltage,
+      current: phaseTData.data.current,
+      power: phaseTData.data.power,
+      energy: phaseTData.data.energy,
+      frequency: phaseTData.data.frequency,
+      pf: phaseTData.data.pf
+    } : defaultPhaseData.T
+  };
+  
+  // Determine if any data is currently being fetched
+  const isFetchingData = 
+    isFetchingPhaseR || isFetchingPhaseS || isFetchingPhaseT ||
+    isFetchingVoltageChart || isFetchingVoltageSChart || isFetchingVoltageTChart;
+  
+  // Extract chart data
+  const voltageRChartData = voltageChartData?.data || [];
+  const voltageSChartData2 = voltageSChartData?.data || [];
+  const voltageTChartData2 = voltageTChartData?.data || [];
   
   return (
     <HomeAssistant>
       <div className="space-y-4">
         {/* Panel Name Header */}
-        <div className="bg-blue-600 text-white p-3 rounded-md">
-          <h1 className="text-xl font-bold">Panel 1 33KVA Monitoring</h1>
+        <div className="bg-blue-600 text-white p-3 rounded-md flex justify-between items-center">
+          <h1 className="text-xl font-bold">Panel 33KVA Monitoring</h1>
+          {isFetchingData && (
+            <div className="flex items-center">
+              <RefreshCw className="w-4 h-4 mr-2 text-white animate-spin" />
+              <span className="text-sm text-white">Refreshing data...</span>
+            </div>
+          )}
         </div>
         
         {/* Total Power Consumption Chart */}
@@ -465,7 +233,7 @@ const PowerMonitoring = () => {
         <div>
           <h2 className="text-lg font-semibold mb-3">Phase Monitoring</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {isLoadingPhaseData ? (
+            {isLoadingPhaseR || isLoadingPhaseS || isLoadingPhaseT ? (
               // Skeleton loading state for power monitor cards
               <>
                 <div className="h-[300px] animate-pulse bg-gray-200 rounded-md"></div>
@@ -475,36 +243,36 @@ const PowerMonitoring = () => {
             ) : (
               <>
                 <PowerMonitorCard 
-                  title="Panel 1 33KVA - Phase R" 
+                  title="Panel 33KVA - Phase R" 
                   phase="R"
-                  voltage={processedPhaseData.R?.voltage || 0}
-                  current={processedPhaseData.R?.current || 0}
-                  power={processedPhaseData.R?.power || 0}
-                  energy={processedPhaseData.R?.energy || 0}
-                  frequency={processedPhaseData.R?.frequency || 0}
-                  pf={processedPhaseData.R?.pf || 0}
+                  voltage={processedPhaseData.R.voltage}
+                  current={processedPhaseData.R.current}
+                  power={processedPhaseData.R.power}
+                  energy={processedPhaseData.R.energy}
+                  frequency={processedPhaseData.R.frequency}
+                  pf={processedPhaseData.R.pf}
                 />
                 
                 <PowerMonitorCard 
-                  title="Panel 1 33KVA - Phase S" 
+                  title="Panel 33KVA - Phase S" 
                   phase="S"
-                  voltage={processedPhaseData.S?.voltage || 0}
-                  current={processedPhaseData.S?.current || 0}
-                  power={processedPhaseData.S?.power || 0}
-                  energy={processedPhaseData.S?.energy || 0}
-                  frequency={processedPhaseData.S?.frequency || 0}
-                  pf={processedPhaseData.S?.pf || 0}
+                  voltage={processedPhaseData.S.voltage}
+                  current={processedPhaseData.S.current}
+                  power={processedPhaseData.S.power}
+                  energy={processedPhaseData.S.energy}
+                  frequency={processedPhaseData.S.frequency}
+                  pf={processedPhaseData.S.pf}
                 />
                 
                 <PowerMonitorCard 
-                  title="Panel 1 33KVA - Phase T" 
+                  title="Panel 33KVA - Phase T" 
                   phase="T"
-                  voltage={processedPhaseData.T?.voltage || 0}
-                  current={processedPhaseData.T?.current || 0}
-                  power={processedPhaseData.T?.power || 0}
-                  energy={processedPhaseData.T?.energy || 0}
-                  frequency={processedPhaseData.T?.frequency || 0}
-                  pf={processedPhaseData.T?.pf || 0}
+                  voltage={processedPhaseData.T.voltage}
+                  current={processedPhaseData.T.current}
+                  power={processedPhaseData.T.power}
+                  energy={processedPhaseData.T.energy}
+                  frequency={processedPhaseData.T.frequency}
+                  pf={processedPhaseData.T.pf}
                 />
               </>
             )}
@@ -516,50 +284,12 @@ const PowerMonitoring = () => {
           <h2 className="text-lg font-semibold my-3">Electrical Parameters</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <ChartCard 
-              title="Panel 1 33KVA - Voltage" 
-              phaseRData={processChartData(voltageDataR)}
-              phaseSData={processChartData(voltageDataS)}
-              phaseTData={processChartData(voltageDataT)}
+              title="Panel 33KVA - Voltage" 
+              phaseRData={processChartData(voltageRChartData)}
+              phaseSData={processChartData(voltageSChartData2)}
+              phaseTData={processChartData(voltageTChartData2)}
               yAxisDomain={[190, 240]}
               unit="V"
-            />
-            
-            <ChartCard 
-              title="Panel 1 33KVA - Current" 
-              phaseRData={processChartData(currentDataR)}
-              phaseSData={processChartData(currentDataS)}
-              phaseTData={processChartData(currentDataT)}
-              yAxisDomain={[0, 100]}
-              unit="A"
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <ChartCard 
-              title="Panel 1 33KVA - Power" 
-              phaseRData={processChartData(powerDataR)}
-              phaseSData={processChartData(powerDataS)}
-              phaseTData={processChartData(powerDataT)}
-              yAxisDomain={[0, 20000]}
-              unit="W"
-            />
-            
-            <ChartCard 
-              title="Panel 1 33KVA - Frequency" 
-              phaseRData={processChartData(frequencyDataR)}
-              phaseSData={processChartData(frequencyDataS)}
-              phaseTData={processChartData(frequencyDataT)}
-              yAxisDomain={[49.5, 50.5]}
-              unit="Hz"
-            />
-            
-            <ChartCard 
-              title="Panel 1 33KVA - Power Factor" 
-              phaseRData={processChartData(pfDataR)}
-              phaseSData={processChartData(pfDataS)}
-              phaseTData={processChartData(pfDataT)}
-              yAxisDomain={[0.8, 1.0]}
-              unit=""
             />
           </div>
         </div>

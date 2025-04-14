@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { type ChartData } from "@shared/schema";
 import SqlQueryDisplay from "@/components/SqlQueryDisplay";
+import { RefreshCw } from "lucide-react";
 
 // Interface for phase data from API
 interface PhaseData {
@@ -48,14 +49,16 @@ const processChartData = (data: ChartData[] | undefined): ChartDataPoint[] => {
 
 const Panel66KVA = () => {
   // Fetch phase data with automatic refetching every 10 seconds
-  const { data: phaseDataArray, isLoading: isLoadingPhaseData } = useQuery({
+  const { 
+    data: phaseDataArray, 
+    isLoading: isLoadingPhaseData, 
+    isFetching: isFetchingPhaseData 
+  } = useQuery({
     queryKey: ['/api/phase-data'],
     queryFn: () => apiRequest<PhaseData[]>("GET", '/api/phase-data'),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true // Continue refetching even when tab is not active
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+  });
 
   // State to store SQL queries
   const [sqlQueries, setSqlQueries] = useState<{ name: string; sql: string; }[]>([]);
@@ -67,14 +70,15 @@ const Panel66KVA = () => {
   }
   
   // Fetch chart data for each type and phase
-  const { data: voltageDataRResponse } = useQuery({
+  const { 
+    data: voltageDataRResponse,
+    isFetching: isFetchingVoltageR
+  } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'R'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/R'),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
-  ,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+  });
   
   // Extract the chart data from the response
   const voltageDataR = voltageDataRResponse?.data;
@@ -86,12 +90,15 @@ const Panel66KVA = () => {
     }
   }, [voltageDataRResponse]);
 
-  const { data: voltageDataSResponse } = useQuery({
+  const { 
+    data: voltageDataSResponse,
+    isFetching: isFetchingVoltageS
+  } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/S')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/S'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const voltageDataS = voltageDataSResponse?.data;
   
@@ -101,12 +108,15 @@ const Panel66KVA = () => {
     }
   }, [voltageDataSResponse]);
 
-  const { data: voltageDataTResponse } = useQuery({
+  const { 
+    data: voltageDataTResponse,
+    isFetching: isFetchingVoltageT
+  } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/T')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/T'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const voltageDataT = voltageDataTResponse?.data;
   
@@ -116,12 +126,15 @@ const Panel66KVA = () => {
     }
   }, [voltageDataTResponse]);
 
-  const { data: currentDataRResponse } = useQuery({
+  const { 
+    data: currentDataRResponse,
+    isFetching: isFetchingCurrentR
+  } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/R')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/R'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const currentDataR = currentDataRResponse?.data;
   
@@ -131,12 +144,15 @@ const Panel66KVA = () => {
     }
   }, [currentDataRResponse]);
 
-  const { data: currentDataSResponse } = useQuery({
+  const { 
+    data: currentDataSResponse,
+    isFetching: isFetchingCurrentS 
+  } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/S')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/S'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const currentDataS = currentDataSResponse?.data;
   
@@ -146,12 +162,15 @@ const Panel66KVA = () => {
     }
   }, [currentDataSResponse]);
 
-  const { data: currentDataTResponse } = useQuery({
+  const { 
+    data: currentDataTResponse,
+    isFetching: isFetchingCurrentT 
+  } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/T')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/T'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const currentDataT = currentDataTResponse?.data;
   
@@ -161,12 +180,15 @@ const Panel66KVA = () => {
     }
   }, [currentDataTResponse]);
 
-  const { data: powerDataRResponse } = useQuery({
+  const { 
+    data: powerDataRResponse,
+    isFetching: isFetchingPowerR
+  } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/R')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/R'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const powerDataR = powerDataRResponse?.data;
   
@@ -176,12 +198,15 @@ const Panel66KVA = () => {
     }
   }, [powerDataRResponse]);
 
-  const { data: powerDataSResponse } = useQuery({
+  const { 
+    data: powerDataSResponse,
+    isFetching: isFetchingPowerS 
+  } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/S')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/S'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const powerDataS = powerDataSResponse?.data;
   
@@ -191,12 +216,15 @@ const Panel66KVA = () => {
     }
   }, [powerDataSResponse]);
 
-  const { data: powerDataTResponse } = useQuery({
+  const { 
+    data: powerDataTResponse,
+    isFetching: isFetchingPowerT 
+  } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/T')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/T'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const powerDataT = powerDataTResponse?.data;
   
@@ -206,12 +234,15 @@ const Panel66KVA = () => {
     }
   }, [powerDataTResponse]);
   
-  const { data: frequencyDataRResponse } = useQuery({
+  const { 
+    data: frequencyDataRResponse,
+    isFetching: isFetchingFrequencyR 
+  } = useQuery({
     queryKey: ['/api/chart-data', 'frequency', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/R')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/R'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const frequencyDataR = frequencyDataRResponse?.data;
   
@@ -221,12 +252,15 @@ const Panel66KVA = () => {
     }
   }, [frequencyDataRResponse]);
 
-  const { data: frequencyDataSResponse } = useQuery({
+  const { 
+    data: frequencyDataSResponse,
+    isFetching: isFetchingFrequencyS
+  } = useQuery({
     queryKey: ['/api/chart-data', 'frequency', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/S')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/S'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const frequencyDataS = frequencyDataSResponse?.data;
   
@@ -236,12 +270,15 @@ const Panel66KVA = () => {
     }
   }, [frequencyDataSResponse]);
 
-  const { data: frequencyDataTResponse } = useQuery({
+  const { 
+    data: frequencyDataTResponse,
+    isFetching: isFetchingFrequencyT 
+  } = useQuery({
     queryKey: ['/api/chart-data', 'frequency', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/T')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/T'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const frequencyDataT = frequencyDataTResponse?.data;
   
@@ -251,12 +288,15 @@ const Panel66KVA = () => {
     }
   }, [frequencyDataTResponse]);
   
-  const { data: pfDataRResponse } = useQuery({
+  const { 
+    data: pfDataRResponse,
+    isFetching: isFetchingPfR 
+  } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/R')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/R'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const pfDataR = pfDataRResponse?.data;
   
@@ -266,12 +306,15 @@ const Panel66KVA = () => {
     }
   }, [pfDataRResponse]);
 
-  const { data: pfDataSResponse } = useQuery({
+  const { 
+    data: pfDataSResponse,
+    isFetching: isFetchingPfS 
+  } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/S')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/S'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const pfDataS = pfDataSResponse?.data;
   
@@ -281,12 +324,15 @@ const Panel66KVA = () => {
     }
   }, [pfDataSResponse]);
 
-  const { data: pfDataTResponse } = useQuery({
+  const { 
+    data: pfDataTResponse,
+    isFetching: isFetchingPfT
+  } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/T')
-  ,
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/T'),
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true});
+    refetchIntervalInBackground: true
+  });
   
   const pfDataT = pfDataTResponse?.data;
   
@@ -296,41 +342,73 @@ const Panel66KVA = () => {
     }
   }, [pfDataTResponse]);
   
-  // Process phase data into the format needed by components
-  const processedPhaseData = Array.isArray(phaseDataArray) 
-    ? phaseDataArray.reduce((acc: Record<string, { 
-        voltage: number, 
-        current: number, 
-        power: number, 
-        energy: number,
-        frequency: number,
-        pf: number
-      }>, phase: PhaseData) => {
-        acc[phase.phase] = {
-          voltage: phase.voltage,
-          current: phase.current,
-          power: phase.power,
-          energy: phase.energy,
-          frequency: phase.frequency,
-          pf: phase.pf
-        };
-        return acc;
-      }, {} as Record<string, { 
-        voltage: number, 
-        current: number, 
-        power: number, 
-        energy: number,
-        frequency: number,
-        pf: number 
-      }>)
-    : defaultPhaseData;
+  // Process and collect phase data + SQL queries
+  const [processedPhaseData, setProcessedPhaseData] = useState(defaultPhaseData);
+
+  // Compute if any data is currently being fetched
+  const isFetchingData = 
+    isFetchingPhaseData || 
+    isFetchingVoltageR || isFetchingVoltageS || isFetchingVoltageT ||
+    isFetchingCurrentR || isFetchingCurrentS || isFetchingCurrentT ||
+    isFetchingPowerR || isFetchingPowerS || isFetchingPowerT ||
+    isFetchingFrequencyR || isFetchingFrequencyS || isFetchingFrequencyT ||
+    isFetchingPfR || isFetchingPfS || isFetchingPfT;
+  
+  useEffect(() => {
+    // Process phase data
+    const newProcessedData = { ...defaultPhaseData };
+    const newSqlQueries: { name: string; sql: string; }[] = [];
+    
+    // Process all phases response
+    if (phaseDataArray && Array.isArray(phaseDataArray)) {
+      // Update phase data from all phases response
+      for (const phaseData of phaseDataArray) {
+        if (phaseData.phase === 'R') {
+          newProcessedData.R = {
+            voltage: phaseData.voltage,
+            current: phaseData.current,
+            power: phaseData.power,
+            energy: phaseData.energy,
+            frequency: phaseData.frequency,
+            pf: phaseData.pf
+          };
+        } else if (phaseData.phase === 'S') {
+          newProcessedData.S = {
+            voltage: phaseData.voltage,
+            current: phaseData.current,
+            power: phaseData.power,
+            energy: phaseData.energy,
+            frequency: phaseData.frequency,
+            pf: phaseData.pf
+          };
+        } else if (phaseData.phase === 'T') {
+          newProcessedData.T = {
+            voltage: phaseData.voltage,
+            current: phaseData.current,
+            power: phaseData.power,
+            energy: phaseData.energy,
+            frequency: phaseData.frequency,
+            pf: phaseData.pf
+          };
+        }
+      }
+    }
+    
+    setProcessedPhaseData(newProcessedData);
+  }, [phaseDataArray]);
   
   return (
     <HomeAssistant>
       <div className="space-y-4">
         {/* Panel Name Header */}
-        <div className="bg-blue-600 text-white p-3 rounded-md">
+        <div className="bg-amber-600 text-white p-3 rounded-md flex justify-between items-center">
           <h1 className="text-xl font-bold">Panel 2 66KVA Monitoring</h1>
+          {isFetchingData && (
+            <div className="flex items-center">
+              <RefreshCw className="w-4 h-4 mr-2 text-white animate-spin" />
+              <span className="text-sm text-white">Refreshing data...</span>
+            </div>
+          )}
         </div>
         
         {/* Total Power Consumption Chart */}
@@ -442,10 +520,11 @@ const Panel66KVA = () => {
         </div>
         
         {/* SQL Queries Display */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-3">SQL Queries</h2>
-          <SqlQueryDisplay queries={sqlQueries} />
-        </div>
+        {sqlQueries.length > 0 && (
+          <div className="mt-8">
+            <SqlQueryDisplay queries={sqlQueries} />
+          </div>
+        )}
       </div>
     </HomeAssistant>
   );

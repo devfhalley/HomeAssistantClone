@@ -38,14 +38,14 @@ const Home = () => {
   }, []);
   
   // Fetch peak power data
-  const { data: powerData, isLoading } = useQuery<{ data: PeakPowerData }>({
+  const { data: powerData, isLoading, isFetching: isFetchingPowerData } = useQuery<{ data: PeakPowerData }>({
     queryKey: ['/api/peak-power'],
     refetchInterval: 10000, // Refresh every 10 seconds
     refetchIntervalInBackground: true,
   });
   
   // Fetch system info
-  const { data: systemInfo, isLoading: isSystemInfoLoading } = useQuery<SystemInfo>({
+  const { data: systemInfo, isLoading: isSystemInfoLoading, isFetching: isFetchingSystemInfo } = useQuery<SystemInfo>({
     queryKey: ['/api/system-info'],
     refetchInterval: 10000, // Refresh every 10 seconds
     refetchIntervalInBackground: true,
@@ -63,9 +63,17 @@ const Home = () => {
 
   return (
     <HomeAssistant>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-1">Home</h1>
-        <p className="text-gray-600">Monitor and control your power usage</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold mb-1">Home</h1>
+          <p className="text-gray-600">Monitor and control your power usage</p>
+        </div>
+        {(isFetchingPowerData || isFetchingSystemInfo) && (
+          <div className="flex items-center">
+            <RefreshCw className="w-4 h-4 mr-2 text-blue-500 animate-spin" />
+            <span className="text-sm text-blue-500">Refreshing data...</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
