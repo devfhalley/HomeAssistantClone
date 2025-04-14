@@ -441,6 +441,74 @@ export class DatabaseStorage implements IStorage {
   // Function to get total power consumption data for all hours
   async getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]> {
     try {
+      // First, check if we have any real data in the database for the requested date
+      let hasRealData = false;
+      let dateStr = '';
+      
+      // Format the date for the SQL query
+      if (startDate) {
+        dateStr = startDate.toISOString().split('T')[0];
+        // Check if we have data for this specific date
+        const checkQuery = `
+          SELECT COUNT(*) as record_count 
+          FROM panel_33kva 
+          WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
+        `;
+        
+        console.log(`Checking for real data on ${dateStr} with query: ${checkQuery}`);
+        
+        try {
+          const result = await pool.query(checkQuery);
+          const count = parseInt(result.rows[0].record_count);
+          hasRealData = count > 0;
+          console.log(`Data check for ${dateStr}: ${count} records found`);
+        } catch (err) {
+          console.error("Error checking for data:", err);
+          hasRealData = false;
+        }
+      } else {
+        // For today, just check if any data exists
+        const checkQuery = `
+          SELECT COUNT(*) as record_count 
+          FROM panel_33kva
+          WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = CURRENT_DATE
+        `;
+        
+        console.log(`Checking for real data today with query: ${checkQuery}`);
+        
+        try {
+          const result = await pool.query(checkQuery);
+          const count = parseInt(result.rows[0].record_count);
+          hasRealData = count > 0;
+          console.log(`Data check for today: ${count} records found`);
+        } catch (err) {
+          console.error("Error checking for data:", err);
+          hasRealData = false;
+        }
+      }
+      
+      // If no real data exists, return zeros instead of simulated data
+      if (!hasRealData) {
+        console.log(`No real data found for ${startDate ? dateStr : 'today'} - returning zeros for all hours`);
+        const zeroDataPoints: TotalPowerData[] = [];
+        
+        // Generate 24 hours of zero data
+        for (let hour = 0; hour < 24; hour++) {
+          const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
+          zeroDataPoints.push({
+            time: timeLabel,
+            panel33Power: 0,
+            panel66Power: 0,
+            totalPower: 0
+          });
+        }
+        
+        return zeroDataPoints;
+      }
+      
+      // If we have real data, we can proceed with simulated data based on the basic power values
+      console.log(`Real data found - showing simulated pattern for ${startDate ? dateStr : 'today'}`);
+      
       // Get the latest readings for power values
       const panel33 = await this.getPanel33kvaData();
       const panel66 = await this.getPanel66kvaData();
