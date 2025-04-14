@@ -150,23 +150,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get the current date at midnight
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
       
       console.log("Fetching peak power data for date:", today);
       
-      // Use the pool directly for raw SQL queries
-      // Try querying without the WHERE condition to see what data we get
+      // Get current panel data for quick monitoring display
+      const panel33DataQuery = await storage.getPanel33kvaData();
+      const panel66DataQuery = await storage.getPanel66kvaData();
+      
+      console.log("Panel33kva Query:", panel33DataQuery?._sqlQuery || "No SQL query available");
+      console.log("Panel66kva Query:", panel66DataQuery?._sqlQuery || "No SQL query available");
+      
+      console.log("Panel 33KVA data:", panel33DataQuery);
+      console.log("Panel 66KVA data:", panel66DataQuery);
+      
+      // Use the pool directly for raw SQL queries for daily stats
       const panel33Query = {
-        text: "SELECT * FROM panel_33kva LIMIT 10",
-        values: []
+        text: "SELECT * FROM panel_33kva WHERE timestamp >= $1 AND timestamp < $2 ORDER BY netkw DESC",
+        values: [today, tomorrow]
       };
       const panel33Result = await pool.query(panel33Query);
       const panel33Data = panel33Result.rows;
       console.log("Panel 33KVA data count:", panel33Data.length);
-      console.log("Panel 33KVA first row:", panel33Data.length > 0 ? Object.keys(panel33Data[0]) : "No data");
       
       const panel66Query = {
-        text: "SELECT * FROM panel_66kva LIMIT 10",
-        values: []
+        text: "SELECT * FROM panel_66kva WHERE timestamp >= $1 AND timestamp < $2 ORDER BY netkw DESC",
+        values: [today, tomorrow]
       };
       const panel66Result = await pool.query(panel66Query);
       const panel66Data = panel66Result.rows;

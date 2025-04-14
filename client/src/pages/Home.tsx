@@ -38,9 +38,9 @@ const Home = () => {
   }, []);
   
   // Fetch peak power data
-  const { data: powerData, isLoading } = useQuery<PeakPowerData>({
+  const { data: powerData, isLoading } = useQuery<{ data: PeakPowerData }>({
     queryKey: ['/api/peak-power'],
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
   
   // Fetch system info
@@ -91,7 +91,7 @@ const Home = () => {
                     {isLoading ? (
                       <span className="text-gray-400">Loading...</span>
                     ) : (
-                      <span>{((powerData?.panel33?.totalUsage) || 0).toFixed(2)} kWh</span>
+                      <span>{((powerData?.data?.panel33?.totalUsage) || 0).toFixed(2)} kWh</span>
                     )}
                   </p>
                   <p className="text-sm text-gray-600 mt-1">Total power consumption</p>
@@ -107,7 +107,7 @@ const Home = () => {
                     {isLoading ? (
                       <span className="text-gray-400">Loading...</span>
                     ) : (
-                      <span>{(powerData?.panel33?.peak || 0).toFixed(2)} kW</span>
+                      <span>{(powerData?.data?.panel33?.peak || 0).toFixed(2)} kW</span>
                     )}
                   </p>
                   <div className="flex items-center text-sm text-gray-600 mt-1">
