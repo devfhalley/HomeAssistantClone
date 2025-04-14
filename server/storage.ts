@@ -449,18 +449,13 @@ export class DatabaseStorage implements IStorage {
       const panel33Power = panel33 ? parseFloat(panel33.netkw || '0') * 1000 : 11000; // kW to W
       const panel66Power = panel66 ? parseFloat(panel66.netkw || '0') * 1000 : 42000; // kW to W
       
-      // Get hour from the timestamp in database (panel33 data)
-      let maxHour = 17; // Default to 17 if we can't extract from timestamp
+      // We want to cut off at hour 17 (5 PM) exactly
+      const maxHour = 17; // Hardcode to hour 17 (5 PM)
       
-      // Log timestamp information for debugging
+      console.log(`Using fixed cutoff hour: ${maxHour}:00 for total power chart`);
+      
       if (panel33 && panel33.timestamp) {
-        // Convert UTC timestamp to GMT+7 (Asia/Jakarta)
-        const timestamp = new Date(panel33.timestamp);
-        const hourInGMT7 = (timestamp.getUTCHours() + 7) % 24; // Add 7 for GMT+7, wrap around 24
-        maxHour = hourInGMT7;
-        
-        console.log(`Using timestamp: ${panel33.timestamp}`);
-        console.log(`Converted to GMT+7 hour: ${maxHour}:00`);
+        console.log(`Reference timestamp: ${panel33.timestamp}`);
       }
       
       // Create hourly power data points from 00:00 up to the current hour

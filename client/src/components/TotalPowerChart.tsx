@@ -100,6 +100,11 @@ const TotalPowerChart = () => {
   useEffect(() => {
     if (chartData.length > 0) {
       console.log("CHART DEBUG - Total power chart data points received:", chartData.length);
+      
+      // Log all time points to help debug why we're seeing all 24 hours
+      const timePoints = chartData.map(point => point.time);
+      console.log("CHART DEBUG - All time points:", timePoints.join(", "));
+      
       console.log("CHART DEBUG - First data point:", chartData[0]);
       console.log("CHART DEBUG - Last data point:", chartData[chartData.length - 1]);
     }
