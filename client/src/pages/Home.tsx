@@ -112,7 +112,7 @@ const Home = () => {
                   </p>
                   <div className="flex items-center text-sm text-gray-600 mt-1">
                     <Clock className="w-3 h-3 mr-1" />
-                    {isLoading ? "Loading..." : formatTime(powerData?.panel33?.peakTime || null)}
+                    {isLoading ? "Loading..." : formatTime(powerData?.data?.panel33?.peakTime || null)}
                   </div>
                 </div>
               </div>
@@ -152,7 +152,7 @@ const Home = () => {
                     {isLoading ? (
                       <span className="text-gray-400">Loading...</span>
                     ) : (
-                      <span>{(powerData?.panel66?.totalUsage || 0).toFixed(2)} kWh</span>
+                      <span>{(powerData?.data?.panel66?.totalUsage || 0).toFixed(2)} kWh</span>
                     )}
                   </p>
                   <p className="text-sm text-gray-600 mt-1">Total power consumption</p>
@@ -168,12 +168,12 @@ const Home = () => {
                     {isLoading ? (
                       <span className="text-gray-400">Loading...</span>
                     ) : (
-                      <span>{(powerData?.panel66?.peak || 0).toFixed(2)} kW</span>
+                      <span>{(powerData?.data?.panel66?.peak || 0).toFixed(2)} kW</span>
                     )}
                   </p>
                   <div className="flex items-center text-sm text-gray-600 mt-1">
                     <Clock className="w-3 h-3 mr-1" />
-                    {isLoading ? "Loading..." : formatTime(powerData?.panel66?.peakTime || null)}
+                    {isLoading ? "Loading..." : formatTime(powerData?.data?.panel66?.peakTime || null)}
                   </div>
                 </div>
               </div>
