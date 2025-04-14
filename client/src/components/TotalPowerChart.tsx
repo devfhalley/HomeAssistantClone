@@ -8,7 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import SqlQueryDisplay from '@/components/SqlQueryDisplay';
 import { useLocation } from 'wouter';
 
@@ -31,7 +31,7 @@ interface TotalPowerResponse {
 
 const TotalPowerChart = () => {
   const [granularity, setGranularity] = useState<string>('hour');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date()); // Initialize with today's date
   
   // State to store SQL queries
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
@@ -102,9 +102,9 @@ const TotalPowerChart = () => {
     }
   }, [chartResponse]);
   
-  // Clear the date filter
-  const clearDateFilter = () => {
-    setSelectedDate(undefined);
+  // Reset the date filter to today
+  const resetDateToToday = () => {
+    setSelectedDate(new Date());
     refetch();
   };
 
@@ -156,9 +156,11 @@ const TotalPowerChart = () => {
                   className="w-[180px] pl-3 text-left font-normal"
                 >
                   {selectedDate ? (
+                    isSameDay(selectedDate, new Date()) ? 
+                    "Today" : 
                     format(selectedDate, "PPP")
                   ) : (
-                    <span>Select a date</span>
+                    <span>Today</span>
                   )}
                   <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                 </Button>
@@ -173,14 +175,14 @@ const TotalPowerChart = () => {
               </PopoverContent>
             </Popover>
             
-            {/* Clear Filter Button */}
-            {selectedDate && (
+            {/* Reset to Today Button */}
+            {selectedDate && !isSameDay(selectedDate, new Date()) && (
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={clearDateFilter}
+                onClick={resetDateToToday}
               >
-                Clear
+                Reset to Today
               </Button>
             )}
           </div>
