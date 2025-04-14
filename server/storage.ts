@@ -271,11 +271,15 @@ export class DatabaseStorage implements IStorage {
         const recordHour = recordDate.getHours();
         const recordMinute = recordDate.getMinutes();
         
-        // Skip data points from future hours
+        // Temporarily disable future hour filtering since we're using test data from 2025
+        // Log for debugging
+        console.log(`Record date: ${recordDate.toISOString()} (Hour: ${recordHour}:${recordMinute})`);
+        /*
         if (recordHour > currentHour || 
             (recordHour === currentHour && recordMinute > currentMinute)) {
           continue;
         }
+        */
         
         const time = formatTime(recordDate);
         
@@ -550,11 +554,19 @@ export class DatabaseStorage implements IStorage {
       console.log(`Local Hour: ${new Date().getHours()}, Local Minute: ${new Date().getMinutes()}`);
       console.log(`GMT+7 Hour: ${currentHour}, GMT+7 Minute: ${currentMinute}`);
       
-      // Only keep data points that are before or equal to the current time
+      // Temporarily remove future hour filtering since we're using test data from 2025
+      const allTimes = allData.map(d => d.time);
+      console.log("All times for total power chart:", allTimes);
+      
+      // Return all data without filtering by current time
+      const filteredData = allData;
+      
+      /* Original filtering code:
       const filteredData = allData.filter(dataPoint => {
         const [hour, minute] = dataPoint.time.split(':').map(Number);
         return hour < currentHour || (hour === currentHour && (minute || 0) <= currentMinute);
       });
+      */
       
       return filteredData; // Return the filtered data instead of the full data
     } catch (error) {
