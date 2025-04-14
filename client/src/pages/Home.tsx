@@ -40,13 +40,15 @@ const Home = () => {
   // Fetch peak power data
   const { data: powerData, isLoading } = useQuery<{ data: PeakPowerData }>({
     queryKey: ['/api/peak-power'],
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 10000, // Refresh every 10 seconds
+    refetchIntervalInBackground: true,
   });
   
   // Fetch system info
   const { data: systemInfo, isLoading: isSystemInfoLoading } = useQuery<SystemInfo>({
     queryKey: ['/api/system-info'],
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: 10000, // Refresh every 10 seconds
+    refetchIntervalInBackground: true,
   });
 
   // Format the timestamp

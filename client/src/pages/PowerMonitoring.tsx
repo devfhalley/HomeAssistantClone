@@ -68,7 +68,9 @@ const PowerMonitoring = () => {
     queryFn: () => apiRequest<{data: PhaseData[], sqlQueries: SqlQuery[]}>("GET", '/api/phase-data'),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true // Continue refetching even when tab is not active
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   // Store SQL queries from all phases response
   useEffect(() => {
@@ -83,19 +85,29 @@ const PowerMonitoring = () => {
     queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/R'),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   // Fetch phase S data with SQL query
   const { data: phaseSResponse, isLoading: isLoadingPhaseS } = useQuery({
     queryKey: ['/api/phase-data', 'S'],
-    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/S')
-  });
+    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/S'),
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   // Fetch phase T data with SQL query
   const { data: phaseTResponse, isLoading: isLoadingPhaseT } = useQuery({
     queryKey: ['/api/phase-data', 'T'],
-    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/T')
-  });
+    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/T'),
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   // Create interfaces for the new response formats
   interface ChartDataResponse {
@@ -112,7 +124,9 @@ const PowerMonitoring = () => {
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/R'),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   // Extract the chart data from the response
   const voltageDataR = voltageDataRResponse?.data;
@@ -126,8 +140,12 @@ const PowerMonitoring = () => {
 
   const { data: voltageDataSResponse } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/S')
-  });
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/S'),
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   // Extract data and collect SQL queries
   const voltageDataS = voltageDataSResponse?.data;
@@ -141,7 +159,9 @@ const PowerMonitoring = () => {
   const { data: voltageDataTResponse } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'T'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/T')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   // Extract data and collect SQL queries
   const voltageDataT = voltageDataTResponse?.data;
@@ -155,7 +175,9 @@ const PowerMonitoring = () => {
   const { data: currentDataRResponse } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'R'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/R')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const currentDataR = currentDataRResponse?.data;
   
@@ -168,7 +190,9 @@ const PowerMonitoring = () => {
   const { data: currentDataSResponse } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'S'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/S')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const currentDataS = currentDataSResponse?.data;
   
@@ -181,7 +205,9 @@ const PowerMonitoring = () => {
   const { data: currentDataTResponse } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'T'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/T')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const currentDataT = currentDataTResponse?.data;
   
@@ -194,7 +220,9 @@ const PowerMonitoring = () => {
   const { data: powerDataRResponse } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'R'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/R')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const powerDataR = powerDataRResponse?.data;
   
@@ -207,7 +235,9 @@ const PowerMonitoring = () => {
   const { data: powerDataSResponse } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'S'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/S')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const powerDataS = powerDataSResponse?.data;
   
@@ -220,7 +250,9 @@ const PowerMonitoring = () => {
   const { data: powerDataTResponse } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'T'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/T')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const powerDataT = powerDataTResponse?.data;
   
@@ -233,7 +265,9 @@ const PowerMonitoring = () => {
   const { data: frequencyDataRResponse } = useQuery({
     queryKey: ['/api/chart-data', 'frequency', 'R'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/R')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const frequencyDataR = frequencyDataRResponse?.data;
   
@@ -246,7 +280,9 @@ const PowerMonitoring = () => {
   const { data: frequencyDataSResponse } = useQuery({
     queryKey: ['/api/chart-data', 'frequency', 'S'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/S')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const frequencyDataS = frequencyDataSResponse?.data;
   
@@ -259,7 +295,9 @@ const PowerMonitoring = () => {
   const { data: frequencyDataTResponse } = useQuery({
     queryKey: ['/api/chart-data', 'frequency', 'T'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/T')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const frequencyDataT = frequencyDataTResponse?.data;
   
@@ -272,7 +310,9 @@ const PowerMonitoring = () => {
   const { data: pfDataRResponse } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'R'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/R')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const pfDataR = pfDataRResponse?.data;
   
@@ -285,7 +325,9 @@ const PowerMonitoring = () => {
   const { data: pfDataSResponse } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'S'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/S')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const pfDataS = pfDataSResponse?.data;
   
@@ -298,7 +340,9 @@ const PowerMonitoring = () => {
   const { data: pfDataTResponse } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'T'],
     queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/T')
-  });
+  ,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: true});
   
   const pfDataT = pfDataTResponse?.data;
   
