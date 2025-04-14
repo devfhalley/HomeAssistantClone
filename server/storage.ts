@@ -241,10 +241,26 @@ export class DatabaseStorage implements IStorage {
       
       // Process panel33 data
       const panel33Data = panel33Result.rows;
+      
+      // Get current hour and minute for filtering
+      const currentDate = new Date();
+      const currentHour = currentDate.getHours();
+      const currentMinute = currentDate.getMinutes();
+      
       for (const record of panel33Data) {
         if (!record.timestamp) continue;
         
-        const time = formatTime(new Date(record.timestamp));
+        const recordDate = new Date(record.timestamp);
+        const recordHour = recordDate.getHours();
+        const recordMinute = recordDate.getMinutes();
+        
+        // Skip data points from future hours
+        if (recordHour > currentHour || 
+            (recordHour === currentHour && recordMinute > currentMinute)) {
+          continue;
+        }
+        
+        const time = formatTime(recordDate);
         
         if (phase === 'R') {
           if (dataType === 'voltage') {
