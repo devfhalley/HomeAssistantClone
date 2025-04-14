@@ -142,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (currentValue > panel33PeakValue) {
           panel33PeakValue = currentValue;
-          panel33PeakTime = record.created_at; // Use created_at instead of timestamp
+          panel33PeakTime = record.timestamp; // Use timestamp instead of created_at
         }
       });
       
@@ -153,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (currentValue > panel66PeakValue) {
           panel66PeakValue = currentValue;
-          panel66PeakTime = record.created_at; // Use created_at instead of timestamp
+          panel66PeakTime = record.timestamp; // Use timestamp instead of created_at
         }
       });
       
