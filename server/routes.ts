@@ -337,7 +337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         kva_t: "10.27",
         netkw: "25.85",
         netkva: "28.76",
-        created_at: new Date() // Changed from timestamp to created_at
+        timestamp: new Date() // Using timestamp field
       };
       
       await storage.createPanel33kvaData(panel33kvaData);
