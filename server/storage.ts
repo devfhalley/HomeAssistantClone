@@ -568,11 +568,18 @@ export class DatabaseStorage implements IStorage {
       console.log(`Local Hour: ${new Date().getHours()}, Local Minute: ${new Date().getMinutes()}`);
       console.log(`GMT+7 Hour: ${currentHour}, GMT+7 Minute: ${currentMinute}`);
       
-      // Filter out the problematic 23:00 hour that doesn't match actual database timestamps
-      const filteredData = allData.filter(d => d.time !== "23:00");
+      // Return only the times that match actual database records 
+      // Don't return hardcoded or synthetic times (00:00, 18:00, 19:00, 20:00)
+      const actualTimes = Array.from(new Set([
+        ...panel33Data.map(record => formatDate(new Date(record.timestamp), granularity)),
+        ...panel66Data.map(record => formatDate(new Date(record.timestamp), granularity)),
+      ]));
+      
+      // Filter to only include time entries that come from actual records
+      const filteredData = allData.filter(d => actualTimes.includes(d.time));
       
       const allTimes = filteredData.map(d => d.time);
-      console.log("Filtered times for total power chart (removed 23:00):", allTimes);
+      console.log("Filtered times for total power chart (only actual DB times):", allTimes);
       
       /* Original filtering code:
       const filteredData = allData.filter(dataPoint => {
