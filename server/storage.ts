@@ -457,6 +457,7 @@ export class DatabaseStorage implements IStorage {
       const dataPoints: TotalPowerData[] = [];
       
       // Factors for each hour of the day to simulate realistic power consumption patterns
+      // Adjust these as needed based on time of day patterns
       const hourlyFactors = [
         0.3, 0.3, 0.3, 0.3, 0.3, 0.4, // 0:00-5:00 (low usage)
         0.5, 0.7, 0.9, 1.0, 1.0, 1.0, // 6:00-11:00 (increasing morning usage)
@@ -464,17 +465,47 @@ export class DatabaseStorage implements IStorage {
         1.0, 0.9, 0.8, 0.6, 0.4, 0.3  // 18:00-23:00 (decreasing evening usage)
       ];
       
-      // Generate data for all 24 hours, but let the API endpoint filter as needed
-      for (let hour = 0; hour < 24; hour++) {
-        const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
-        const factor = hourlyFactors[hour];
+      // Check if we are simulating data for a specific date or using today's data
+      if (startDate) {
+        // Use a seed based on the requested date to ensure consistent results for the same day
+        const dateString = startDate.toISOString().split('T')[0];
+        console.log(`Generating power data for specific date: ${dateString}`);
         
-        dataPoints.push({
-          time: timeLabel,
-          panel33Power: Math.round(panel33Power * factor),
-          panel66Power: Math.round(panel66Power * factor),
-          totalPower: Math.round((panel33Power + panel66Power) * factor)
-        });
+        // Generate a simple hash from date string to create variation between days
+        const dateSeed = dateString.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const dateFactor = 0.5 + ((dateSeed % 100) / 100); // Between 0.5 and 1.5
+        
+        // Scale the power values based on the date (for variety between days)
+        const scaledPanel33Power = panel33Power * dateFactor;
+        const scaledPanel66Power = panel66Power * dateFactor;
+        
+        console.log(`Using date factor: ${dateFactor.toFixed(2)} to generate realistic power patterns for ${dateString}`);
+        
+        // Generate data for all 24 hours with the date-specific scaling
+        for (let hour = 0; hour < 24; hour++) {
+          const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
+          const factor = hourlyFactors[hour];
+          
+          dataPoints.push({
+            time: timeLabel,
+            panel33Power: Math.round(scaledPanel33Power * factor),
+            panel66Power: Math.round(scaledPanel66Power * factor),
+            totalPower: Math.round((scaledPanel33Power + scaledPanel66Power) * factor)
+          });
+        }
+      } else {
+        // Standard pattern for today
+        for (let hour = 0; hour < 24; hour++) {
+          const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
+          const factor = hourlyFactors[hour];
+          
+          dataPoints.push({
+            time: timeLabel,
+            panel33Power: Math.round(panel33Power * factor),
+            panel66Power: Math.round(panel66Power * factor),
+            totalPower: Math.round((panel33Power + panel66Power) * factor)
+          });
+        }
       }
       
       // Log data for debugging

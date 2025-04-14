@@ -210,7 +210,14 @@ const TotalPowerChart = () => {
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={setSelectedDate}
+                  onSelect={(date) => {
+                    setSelectedDate(date);
+                    // Immediately refetch data when date changes
+                    if (date) {
+                      console.log(`Calendar date selected: ${date.toISOString()}`);
+                      setTimeout(() => refetch(), 100); // Small delay to ensure state is updated
+                    }
+                  }}
                   initialFocus
                 />
               </PopoverContent>

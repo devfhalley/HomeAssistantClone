@@ -91,14 +91,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { 
         granularity = 'hour', 
         startDate, 
-        endDate 
+        endDate,
+        date  // New date parameter for single day selection
       } = req.query;
       
-      // Convert string dates to Date objects if provided
-      const startDateObj = startDate ? new Date(startDate as string) : undefined;
-      const endDateObj = endDate ? new Date(endDate as string) : undefined;
+      // Log the incoming date parameter to debug date-related issues
+      if (date) {
+        console.log(`Total power chart requested with specific date: ${date}`);
+      }
       
-      // Get power consumption data up to the current hour (hardcoded to 17:00/5PM)
+      // Convert string dates to Date objects if provided
+      let startDateObj;
+      let endDateObj;
+      
+      if (date) {
+        // If the date parameter is provided, use it to create a day range
+        startDateObj = new Date(date as string);
+        endDateObj = new Date(date as string);
+        endDateObj.setDate(endDateObj.getDate() + 1); // Next day at midnight
+        console.log(`Using date from datepicker: ${startDateObj.toISOString()} to ${endDateObj.toISOString()}`);
+      } else {
+        // Otherwise use the existing startDate/endDate parameters
+        startDateObj = startDate ? new Date(startDate as string) : undefined;
+        endDateObj = endDate ? new Date(endDate as string) : undefined;
+      }
+      
+      // Get power consumption data
       const allData = await storage.getTotalPowerConsumption(
         granularity as string,
         startDateObj,
