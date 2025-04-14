@@ -123,8 +123,8 @@ const TotalPowerChart = () => {
             {showPanel33 && showPanel66 
               ? "Daily Total Power Consumption" 
               : showPanel33 
-                ? "Panel 1 33KVA Power Consumption" 
-                : "Panel 2 66KVA Power Consumption"}
+                ? "Panel 1 33KVA Daily Consumption" 
+                : "Panel 2 66KVA Daily Consumption"}
           </CardTitle>
           <div className="flex items-center space-x-2">
             <Label htmlFor="granularity">Granularity:</Label>
