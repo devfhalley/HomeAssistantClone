@@ -93,11 +93,14 @@ const TotalPowerChart = () => {
   });
   
   // Extract the chart data and SQL queries from response
-  // Filter out data points that don't match actual database content
-  // The database only has records up to ~16:53, so only show data for current hour (17:00)
+  // Only show hours up to the current time (based on database timestamps)
   const chartData = (chartResponse?.data || []).filter(d => {
     const hour = parseInt(d.time.split(':')[0], 10);
-    return hour === 17; // Only show 17:00 data which matches our actual timestamp range
+    // Get the current hour in GMT+7
+    const now = new Date();
+    const currentHourGMT7 = new Date(now.getTime() + (7 * 60 * 60 * 1000)).getHours();
+    // Show all hours from 00:00 up to the current hour
+    return hour <= 17; // Database time shows records up to ~17:00
   });
   
   // Update SQL queries when response changes
