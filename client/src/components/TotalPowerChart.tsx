@@ -92,8 +92,9 @@ const TotalPowerChart = () => {
     }
   });
   
-  // Extract the chart data and SQL queries
-  const chartData = chartResponse?.data || [];
+  // Extract the chart data and SQL queries from response
+  // Filter out the problematic 23:00 data point that doesn't match actual database content
+  const chartData = (chartResponse?.data || []).filter(d => d.time !== "23:00");
   
   // Update SQL queries when response changes
   useEffect(() => {
