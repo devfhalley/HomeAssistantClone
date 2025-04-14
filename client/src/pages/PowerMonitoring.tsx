@@ -3,6 +3,7 @@ import HomeAssistant from "@/components/HomeAssistant";
 import PowerMonitorCard from "@/components/PowerMonitorCard";
 import ChartCard from "@/components/ChartCard";
 import TotalPowerChart from "@/components/TotalPowerChart";
+import SqlQueryDisplay from "@/components/SqlQueryDisplay";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { type ChartData } from "@shared/schema";
@@ -17,6 +18,18 @@ interface PhaseData {
   frequency: number;
   pf: number;
   time: Date;
+}
+
+// SQL query interface
+interface SqlQuery {
+  name: string;
+  sql: string;
+}
+
+// API response including SQL queries
+interface ApiResponse {
+  data: PhaseData;
+  sqlQueries: SqlQuery[];
 }
 
 interface ChartDataPoint {
@@ -40,11 +53,28 @@ const processChartData = (data: ChartData[] | undefined): ChartDataPoint[] => {
 };
 
 const PowerMonitoring = () => {
-  // Fetch phase data
-  const { data: phaseDataArray, isLoading: isLoadingPhaseData } = useQuery({
-    queryKey: ['/api/phase-data'],
-    queryFn: () => apiRequest<PhaseData[]>("GET", '/api/phase-data')
+  // State to store SQL queries
+  const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
+  
+  // Fetch phase R data with SQL query
+  const { data: phaseRResponse, isLoading: isLoadingPhaseR } = useQuery({
+    queryKey: ['/api/phase-data', 'R'],
+    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/R')
   });
+  
+  // Fetch phase S data with SQL query
+  const { data: phaseSResponse, isLoading: isLoadingPhaseS } = useQuery({
+    queryKey: ['/api/phase-data', 'S'],
+    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/S')
+  });
+  
+  // Fetch phase T data with SQL query
+  const { data: phaseTResponse, isLoading: isLoadingPhaseT } = useQuery({
+    queryKey: ['/api/phase-data', 'T'],
+    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/T')
+  });
+  
+  const isLoadingPhaseData = isLoadingPhaseR || isLoadingPhaseS || isLoadingPhaseT;
 
   // Fetch chart data for each type and phase
   const { data: voltageDataR } = useQuery({
@@ -122,34 +152,68 @@ const PowerMonitoring = () => {
     queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/pf/T')
   });
   
-  // Process phase data into the format needed by components
-  const processedPhaseData = Array.isArray(phaseDataArray) 
-    ? phaseDataArray.reduce((acc: Record<string, { 
-        voltage: number, 
-        current: number, 
-        power: number, 
-        energy: number,
-        frequency: number,
-        pf: number
-      }>, phase: PhaseData) => {
-        acc[phase.phase] = {
-          voltage: phase.voltage,
-          current: phase.current,
-          power: phase.power,
-          energy: phase.energy,
-          frequency: phase.frequency,
-          pf: phase.pf
-        };
-        return acc;
-      }, {} as Record<string, { 
-        voltage: number, 
-        current: number, 
-        power: number, 
-        energy: number,
-        frequency: number,
-        pf: number 
-      }>)
-    : defaultPhaseData;
+  // Process and collect phase data + SQL queries
+  const [processedPhaseData, setProcessedPhaseData] = useState(defaultPhaseData);
+  
+  useEffect(() => {
+    // Process phase data
+    const newProcessedData = { ...defaultPhaseData };
+    const newSqlQueries: SqlQuery[] = [];
+    
+    // Phase R data
+    if (phaseRResponse?.data) {
+      newProcessedData.R = {
+        voltage: phaseRResponse.data.voltage,
+        current: phaseRResponse.data.current,
+        power: phaseRResponse.data.power,
+        energy: phaseRResponse.data.energy,
+        frequency: phaseRResponse.data.frequency,
+        pf: phaseRResponse.data.pf
+      };
+      
+      // Collect SQL queries
+      if (phaseRResponse.sqlQueries) {
+        newSqlQueries.push(...phaseRResponse.sqlQueries);
+      }
+    }
+    
+    // Phase S data
+    if (phaseSResponse?.data) {
+      newProcessedData.S = {
+        voltage: phaseSResponse.data.voltage,
+        current: phaseSResponse.data.current,
+        power: phaseSResponse.data.power,
+        energy: phaseSResponse.data.energy,
+        frequency: phaseSResponse.data.frequency,
+        pf: phaseSResponse.data.pf
+      };
+      
+      // Collect SQL queries
+      if (phaseSResponse.sqlQueries) {
+        newSqlQueries.push(...phaseSResponse.sqlQueries);
+      }
+    }
+    
+    // Phase T data
+    if (phaseTResponse?.data) {
+      newProcessedData.T = {
+        voltage: phaseTResponse.data.voltage,
+        current: phaseTResponse.data.current,
+        power: phaseTResponse.data.power,
+        energy: phaseTResponse.data.energy,
+        frequency: phaseTResponse.data.frequency,
+        pf: phaseTResponse.data.pf
+      };
+      
+      // Collect SQL queries
+      if (phaseTResponse.sqlQueries) {
+        newSqlQueries.push(...phaseTResponse.sqlQueries);
+      }
+    }
+    
+    setProcessedPhaseData(newProcessedData);
+    setSqlQueries(newSqlQueries);
+  }, [phaseRResponse, phaseSResponse, phaseTResponse]);
   
   return (
     <HomeAssistant>
@@ -266,6 +330,13 @@ const PowerMonitoring = () => {
             />
           </div>
         </div>
+        
+        {/* SQL Queries Display */}
+        {sqlQueries.length > 0 && (
+          <div className="mt-8">
+            <SqlQueryDisplay queries={sqlQueries} />
+          </div>
+        )}
       </div>
     </HomeAssistant>
   );
