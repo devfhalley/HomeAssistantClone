@@ -31,7 +31,7 @@ interface TotalPowerResponse {
 
 const TotalPowerChart = () => {
   const [granularity, setGranularity] = useState<string>('hour');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date()); // Initialize with today's date
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Always initialize with today's date (never undefined)
   
   // State to store SQL queries
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
@@ -46,9 +46,12 @@ const TotalPowerChart = () => {
     queryKey: ['/api/total-power', granularity, selectedDate?.toISOString()], // Include date in query key for cache invalidation
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true, // Continue refetching even when tab is not active
+    enabled: true, // Always enable the query regardless of selectedDate
     queryFn: async () => {
       // Build the query string with parameters
       let queryParams = `granularity=${granularity}`;
+      
+      // Always use today's date if no date is selected
       if (selectedDate) {
         const startOfDay = new Date(selectedDate);
         startOfDay.setHours(0, 0, 0, 0);
@@ -61,6 +64,9 @@ const TotalPowerChart = () => {
         console.log(`Using selected date: ${formattedDate} for power chart`);
         
         queryParams += `&date=${formattedDate}`;
+      } else {
+        // If no date is selected, explicitly fetch today's data
+        console.log('No date selected, using today for power chart');
       }
       
       const response = await fetch(`/api/total-power?${queryParams}`);
@@ -99,6 +105,14 @@ const TotalPowerChart = () => {
   // Extract the chart data and SQL queries from response
   // Show all data points from 00:00 to 23:59 as requested by user
   const chartData = chartResponse?.data || [];
+  
+  // Force refetch on component mount to ensure today's data is loaded
+  useEffect(() => {
+    const today = new Date();
+    setSelectedDate(today);
+    console.log("TotalPowerChart: Initial load, setting today's date:", today.toISOString());
+    setTimeout(() => refetch(), 500); // Small delay to ensure state is updated
+  }, []);
   
   // Debug data received from the API
   useEffect(() => {
@@ -210,13 +224,19 @@ const TotalPowerChart = () => {
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={(date) => {
-                    setSelectedDate(date);
-                    // Immediately refetch data when date changes
+                  onSelect={(date: Date | undefined) => {
+                    // Handle calendar date selection with proper null check
+                    const newDate = date || new Date(); // Use today if date is null/undefined
+                    setSelectedDate(newDate);
+                    
                     if (date) {
-                      console.log(`Calendar date selected: ${date.toISOString()}`);
-                      setTimeout(() => refetch(), 100); // Small delay to ensure state is updated
+                      console.log(`Calendar date selected: ${newDate.toISOString()}`);
+                    } else {
+                      console.log(`Calendar date reset to today: ${newDate.toISOString()}`);
                     }
+                    
+                    // Small delay to ensure state is updated before refetching
+                    setTimeout(() => refetch(), 100);
                   }}
                   initialFocus
                 />
