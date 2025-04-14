@@ -9,10 +9,21 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import SqlQueryDisplay from '@/components/SqlQueryDisplay';
 
 interface TotalPowerData {
   time: string;
   totalPower: number;
+}
+
+interface SqlQuery {
+  name: string;
+  sql: string;
+}
+
+interface TotalPowerResponse {
+  data: TotalPowerData[];
+  sqlQueries: SqlQuery[];
 }
 
 const TotalPowerChart = () => {
@@ -20,8 +31,11 @@ const TotalPowerChart = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   
+  // State to store SQL queries
+  const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
+  
   // Fetch the data using TanStack Query
-  const { data: chartData = [], isLoading, error, refetch } = useQuery({
+  const { data: chartResponse, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/total-power', granularity, startDate, endDate],
     queryFn: async () => {
       // Build the query string with parameters
@@ -37,9 +51,44 @@ const TotalPowerChart = () => {
       if (!response.ok) {
         throw new Error('Failed to fetch total power data');
       }
-      return response.json() as Promise<TotalPowerData[]>;
+      
+      // Try to parse as a TotalPowerResponse with SQL queries
+      try {
+        const fullResponse = await response.json();
+        if (fullResponse.data && fullResponse.sqlQueries) {
+          // It's the new format with SQL queries
+          return fullResponse as TotalPowerResponse;
+        } else {
+          // It's the old format - just the array
+          return {
+            data: fullResponse as TotalPowerData[],
+            sqlQueries: [
+              {
+                name: "Total Power Query",
+                sql: "SELECT * FROM panel_33kva, panel_66kva ORDER BY timestamp"
+              }
+            ]
+          };
+        }
+      } catch (e) {
+        // Fallback to original format
+        return {
+          data: await response.json() as TotalPowerData[],
+          sqlQueries: []
+        };
+      }
     }
   });
+  
+  // Extract the chart data and SQL queries
+  const chartData = chartResponse?.data || [];
+  
+  // Update SQL queries when response changes
+  useEffect(() => {
+    if (chartResponse?.sqlQueries?.length) {
+      setSqlQueries(chartResponse.sqlQueries);
+    }
+  }, [chartResponse]);
   
   // Clear the date filters
   const clearDateFilters = () => {
@@ -194,6 +243,14 @@ const TotalPowerChart = () => {
             </ResponsiveContainer>
           )}
         </div>
+        
+        {/* SQL Queries Display */}
+        {sqlQueries.length > 0 && (
+          <div className="mt-4">
+            <SqlQueryDisplay queries={sqlQueries} />
+          </div>
+        )}
+        
       </CardContent>
     </Card>
   );

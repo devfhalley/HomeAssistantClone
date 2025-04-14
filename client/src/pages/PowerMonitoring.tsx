@@ -76,11 +76,27 @@ const PowerMonitoring = () => {
   
   const isLoadingPhaseData = isLoadingPhaseR || isLoadingPhaseS || isLoadingPhaseT;
 
+  // Create an interface for the new chart data response format
+  interface ChartDataResponse {
+    data: ChartData[];
+    sqlQueries: SqlQuery[];
+  }
+  
   // Fetch chart data for each type and phase
-  const { data: voltageDataR } = useQuery({
+  const { data: voltageDataRResponse } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'R'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/voltage/R')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/R')
   });
+  
+  // Extract the chart data from the response
+  const voltageDataR = voltageDataRResponse?.data;
+  
+  // Collect SQL queries
+  useEffect(() => {
+    if (voltageDataRResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...voltageDataRResponse.sqlQueries]);
+    }
+  }, [voltageDataRResponse]);
 
   const { data: voltageDataS } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'S'],

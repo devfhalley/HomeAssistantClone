@@ -295,7 +295,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { dataType, phase } = req.params;
       const data = await storage.getChartDataByType(dataType, phase);
-      res.json(data);
+      
+      // Log the SQL query for this request
+      console.log(`Chart data query for ${dataType}/${phase} executed`);
+      
+      // Include the SQL query in the response
+      const sqlQuery = "SELECT * FROM panel_33kva ORDER BY timestamp";
+      
+      res.json({
+        data: data,
+        sqlQueries: [
+          {
+            name: `Chart Data Query (${dataType}/${phase})`,
+            sql: sqlQuery
+          }
+        ]
+      });
     } catch (error) {
       console.error(`Error fetching ${req.params.dataType} data for phase ${req.params.phase}:`, error);
       res.status(500).json({ error: "Failed to fetch chart data" });
