@@ -187,6 +187,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get panel data with timestamp
       const panel33kvaData = await storage.getPanel33kvaData() as any;
       
+      // Capture the SQL query used
+      const sqlQuery = panel33kvaData?._sqlQuery || "No SQL query available";
+      
       if (panel33kvaData) {
         if (phase === 'R') {
           data = {
@@ -228,7 +231,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Phase data not found" });
       }
       
-      res.json(data);
+      // Include the SQL query in the response
+      res.json({
+        data,
+        sqlQueries: [
+          {
+            name: "Panel 33KVA Query",
+            sql: sqlQuery
+          }
+        ]
+      });
     } catch (error) {
       console.error(`Error fetching phase data for ${req.params.phase}:`, error);
       res.status(500).json({ error: "Failed to fetch phase data" });

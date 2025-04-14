@@ -131,15 +131,17 @@ export class DatabaseStorage implements IStorage {
   async getPanel33kvaData(): Promise<Panel33kva | undefined> {
     try {
       // Use direct SQL query for consistency with production DB column names
-      const result = await pool.query(
-        "SELECT * FROM panel_33kva ORDER BY timestamp DESC LIMIT 1"
-      );
+      const sqlQuery = "SELECT * FROM panel_33kva ORDER BY timestamp DESC LIMIT 1";
+      console.log("Panel33kva Query:", sqlQuery);
+      
+      const result = await pool.query(sqlQuery);
       
       if (result.rows.length === 0) return undefined;
       
       // Use timestamp field directly
       const data = {
-        ...result.rows[0]
+        ...result.rows[0],
+        _sqlQuery: sqlQuery // Adding the SQL query to the response
       };
       
       return data;
@@ -152,15 +154,17 @@ export class DatabaseStorage implements IStorage {
   async getPanel66kvaData(): Promise<Panel66kva | undefined> {
     try {
       // Use direct SQL query for consistency with production DB column names
-      const result = await pool.query(
-        "SELECT * FROM panel_66kva ORDER BY timestamp DESC LIMIT 1"
-      );
+      const sqlQuery = "SELECT * FROM panel_66kva ORDER BY timestamp DESC LIMIT 1";
+      console.log("Panel66kva Query:", sqlQuery);
+      
+      const result = await pool.query(sqlQuery);
       
       if (result.rows.length === 0) return undefined;
       
       // Use timestamp field directly
       const data = {
-        ...result.rows[0]
+        ...result.rows[0],
+        _sqlQuery: sqlQuery // Adding the SQL query to the response
       };
       
       return data;
@@ -240,9 +244,10 @@ export class DatabaseStorage implements IStorage {
   async getChartDataByType(dataType: string, phase: string): Promise<ChartData[]> {
     try {
       // Use direct SQL query for consistency with production DB column names
-      const panel33Result = await pool.query(
-        "SELECT * FROM panel_33kva ORDER BY timestamp"
-      );
+      const sqlQuery = "SELECT * FROM panel_33kva ORDER BY timestamp";
+      console.log("Chart data query:", sqlQuery);
+      
+      const panel33Result = await pool.query(sqlQuery);
       
       // Format timestamp to time string
       const formatTime = (timestamp: Date): string => {
@@ -398,6 +403,9 @@ export class DatabaseStorage implements IStorage {
         panel33Query = `SELECT * FROM panel_33kva WHERE timestamp <= $1 ORDER BY timestamp`;
         panel66Query = `SELECT * FROM panel_66kva WHERE timestamp <= $1 ORDER BY timestamp`;
       }
+      
+      console.log("Panel33 Total Power Query:", panel33Query);
+      console.log("Panel66 Total Power Query:", panel66Query);
       
       // Execute queries with parameters if needed
       let panel33Result, panel66Result;
