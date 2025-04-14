@@ -449,8 +449,22 @@ export class DatabaseStorage implements IStorage {
       const panel33Power = panel33 ? parseFloat(panel33.netkw || '0') * 1000 : 11000; // kW to W
       const panel66Power = panel66 ? parseFloat(panel66.netkw || '0') * 1000 : 42000; // kW to W
       
-      // Create time points for a full day (00:00 to 23:00)
-      // This ensures the chart always shows data
+      // Extract database timestamp to determine display hours
+      let maxHour = 17; // Default to 17:00 (matching database time around 17:41)
+      let actualTime = new Date();
+      
+      if (panel33 && panel33.timestamp) {
+        actualTime = new Date(panel33.timestamp);
+        // Extract hours from the timestamp (with timezone adjustment)
+        const databaseHour = actualTime.getUTCHours() + 7; // Convert UTC to GMT+7
+        console.log(`Database actual hour (GMT+7): ${databaseHour}`);
+        
+        // Use database hour but ensure reasonable range (0-23)
+        maxHour = Math.min(Math.max(databaseHour, 0), 23);
+      }
+      
+      // Create time points for a full day (00:00 to maxHour)
+      // This ensures the chart always shows data to match database
       const dataPoints: TotalPowerData[] = [];
       
       // Simple curve to simulate realistic power consumption through the day
@@ -461,7 +475,7 @@ export class DatabaseStorage implements IStorage {
         1.0, 0.9, 0.8, 0.6, 0.4, 0.3  // 18:00-23:00 (decreasing evening usage)
       ];
       
-      for (let hour = 0; hour < 24; hour++) {
+      for (let hour = 0; hour <= maxHour; hour++) {
         const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
         const factor = hourlyFactors[hour];
         
@@ -473,12 +487,8 @@ export class DatabaseStorage implements IStorage {
         });
       }
       
-      // Get current hour to filter future hours
-      const now = new Date();
-      const currentHour = now.getHours();
-      
-      // Only return hours up through the current hour
-      const filteredData = dataPoints.filter((_, index) => index <= currentHour);
+      // Return all data points up to maxHour - we don't need to filter here
+      const filteredData = dataPoints;
       
       return filteredData;
     } catch (error) {
