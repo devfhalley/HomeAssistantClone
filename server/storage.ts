@@ -568,12 +568,11 @@ export class DatabaseStorage implements IStorage {
       console.log(`Local Hour: ${new Date().getHours()}, Local Minute: ${new Date().getMinutes()}`);
       console.log(`GMT+7 Hour: ${currentHour}, GMT+7 Minute: ${currentMinute}`);
       
-      // Temporarily remove future hour filtering since we're using test data from 2025
-      const allTimes = allData.map(d => d.time);
-      console.log("All times for total power chart:", allTimes);
+      // Filter out the problematic 23:00 hour that doesn't match actual database timestamps
+      const filteredData = allData.filter(d => d.time !== "23:00");
       
-      // Return all data without filtering by current time
-      const filteredData = allData;
+      const allTimes = filteredData.map(d => d.time);
+      console.log("Filtered times for total power chart (removed 23:00):", allTimes);
       
       /* Original filtering code:
       const filteredData = allData.filter(dataPoint => {
