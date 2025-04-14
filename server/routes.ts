@@ -170,12 +170,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Format the hour string (e.g., "00:00", "01:00", etc.)
         const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
         
-        // Check if we have panel data for this specific hour
+        // Check if we have panel data for this specific hour (improved query)
         const hourlyCheckQuery = `
           SELECT COUNT(*) as record_count 
           FROM panel_33kva 
-          WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
-          AND EXTRACT(HOUR FROM timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = ${hour}
+          WHERE timestamp >= '${dateStr} ${hour}:00:00'::timestamp 
+          AND timestamp < '${dateStr} ${hour+1}:00:00'::timestamp
         `;
         
         try {
@@ -187,22 +187,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Data exists for this hour, get the actual values
             hoursWithData++;
             
-            // Get panel 33KVA data for this hour
+            // Get panel 33KVA data for this hour (improved query)
             const panel33Query = `
               SELECT netkw
               FROM panel_33kva
-              WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
-              AND EXTRACT(HOUR FROM timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = ${hour}
+              WHERE timestamp >= '${dateStr} ${hour}:00:00'::timestamp 
+              AND timestamp < '${dateStr} ${hour+1}:00:00'::timestamp
               ORDER BY timestamp DESC
               LIMIT 1
             `;
             
-            // Get panel 66KVA data for this hour
+            // Get panel 66KVA data for this hour (improved query)
             const panel66Query = `
               SELECT netkw
               FROM panel_66kva
-              WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
-              AND EXTRACT(HOUR FROM timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = ${hour}
+              WHERE timestamp >= '${dateStr} ${hour}:00:00'::timestamp 
+              AND timestamp < '${dateStr} ${hour+1}:00:00'::timestamp
               ORDER BY timestamp DESC
               LIMIT 1
             `;
