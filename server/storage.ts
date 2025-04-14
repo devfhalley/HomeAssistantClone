@@ -231,9 +231,11 @@ export class DatabaseStorage implements IStorage {
       
       const panel33Result = await pool.query(sqlQuery);
       
-      // Format timestamp to time string
+      // Format timestamp to time string with GMT+7 timezone adjustment
       const formatTime = (timestamp: Date): string => {
-        return `${timestamp.getHours().toString().padStart(2, '0')}:${timestamp.getMinutes().toString().padStart(2, '0')}`;
+        // Convert to GMT+7
+        const timestampGMT7 = new Date(timestamp.getTime() + (7 * 60 * 60 * 1000));
+        return `${timestampGMT7.getHours().toString().padStart(2, '0')}:${timestampGMT7.getMinutes().toString().padStart(2, '0')}`;
       };
       
       // Map to chart data format
@@ -242,15 +244,21 @@ export class DatabaseStorage implements IStorage {
       // Process panel33 data
       const panel33Data = panel33Result.rows;
       
-      // Get current hour and minute for filtering
-      const currentDate = new Date();
+      // Get current hour and minute for filtering with GMT+7 timezone adjustment
+      const currentUTCDate = new Date();
+      // Convert to GMT+7 by adding 7 hours to UTC time
+      const currentDate = new Date(currentUTCDate.getTime() + (7 * 60 * 60 * 1000));
       const currentHour = currentDate.getHours();
       const currentMinute = currentDate.getMinutes();
+      
+      console.log(`Current time in GMT+7: ${currentDate.toISOString()} (Hour: ${currentHour}, Minute: ${currentMinute})`);
       
       for (const record of panel33Data) {
         if (!record.timestamp) continue;
         
-        const recordDate = new Date(record.timestamp);
+        const recordUTCDate = new Date(record.timestamp);
+        // Convert to GMT+7
+        const recordDate = new Date(recordUTCDate.getTime() + (7 * 60 * 60 * 1000));
         const recordHour = recordDate.getHours();
         const recordMinute = recordDate.getMinutes();
         
@@ -436,15 +444,18 @@ export class DatabaseStorage implements IStorage {
         totalPower: number;
       }>();
       
-      // Helper function to format date based on granularity
+      // Helper function to format date based on granularity with GMT+7 timezone adjustment
       const formatDate = (date: Date, gran: string): string => {
+        // Convert to GMT+7
+        const dateGMT7 = new Date(date.getTime() + (7 * 60 * 60 * 1000));
+        
         if (gran === 'minute') {
-          return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+          return `${dateGMT7.getHours().toString().padStart(2, '0')}:${dateGMT7.getMinutes().toString().padStart(2, '0')}`;
         } else if (gran === 'hour') {
-          return `${date.getHours().toString().padStart(2, '0')}:00`;
+          return `${dateGMT7.getHours().toString().padStart(2, '0')}:00`;
         } else {
           // Default daily view shows hours
-          return `${date.getHours().toString().padStart(2, '0')}:00`;
+          return `${dateGMT7.getHours().toString().padStart(2, '0')}:00`;
         }
       };
       
@@ -516,9 +527,14 @@ export class DatabaseStorage implements IStorage {
         return (aMinute || 0) - (bMinute || 0);
       });
       
-      // Filter out future hours beyond the current time
-      const currentHour = new Date().getHours();
-      const currentMinute = new Date().getMinutes();
+      // Filter out future hours beyond the current time (using GMT+7)
+      const currentUTCDate = new Date();
+      // Convert to GMT+7 by adding 7 hours to UTC time
+      const currentDate = new Date(currentUTCDate.getTime() + (7 * 60 * 60 * 1000));
+      const currentHour = currentDate.getHours();
+      const currentMinute = currentDate.getMinutes();
+      
+      console.log(`Current time in GMT+7 (total power): ${currentDate.toISOString()} (Hour: ${currentHour}, Minute: ${currentMinute})`);
       
       // Only keep data points that are before or equal to the current time
       const filteredData = allData.filter(dataPoint => {
