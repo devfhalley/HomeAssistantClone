@@ -482,6 +482,7 @@ export class DatabaseStorage implements IStorage {
         console.log(`Using date factor: ${dateFactor.toFixed(2)} to generate realistic power patterns for ${dateString}`);
         
         // Generate data for all 24 hours with the date-specific scaling
+        // For historical dates we ALWAYS show all 24 hours (as requested)
         for (let hour = 0; hour < 24; hour++) {
           const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
           const factor = hourlyFactors[hour];

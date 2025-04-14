@@ -123,31 +123,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDateObj
       );
       
-      // Default to showing full 24 hours if no database timestamp available
+      // Default to showing full 24 hours
       let maxHour = 23; 
       
-      // Get the latest panel data timestamp to determine how much data to show
-      const panel33 = await storage.getPanel33kvaData();
-      if (panel33 && panel33.timestamp) {
-        const timestamp = new Date(panel33.timestamp);
+      // Only apply hour filtering for current day (today)
+      // For historical dates, show all 24 hours
+      const isToday = !date && !startDate && !endDate;
+      
+      if (isToday) {
+        // Get the latest panel data timestamp to determine how much data to show
+        const panel33 = await storage.getPanel33kvaData();
+        if (panel33 && panel33.timestamp) {
+          const timestamp = new Date(panel33.timestamp);
+          
+          // Extract the UTC hour from the timestamp
+          const utcHour = timestamp.getUTCHours();
+          
+          // Use the current hour from the database timestamp
+          maxHour = utcHour;
+          
+          console.log(`Dynamic cutoff for today: Using hour ${maxHour} from latest database timestamp: ${panel33.timestamp}`);
+        } else {
+          console.log(`No timestamp found, defaulting to full day (${maxHour} hours)`);
+        }
         
-        // Extract the UTC hour from the timestamp
-        const utcHour = timestamp.getUTCHours();
-        
-        // Use the current hour from the database timestamp
-        maxHour = utcHour;
-        
-        console.log(`Dynamic cutoff: Using hour ${maxHour} from latest database timestamp: ${panel33.timestamp}`);
+        // For today, filter data to show only up to the current hour
+        console.log(`Filtering today's data to show only hours 00:00 to ${maxHour}:00`);
       } else {
-        console.log(`No timestamp found, defaulting to full day (${maxHour} hours)`);
+        // For historical dates, show all 24 hours
+        console.log(`Historical date selected - showing full 24 hours of data`);
       }
       
-      // Filter data to show only up to the current hour
-      const filteredData = allData.filter(point => {
-        // Extract hour from the time string (format: "HH:00")
-        const hour = parseInt(point.time.split(':')[0], 10);
-        return hour <= maxHour;
-      });
+      // Apply filtering based on whether it's today or a historical date
+      const filteredData = isToday 
+        ? allData.filter(point => {
+            // Extract hour from the time string (format: "HH:00")
+            const hour = parseInt(point.time.split(':')[0], 10);
+            return hour <= maxHour;
+          })
+        : allData; // For historical dates, use all data points
       
       console.log(`Total power data - requested: ${allData.length}, filtered: ${filteredData.length}`);
       if (filteredData.length > 0) {
@@ -172,7 +186,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           {
             name: "Data Filtered",
-            sql: `-- Data filtered to show only hours 00:00 to ${maxHour}:00`
+            sql: isToday 
+              ? `-- Data filtered to show only hours 00:00 to ${maxHour}:00 for today`
+              : `-- Showing all 24 hours for historical date ${date || startDate}`
           }
         ]
       });
