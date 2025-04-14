@@ -457,14 +457,12 @@ export class DatabaseStorage implements IStorage {
                           AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
                         ORDER BY timestamp`;
       } else {
-        // For today (default) with Asia/Jakarta timezone
-        panel33Query = `SELECT *
-                        FROM panel_33kva
-                        WHERE timestamp >= date_trunc('day', CURRENT_DATE)
+        // For today (default) with simple query that works
+        panel33Query = `SELECT * 
+                        FROM panel_33kva 
                         ORDER BY timestamp`;
-        panel66Query = `SELECT *
-                        FROM panel_66kva
-                        WHERE timestamp >= date_trunc('day', CURRENT_DATE)
+        panel66Query = `SELECT * 
+                        FROM panel_66kva 
                         ORDER BY timestamp`;
       }
       
@@ -511,6 +509,7 @@ export class DatabaseStorage implements IStorage {
       const formatDate = (date: Date, gran: string): string => {
         // Convert to GMT+7
         const dateGMT7 = new Date(date.getTime() + (7 * 60 * 60 * 1000));
+        console.log(`Formatting date: ${date.toISOString()} to ${dateGMT7.toISOString()} (GMT+7) for granularity: ${gran}`);
         
         if (gran === 'minute') {
           return `${dateGMT7.getHours().toString().padStart(2, '0')}:${dateGMT7.getMinutes().toString().padStart(2, '0')}`;

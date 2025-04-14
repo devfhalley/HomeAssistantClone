@@ -110,36 +110,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (startDateObj) {
         // For a specific date
         const dateStr = startDateObj.toISOString().split('T')[0]; // Get just the date part (YYYY-MM-DD)
-        panel33Query = `
-          SELECT *
-          FROM panel_33kva
-          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
-            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
-          ORDER BY timestamp
-        `;
-        panel66Query = `
-          SELECT *
-          FROM panel_66kva
-          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
-            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
-          ORDER BY timestamp
-        `;
+        panel33Query = `SELECT *
+                        FROM panel_33kva
+                        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
+                          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
+                        ORDER BY timestamp`;
+        panel66Query = `SELECT *
+                        FROM panel_66kva
+                        WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
+                          AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
+                        ORDER BY timestamp`;
       } else {
         // For today (default)
-        panel33Query = `
-          SELECT *
-          FROM panel_33kva
-          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
-            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
-          ORDER BY timestamp
-        `;
-        panel66Query = `
-          SELECT *
-          FROM panel_66kva
-          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
-            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
-          ORDER BY timestamp
-        `;
+        panel33Query = `SELECT * 
+                        FROM panel_33kva 
+                        ORDER BY timestamp`;
+        panel66Query = `SELECT * 
+                        FROM panel_66kva 
+                        ORDER BY timestamp`;
       }
       
       // Send response with data and SQL queries
