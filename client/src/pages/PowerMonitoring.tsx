@@ -45,11 +45,17 @@ const defaultPhaseData = {
 };
 
 const processChartData = (data: ChartData[] | undefined): ChartDataPoint[] => {
-  if (!data) return [];
-  return data.map(item => ({
-    time: item.time,
-    value: item.value
-  }));
+  if (!data || !Array.isArray(data)) return [];
+  
+  try {
+    return data.map(item => ({
+      time: item.time,
+      value: item.value
+    }));
+  } catch (error) {
+    console.error('Error processing chart data:', error);
+    return [];
+  }
 };
 
 const PowerMonitoring = () => {
@@ -112,75 +118,189 @@ const PowerMonitoring = () => {
     }
   }, [voltageDataRResponse]);
 
-  const { data: voltageDataS } = useQuery({
+  const { data: voltageDataSResponse } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'S'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/voltage/S')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/S')
   });
+  
+  // Extract data and collect SQL queries
+  const voltageDataS = voltageDataSResponse?.data;
+  
+  useEffect(() => {
+    if (voltageDataSResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...voltageDataSResponse.sqlQueries]);
+    }
+  }, [voltageDataSResponse]);
 
-  const { data: voltageDataT } = useQuery({
+  const { data: voltageDataTResponse } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'T'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/voltage/T')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/T')
   });
+  
+  // Extract data and collect SQL queries
+  const voltageDataT = voltageDataTResponse?.data;
+  
+  useEffect(() => {
+    if (voltageDataTResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...voltageDataTResponse.sqlQueries]);
+    }
+  }, [voltageDataTResponse]);
 
-  const { data: currentDataR } = useQuery({
+  const { data: currentDataRResponse } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'R'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/current/R')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/R')
   });
+  
+  const currentDataR = currentDataRResponse?.data;
+  
+  useEffect(() => {
+    if (currentDataRResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...currentDataRResponse.sqlQueries]);
+    }
+  }, [currentDataRResponse]);
 
-  const { data: currentDataS } = useQuery({
+  const { data: currentDataSResponse } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'S'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/current/S')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/S')
   });
+  
+  const currentDataS = currentDataSResponse?.data;
+  
+  useEffect(() => {
+    if (currentDataSResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...currentDataSResponse.sqlQueries]);
+    }
+  }, [currentDataSResponse]);
 
-  const { data: currentDataT } = useQuery({
+  const { data: currentDataTResponse } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'T'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/current/T')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/T')
   });
+  
+  const currentDataT = currentDataTResponse?.data;
+  
+  useEffect(() => {
+    if (currentDataTResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...currentDataTResponse.sqlQueries]);
+    }
+  }, [currentDataTResponse]);
 
-  const { data: powerDataR } = useQuery({
+  const { data: powerDataRResponse } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'R'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/power/R')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/R')
   });
+  
+  const powerDataR = powerDataRResponse?.data;
+  
+  useEffect(() => {
+    if (powerDataRResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...powerDataRResponse.sqlQueries]);
+    }
+  }, [powerDataRResponse]);
 
-  const { data: powerDataS } = useQuery({
+  const { data: powerDataSResponse } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'S'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/power/S')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/S')
   });
+  
+  const powerDataS = powerDataSResponse?.data;
+  
+  useEffect(() => {
+    if (powerDataSResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...powerDataSResponse.sqlQueries]);
+    }
+  }, [powerDataSResponse]);
 
-  const { data: powerDataT } = useQuery({
+  const { data: powerDataTResponse } = useQuery({
     queryKey: ['/api/chart-data', 'power', 'T'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/power/T')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/T')
   });
   
-  const { data: frequencyDataR } = useQuery({
+  const powerDataT = powerDataTResponse?.data;
+  
+  useEffect(() => {
+    if (powerDataTResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...powerDataTResponse.sqlQueries]);
+    }
+  }, [powerDataTResponse]);
+  
+  const { data: frequencyDataRResponse } = useQuery({
     queryKey: ['/api/chart-data', 'frequency', 'R'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/frequency/R')
-  });
-
-  const { data: frequencyDataS } = useQuery({
-    queryKey: ['/api/chart-data', 'frequency', 'S'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/frequency/S')
-  });
-
-  const { data: frequencyDataT } = useQuery({
-    queryKey: ['/api/chart-data', 'frequency', 'T'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/frequency/T')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/R')
   });
   
-  const { data: pfDataR } = useQuery({
+  const frequencyDataR = frequencyDataRResponse?.data;
+  
+  useEffect(() => {
+    if (frequencyDataRResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...frequencyDataRResponse.sqlQueries]);
+    }
+  }, [frequencyDataRResponse]);
+
+  const { data: frequencyDataSResponse } = useQuery({
+    queryKey: ['/api/chart-data', 'frequency', 'S'],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/S')
+  });
+  
+  const frequencyDataS = frequencyDataSResponse?.data;
+  
+  useEffect(() => {
+    if (frequencyDataSResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...frequencyDataSResponse.sqlQueries]);
+    }
+  }, [frequencyDataSResponse]);
+
+  const { data: frequencyDataTResponse } = useQuery({
+    queryKey: ['/api/chart-data', 'frequency', 'T'],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/T')
+  });
+  
+  const frequencyDataT = frequencyDataTResponse?.data;
+  
+  useEffect(() => {
+    if (frequencyDataTResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...frequencyDataTResponse.sqlQueries]);
+    }
+  }, [frequencyDataTResponse]);
+  
+  const { data: pfDataRResponse } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'R'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/pf/R')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/R')
   });
+  
+  const pfDataR = pfDataRResponse?.data;
+  
+  useEffect(() => {
+    if (pfDataRResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...pfDataRResponse.sqlQueries]);
+    }
+  }, [pfDataRResponse]);
 
-  const { data: pfDataS } = useQuery({
+  const { data: pfDataSResponse } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'S'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/pf/S')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/S')
   });
+  
+  const pfDataS = pfDataSResponse?.data;
+  
+  useEffect(() => {
+    if (pfDataSResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...pfDataSResponse.sqlQueries]);
+    }
+  }, [pfDataSResponse]);
 
-  const { data: pfDataT } = useQuery({
+  const { data: pfDataTResponse } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'T'],
-    queryFn: () => apiRequest<ChartData[]>("GET", '/api/chart-data/pf/T')
+    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/T')
   });
+  
+  const pfDataT = pfDataTResponse?.data;
+  
+  useEffect(() => {
+    if (pfDataTResponse?.sqlQueries) {
+      setSqlQueries(prev => [...prev, ...pfDataTResponse.sqlQueries]);
+    }
+  }, [pfDataTResponse]);
   
   // Process and collect phase data + SQL queries
   const [processedPhaseData, setProcessedPhaseData] = useState(defaultPhaseData);
@@ -190,7 +310,7 @@ const PowerMonitoring = () => {
     const newProcessedData = { ...defaultPhaseData };
     const newSqlQueries: SqlQuery[] = [];
     
-    // Phase R data
+    // Process individual phase responses
     if (phaseRResponse?.data) {
       newProcessedData.R = {
         voltage: phaseRResponse.data.voltage,
@@ -207,7 +327,6 @@ const PowerMonitoring = () => {
       }
     }
     
-    // Phase S data
     if (phaseSResponse?.data) {
       newProcessedData.S = {
         voltage: phaseSResponse.data.voltage,
@@ -224,7 +343,6 @@ const PowerMonitoring = () => {
       }
     }
     
-    // Phase T data
     if (phaseTResponse?.data) {
       newProcessedData.T = {
         voltage: phaseTResponse.data.voltage,
@@ -241,9 +359,44 @@ const PowerMonitoring = () => {
       }
     }
     
+    // Process all phases response
+    if (allPhasesResponse?.data && Array.isArray(allPhasesResponse.data)) {
+      // Update phase data from all phases response
+      for (const phaseData of allPhasesResponse.data) {
+        if (phaseData.phase === 'R') {
+          newProcessedData.R = {
+            voltage: phaseData.voltage,
+            current: phaseData.current,
+            power: phaseData.power,
+            energy: phaseData.energy,
+            frequency: phaseData.frequency,
+            pf: phaseData.pf
+          };
+        } else if (phaseData.phase === 'S') {
+          newProcessedData.S = {
+            voltage: phaseData.voltage,
+            current: phaseData.current,
+            power: phaseData.power,
+            energy: phaseData.energy,
+            frequency: phaseData.frequency,
+            pf: phaseData.pf
+          };
+        } else if (phaseData.phase === 'T') {
+          newProcessedData.T = {
+            voltage: phaseData.voltage,
+            current: phaseData.current,
+            power: phaseData.power,
+            energy: phaseData.energy,
+            frequency: phaseData.frequency,
+            pf: phaseData.pf
+          };
+        }
+      }
+    }
+    
     setProcessedPhaseData(newProcessedData);
     setSqlQueries(newSqlQueries);
-  }, [phaseRResponse, phaseSResponse, phaseTResponse]);
+  }, [phaseRResponse, phaseSResponse, phaseTResponse, allPhasesResponse]);
   
   return (
     <HomeAssistant>
