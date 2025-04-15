@@ -69,7 +69,9 @@ const TotalPowerChart = ({ selectedDate: externalSelectedDate, onDateChange }: T
         endOfDay.setHours(23, 59, 59, 999);
         
         // Format date as YYYY-MM-DD to ensure proper date handling
-        const formattedDate = startOfDay.toISOString().split('T')[0];
+        // Fix timezone issue by using browser's local timezone formatting
+        // This prevents the UTC conversion that causes the date to be off by one day
+        const formattedDate = format(selectedDate, 'yyyy-MM-dd');
         console.log(`Using selected date: ${formattedDate} for power chart`);
         
         queryParams += `&date=${formattedDate}`;
@@ -123,8 +125,13 @@ const TotalPowerChart = ({ selectedDate: externalSelectedDate, onDateChange }: T
       
       console.log("CHART DEBUG - First data point:", chartData[0]);
       console.log("CHART DEBUG - Last data point:", chartData[chartData.length - 1]);
+      
+      // Output the exact date used in chart legends for debugging
+      if (selectedDate) {
+        console.log("Using selected date:", format(selectedDate, "yyyy-MM-dd"), "for power chart");
+      }
     }
-  }, [chartData]);
+  }, [chartData, selectedDate]);
   
   // Update SQL queries when response changes
   useEffect(() => {
