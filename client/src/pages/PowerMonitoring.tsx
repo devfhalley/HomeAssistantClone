@@ -141,8 +141,8 @@ const PowerMonitoring = () => {
     isLoading: isLoadingVoltageChart, 
     isFetching: isFetchingVoltageChart 
   } = useQuery<ChartDataResponse>({
-    queryKey: ['/api/chart-data/voltage/R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/R'),
+    queryKey: ['/api/chart-data/voltage/R', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('voltage', 'R', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -153,8 +153,8 @@ const PowerMonitoring = () => {
     isLoading: isLoadingVoltageSChart, 
     isFetching: isFetchingVoltageSChart 
   } = useQuery<ChartDataResponse>({
-    queryKey: ['/api/chart-data/voltage/S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/S'),
+    queryKey: ['/api/chart-data/voltage/S', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('voltage', 'S', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -165,8 +165,8 @@ const PowerMonitoring = () => {
     isLoading: isLoadingVoltageTChart, 
     isFetching: isFetchingVoltageTChart 
   } = useQuery<ChartDataResponse>({
-    queryKey: ['/api/chart-data/voltage/T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/T'),
+    queryKey: ['/api/chart-data/voltage/T', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('voltage', 'T', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
