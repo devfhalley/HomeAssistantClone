@@ -277,11 +277,12 @@ const TotalPowerChart = () => {
                   domain={[0, 'dataMax + 5000']}
                 />
                 <Tooltip formatter={(value: any) => formatPower(value as number)} />
+                {/* Format date for display in legend */}
                 {showPanel33 && (
                   <Area 
                     type="monotone" 
                     dataKey="panel33Power" 
-                    name="Panel 1 33KVA"
+                    name={`Panel 1 33KVA ${selectedDate ? `(${format(selectedDate, "dd MMM yyyy")})` : ''}`}
                     stroke="#4caf50" 
                     fill="#4caf50" 
                     fillOpacity={0.3} 
@@ -292,7 +293,7 @@ const TotalPowerChart = () => {
                   <Area 
                     type="monotone" 
                     dataKey="panel66Power" 
-                    name="Panel 2 66KVA"
+                    name={`Panel 2 66KVA ${selectedDate ? `(${format(selectedDate, "dd MMM yyyy")})` : ''}`}
                     stroke="#ff9800" 
                     fill="#ff9800" 
                     fillOpacity={0.3}
@@ -302,7 +303,7 @@ const TotalPowerChart = () => {
                 <Area 
                   type="monotone" 
                   dataKey="totalPower" 
-                  name="Total Power"
+                  name={`Total Power ${selectedDate ? `(${format(selectedDate, "dd MMM yyyy")})` : ''}`}
                   stroke="#03a9f4" 
                   fill="#03a9f4" 
                   fillOpacity={0.3}

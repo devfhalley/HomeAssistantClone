@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { format } from 'date-fns';
 
 interface ChartCardProps {
   title: string;
@@ -8,6 +9,7 @@ interface ChartCardProps {
   phaseTData: { time: string; value: number }[];
   yAxisDomain?: [number, number];
   unit: string;
+  selectedDate?: Date; // Add optional selected date
 }
 
 const ChartCard = ({ 
@@ -16,7 +18,8 @@ const ChartCard = ({
   phaseSData, 
   phaseTData, 
   yAxisDomain,
-  unit
+  unit,
+  selectedDate
 }: ChartCardProps) => {
   // Handle empty data states
   if (!phaseRData.length || !phaseSData.length || !phaseTData.length) {
@@ -89,7 +92,7 @@ const ChartCard = ({
               <Line
                 type="monotone"
                 dataKey="R"
-                name={`${dataTypeName} R`}
+                name={`${dataTypeName} R ${selectedDate ? `(${format(selectedDate, "dd MMM yyyy")})` : ''}`}
                 stroke="#1e90ff"
                 strokeWidth={1.5}
                 dot={false}
@@ -98,7 +101,7 @@ const ChartCard = ({
               <Line
                 type="monotone"
                 dataKey="S"
-                name={`${dataTypeName} S`}
+                name={`${dataTypeName} S ${selectedDate ? `(${format(selectedDate, "dd MMM yyyy")})` : ''}`}
                 stroke="#ffa500"
                 strokeWidth={1.5}
                 dot={false}
@@ -107,7 +110,7 @@ const ChartCard = ({
               <Line
                 type="monotone"
                 dataKey="T"
-                name={`${dataTypeName} T`}
+                name={`${dataTypeName} T ${selectedDate ? `(${format(selectedDate, "dd MMM yyyy")})` : ''}`}
                 stroke="#2ecc71"
                 strokeWidth={1.5}
                 dot={false}
