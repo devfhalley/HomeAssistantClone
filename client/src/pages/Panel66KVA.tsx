@@ -242,8 +242,8 @@ const Panel66KVA = () => {
     data: powerDataTResponse,
     isFetching: isFetchingPowerT 
   } = useQuery({
-    queryKey: ['/api/chart-data', 'power', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/T'),
+    queryKey: ['/api/chart-data', 'power', 'T', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('power', 'T', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -260,8 +260,8 @@ const Panel66KVA = () => {
     data: frequencyDataRResponse,
     isFetching: isFetchingFrequencyR 
   } = useQuery({
-    queryKey: ['/api/chart-data', 'frequency', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/R'),
+    queryKey: ['/api/chart-data', 'frequency', 'R', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('frequency', 'R', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -278,8 +278,8 @@ const Panel66KVA = () => {
     data: frequencyDataSResponse,
     isFetching: isFetchingFrequencyS
   } = useQuery({
-    queryKey: ['/api/chart-data', 'frequency', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/S'),
+    queryKey: ['/api/chart-data', 'frequency', 'S', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('frequency', 'S', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -296,8 +296,8 @@ const Panel66KVA = () => {
     data: frequencyDataTResponse,
     isFetching: isFetchingFrequencyT 
   } = useQuery({
-    queryKey: ['/api/chart-data', 'frequency', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/frequency/T'),
+    queryKey: ['/api/chart-data', 'frequency', 'T', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('frequency', 'T', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -314,8 +314,8 @@ const Panel66KVA = () => {
     data: pfDataRResponse,
     isFetching: isFetchingPfR 
   } = useQuery({
-    queryKey: ['/api/chart-data', 'pf', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/R'),
+    queryKey: ['/api/chart-data', 'pf', 'R', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('pf', 'R', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -332,8 +332,8 @@ const Panel66KVA = () => {
     data: pfDataSResponse,
     isFetching: isFetchingPfS 
   } = useQuery({
-    queryKey: ['/api/chart-data', 'pf', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/S'),
+    queryKey: ['/api/chart-data', 'pf', 'S', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('pf', 'S', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -350,8 +350,8 @@ const Panel66KVA = () => {
     data: pfDataTResponse,
     isFetching: isFetchingPfT
   } = useQuery({
-    queryKey: ['/api/chart-data', 'pf', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/pf/T'),
+    queryKey: ['/api/chart-data', 'pf', 'T', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('pf', 'T', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
