@@ -11,6 +11,22 @@ import { RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 
+// Helper function to create phase data URLs with date parameters
+const createPhaseDataUrl = (phase: string, date?: Date): string => {
+  if (date) {
+    return `/api/phase-data/${phase}?date=${date.toISOString()}`;
+  }
+  return `/api/phase-data/${phase}`;
+};
+
+// Helper function to create chart data URLs with date parameters
+const createChartDataUrl = (dataType: string, phase: string, date?: Date): string => {
+  if (date) {
+    return `/api/chart-data/${dataType}/${phase}?date=${date.toISOString()}`;
+  }
+  return `/api/chart-data/${dataType}/${phase}`;
+};
+
 // Interface for phase data from API
 interface PhaseData {
   phase: string;
@@ -83,8 +99,8 @@ const PowerMonitoring = () => {
     isLoading: isLoadingPhaseR, 
     isFetching: isFetchingPhaseR 
   } = useQuery<ApiResponse>({
-    queryKey: ['/api/phase-data/R'],
-    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/R'),
+    queryKey: ['/api/phase-data/R', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ApiResponse>("GET", createPhaseDataUrl('R', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -95,8 +111,8 @@ const PowerMonitoring = () => {
     isLoading: isLoadingPhaseS, 
     isFetching: isFetchingPhaseS 
   } = useQuery<ApiResponse>({
-    queryKey: ['/api/phase-data/S'],
-    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/S'),
+    queryKey: ['/api/phase-data/S', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ApiResponse>("GET", createPhaseDataUrl('S', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -107,8 +123,8 @@ const PowerMonitoring = () => {
     isLoading: isLoadingPhaseT, 
     isFetching: isFetchingPhaseT 
   } = useQuery<ApiResponse>({
-    queryKey: ['/api/phase-data/T'],
-    queryFn: () => apiRequest<ApiResponse>("GET", '/api/phase-data/T'),
+    queryKey: ['/api/phase-data/T', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ApiResponse>("GET", createPhaseDataUrl('T', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });

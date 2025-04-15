@@ -76,8 +76,11 @@ const Panel66KVA = () => {
     isLoading: isLoadingPhaseData, 
     isFetching: isFetchingPhaseData 
   } = useQuery({
-    queryKey: ['/api/phase-data'],
-    queryFn: () => apiRequest<PhaseData[]>("GET", '/api/phase-data'),
+    queryKey: ['/api/phase-data', selectedDate?.toISOString()],
+    queryFn: () => {
+      const dateParam = selectedDate ? `?date=${selectedDate.toISOString()}` : '';
+      return apiRequest<PhaseData[]>("GET", `/api/phase-data${dateParam}`);
+    },
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true // Continue refetching even when tab is not active
   });
@@ -97,7 +100,7 @@ const Panel66KVA = () => {
     isFetching: isFetchingVoltageR
   } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'R', selectedDate?.toISOString()],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", `/api/chart-data/voltage/R?date=${selectedDate?.toISOString()}`),
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('voltage', 'R', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
