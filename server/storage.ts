@@ -239,12 +239,11 @@ export class DatabaseStorage implements IStorage {
       if (specificDate) {
         // For a specific date using Asia/Jakarta timezone
         const dateStr = specificDate.toISOString().split('T')[0]; // Get just the date part (YYYY-MM-DD)
-        console.log(`Chart data query using dateStr: ${dateStr}`);
+        console.log(`Chart data query using dateStr: ${dateStr} from date ${specificDate.toISOString()}`);
         sqlQuery = `
           SELECT *
           FROM panel_33kva
-          WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= '${dateStr} 00:00:00'
-            AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' < '${dateStr} 00:00:00'::timestamp + interval '1 day'
+          WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
           ORDER BY timestamp
         `;
         params = []; // No bind params needed as we've embedded the date directly
