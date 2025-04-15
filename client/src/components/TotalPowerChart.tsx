@@ -29,9 +29,21 @@ interface TotalPowerResponse {
   sqlQueries: SqlQuery[];
 }
 
-const TotalPowerChart = () => {
+interface TotalPowerChartProps {
+  selectedDate?: Date;
+  onDateChange?: (date: Date) => void;
+}
+
+const TotalPowerChart = ({ selectedDate: externalSelectedDate, onDateChange }: TotalPowerChartProps) => {
   const [granularity, setGranularity] = useState<string>('hour');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date()); // Initialize with today's date
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(externalSelectedDate || new Date()); // Use provided date or today's date
+  
+  // Sync internal state with external props
+  useEffect(() => {
+    if (externalSelectedDate && !isSameDay(externalSelectedDate, selectedDate || new Date())) {
+      setSelectedDate(externalSelectedDate);
+    }
+  }, [externalSelectedDate]);
   
   // State to store SQL queries
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
@@ -123,7 +135,14 @@ const TotalPowerChart = () => {
   
   // Reset the date filter to today
   const resetDateToToday = () => {
-    setSelectedDate(new Date());
+    const today = new Date();
+    setSelectedDate(today);
+    
+    // Update external state if callback provided
+    if (onDateChange) {
+      onDateChange(today);
+    }
+    
     refetch();
   };
 
@@ -212,6 +231,12 @@ const TotalPowerChart = () => {
                   selected={selectedDate}
                   onSelect={(date) => {
                     setSelectedDate(date);
+                    
+                    // Update the external state if callback provided
+                    if (date && onDateChange) {
+                      onDateChange(date);
+                    }
+                    
                     // Immediately refetch data when date changes
                     if (date) {
                       console.log(`Calendar date selected: ${date.toISOString()}`);

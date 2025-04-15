@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { type ChartData } from "@shared/schema";
 import SqlQueryDisplay from "@/components/SqlQueryDisplay";
 import { RefreshCw } from "lucide-react";
+import { format } from "date-fns";
 
 // Interface for phase data from API
 interface PhaseData {
@@ -60,9 +61,15 @@ const processChartData = (data: ChartData[] | undefined): ChartDataPoint[] => {
 };
 
 const PowerMonitoring = () => {
+  // Add selectedDate state, default to today's date
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  
   useEffect(() => {
     document.title = "Home Assistant - Power Monitoring";
-  }, []);
+    
+    // Log the selected date for monitoring
+    console.log("Using selected date:", format(selectedDate, "yyyy-MM-dd"), "for power chart");
+  }, [selectedDate]);
 
   // State to store SQL queries
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
@@ -226,7 +233,7 @@ const PowerMonitoring = () => {
         
         {/* Total Power Consumption Chart */}
         <div>
-          <TotalPowerChart />
+          <TotalPowerChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
         </div>
         
         {/* Power Monitor Cards */}
@@ -290,6 +297,7 @@ const PowerMonitoring = () => {
               phaseTData={processChartData(voltageTChartData2)}
               yAxisDomain={[190, 240]}
               unit="V"
+              selectedDate={selectedDate}
             />
           </div>
         </div>
