@@ -11,6 +11,14 @@ import { RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 
+// Helper function to create chart data URLs with date parameters
+const createChartDataUrl = (dataType: string, phase: string, date?: Date): string => {
+  if (date) {
+    return `/api/chart-data/${dataType}/${phase}?date=${date.toISOString()}`;
+  }
+  return `/api/chart-data/${dataType}/${phase}`;
+};
+
 // Interface for phase data from API
 interface PhaseData {
   phase: string;
@@ -108,8 +116,8 @@ const Panel66KVA = () => {
     data: voltageDataSResponse,
     isFetching: isFetchingVoltageS
   } = useQuery({
-    queryKey: ['/api/chart-data', 'voltage', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/S'),
+    queryKey: ['/api/chart-data', 'voltage', 'S', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('voltage', 'S', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -126,8 +134,8 @@ const Panel66KVA = () => {
     data: voltageDataTResponse,
     isFetching: isFetchingVoltageT
   } = useQuery({
-    queryKey: ['/api/chart-data', 'voltage', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/T'),
+    queryKey: ['/api/chart-data', 'voltage', 'T', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('voltage', 'T', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -144,8 +152,8 @@ const Panel66KVA = () => {
     data: currentDataRResponse,
     isFetching: isFetchingCurrentR
   } = useQuery({
-    queryKey: ['/api/chart-data', 'current', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/R'),
+    queryKey: ['/api/chart-data', 'current', 'R', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('current', 'R', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -162,8 +170,8 @@ const Panel66KVA = () => {
     data: currentDataSResponse,
     isFetching: isFetchingCurrentS 
   } = useQuery({
-    queryKey: ['/api/chart-data', 'current', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/S'),
+    queryKey: ['/api/chart-data', 'current', 'S', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('current', 'S', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -180,8 +188,8 @@ const Panel66KVA = () => {
     data: currentDataTResponse,
     isFetching: isFetchingCurrentT 
   } = useQuery({
-    queryKey: ['/api/chart-data', 'current', 'T'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/current/T'),
+    queryKey: ['/api/chart-data', 'current', 'T', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('current', 'T', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -198,8 +206,8 @@ const Panel66KVA = () => {
     data: powerDataRResponse,
     isFetching: isFetchingPowerR
   } = useQuery({
-    queryKey: ['/api/chart-data', 'power', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/R'),
+    queryKey: ['/api/chart-data', 'power', 'R', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('power', 'R', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
@@ -216,8 +224,8 @@ const Panel66KVA = () => {
     data: powerDataSResponse,
     isFetching: isFetchingPowerS 
   } = useQuery({
-    queryKey: ['/api/chart-data', 'power', 'S'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/power/S'),
+    queryKey: ['/api/chart-data', 'power', 'S', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('power', 'S', selectedDate)),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
