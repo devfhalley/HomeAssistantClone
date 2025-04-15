@@ -88,8 +88,8 @@ const Panel66KVA = () => {
     data: voltageDataRResponse,
     isFetching: isFetchingVoltageR
   } = useQuery({
-    queryKey: ['/api/chart-data', 'voltage', 'R'],
-    queryFn: () => apiRequest<ChartDataResponse>("GET", '/api/chart-data/voltage/R'),
+    queryKey: ['/api/chart-data', 'voltage', 'R', selectedDate?.toISOString()],
+    queryFn: () => apiRequest<ChartDataResponse>("GET", `/api/chart-data/voltage/R?date=${selectedDate?.toISOString()}`),
     refetchInterval: 10000, // Refetch every 10 seconds
     refetchIntervalInBackground: true
   });
