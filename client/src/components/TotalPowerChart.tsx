@@ -47,6 +47,7 @@ const TotalPowerChart = ({ selectedDate: externalSelectedDate, onDateChange }: T
   
   // State to store SQL queries
   const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
+  const [showDebugInfo, setShowDebugInfo] = useState<boolean>(false);
   
   // Get current route to determine which panel data to show
   const [location] = useLocation();
@@ -187,12 +188,12 @@ const TotalPowerChart = ({ selectedDate: externalSelectedDate, onDateChange }: T
           </CardTitle>
           <div className="flex items-center space-x-2">
             <Button 
-              variant="outline" 
+              variant={showDebugInfo ? "secondary" : "outline"}
               size="sm" 
-              onClick={printFullData}
+              onClick={() => setShowDebugInfo(!showDebugInfo)}
               className="mr-2"
             >
-              Debug Data
+              {showDebugInfo ? "Hide Debug" : "Show Debug"}
             </Button>
             <Label htmlFor="granularity">Granularity:</Label>
             <Select
@@ -346,9 +347,10 @@ const TotalPowerChart = ({ selectedDate: externalSelectedDate, onDateChange }: T
           )}
         </div>
         
-        {/* SQL Queries Display */}
-        {sqlQueries.length > 0 && (
+        {/* SQL Queries Display - Only shown when debug is toggled on */}
+        {showDebugInfo && sqlQueries.length > 0 && (
           <div className="mt-4">
+            <h3 className="text-sm font-medium mb-2">SQL Debug Information</h3>
             <SqlQueryDisplay queries={sqlQueries} />
           </div>
         )}
