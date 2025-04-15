@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { type ChartData } from "@shared/schema";
 import SqlQueryDisplay from "@/components/SqlQueryDisplay";
 import { RefreshCw } from "lucide-react";
+import { format } from "date-fns";
 
 // Interface for phase data from API
 interface PhaseData {
@@ -48,6 +49,16 @@ const processChartData = (data: ChartData[] | undefined): ChartDataPoint[] => {
 };
 
 const Panel66KVA = () => {
+  // Add selectedDate state, default to today's date
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  
+  useEffect(() => {
+    document.title = "Home Assistant - Panel 66KVA";
+    
+    // Log the selected date for monitoring
+    console.log("Using selected date:", format(selectedDate, "yyyy-MM-dd"), "for 66KVA panel");
+  }, [selectedDate]);
+  
   // Fetch phase data with automatic refetching every 10 seconds
   const { 
     data: phaseDataArray, 
@@ -413,7 +424,7 @@ const Panel66KVA = () => {
         
         {/* Total Power Consumption Chart */}
         <div>
-          <TotalPowerChart />
+          <TotalPowerChart selectedDate={selectedDate} onDateChange={setSelectedDate} />
         </div>
         
         {/* Power Monitor Cards */}
@@ -477,6 +488,7 @@ const Panel66KVA = () => {
               phaseTData={processChartData(voltageDataT)}
               yAxisDomain={[190, 240]}
               unit="V"
+              selectedDate={selectedDate}
             />
             
             <ChartCard 
@@ -486,6 +498,7 @@ const Panel66KVA = () => {
               phaseTData={processChartData(currentDataT)}
               yAxisDomain={[0, 100]}
               unit="A"
+              selectedDate={selectedDate}
             />
           </div>
           
@@ -497,6 +510,7 @@ const Panel66KVA = () => {
               phaseTData={processChartData(powerDataT)}
               yAxisDomain={[0, 20000]}
               unit="W"
+              selectedDate={selectedDate}
             />
             
             <ChartCard 
@@ -506,6 +520,7 @@ const Panel66KVA = () => {
               phaseTData={processChartData(frequencyDataT)}
               yAxisDomain={[49.5, 50.5]}
               unit="Hz"
+              selectedDate={selectedDate}
             />
             
             <ChartCard 
@@ -515,6 +530,7 @@ const Panel66KVA = () => {
               phaseTData={processChartData(pfDataT)}
               yAxisDomain={[0.8, 1.0]}
               unit=""
+              selectedDate={selectedDate}
             />
           </div>
         </div>
