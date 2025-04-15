@@ -239,6 +239,7 @@ export class DatabaseStorage implements IStorage {
       if (specificDate) {
         // For a specific date using Asia/Jakarta timezone
         const dateStr = specificDate.toISOString().split('T')[0]; // Get just the date part (YYYY-MM-DD)
+        console.log(`Chart data query using dateStr: ${dateStr}`);
         sqlQuery = `
           SELECT *
           FROM panel_33kva

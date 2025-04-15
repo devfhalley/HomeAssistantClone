@@ -525,6 +525,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let specificDate: Date | undefined = undefined;
       if (date) {
         specificDate = new Date(date as string);
+        console.log(`Chart data request received for ${dataType}/${phase} with date: ${date}`);
+        console.log(`Parsed date: ${specificDate.toISOString()}`);
       }
       
       // Get chart data with the specific date filter
