@@ -9,6 +9,7 @@ import { type ChartData } from "@shared/schema";
 import SqlQueryDisplay from "@/components/SqlQueryDisplay";
 import { RefreshCw } from "lucide-react";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 // Interface for phase data from API
 interface PhaseData {

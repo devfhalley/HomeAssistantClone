@@ -9,6 +9,7 @@ import { type ChartData } from "@shared/schema";
 import SqlQueryDisplay from "@/components/SqlQueryDisplay";
 import { RefreshCw } from "lucide-react";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 // Interface for phase data from API
 interface PhaseData {
@@ -63,6 +64,8 @@ const processChartData = (data: ChartData[] | undefined): ChartDataPoint[] => {
 const PowerMonitoring = () => {
   // Add selectedDate state, default to today's date
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  // State to control SQL debug display
+  const [showDebugInfo, setShowDebugInfo] = useState<boolean>(false);
   
   useEffect(() => {
     document.title = "Home Assistant - Power Monitoring";
@@ -302,9 +305,21 @@ const PowerMonitoring = () => {
           </div>
         </div>
         
-        {/* SQL Queries Display */}
-        {sqlQueries.length > 0 && (
-          <div className="mt-8">
+        {/* Debug Button */}
+        <div className="mt-4 flex justify-end">
+          <Button 
+            variant={showDebugInfo ? "secondary" : "outline"}
+            size="sm" 
+            onClick={() => setShowDebugInfo(!showDebugInfo)}
+          >
+            {showDebugInfo ? "Hide Debug" : "Show Debug"}
+          </Button>
+        </div>
+
+        {/* SQL Queries Display - Only shown when debug toggle is on */}
+        {showDebugInfo && sqlQueries.length > 0 && (
+          <div className="mt-4">
+            <h2 className="text-lg font-semibold mb-3">SQL Debug Information</h2>
             <SqlQueryDisplay queries={sqlQueries} />
           </div>
         )}
