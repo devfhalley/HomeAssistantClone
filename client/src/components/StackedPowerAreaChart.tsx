@@ -16,7 +16,10 @@ import {
   ComposedChart
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronDown, ChevronUp, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { ChevronDown, ChevronUp, Info, CalendarIcon } from "lucide-react";
 import SqlQueryDisplay from './SqlQueryDisplay';
 
 interface PowerData {
@@ -102,8 +105,17 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   return null;
 };
 
-const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQueryParams = {} }: StackedPowerAreaChartProps) => {
+const StackedPowerAreaChart = ({ title, panelType, selectedDate: propSelectedDate, additionalQueryParams = {} }: StackedPowerAreaChartProps) => {
   const [showQueries, setShowQueries] = useState(false);
+  const [localSelectedDate, setLocalSelectedDate] = useState<Date | undefined>(propSelectedDate || new Date());
+  
+  // Use either the prop date or local state
+  const selectedDate = propSelectedDate || localSelectedDate;
+  
+  // Handle date change and propagate it upwards if an onDateChange prop is provided
+  const handleDateChange = (date: Date | undefined) => {
+    setLocalSelectedDate(date);
+  };
 
   // Create URL for power data with date parameter
   const getTotalPowerUrl = (specificDate?: Date): string => {
@@ -348,7 +360,33 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl">{title}</CardTitle>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* Date Picker */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-9 border-dashed flex items-center gap-1 text-xs"
+                >
+                  <CalendarIcon className="h-3.5 w-3.5" />
+                  {selectedDate ? (
+                    format(selectedDate, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateChange}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            
+            {/* SQL Query Toggle */}
             <button 
               onClick={() => setShowQueries(!showQueries)}
               className="text-xs px-2 py-1 rounded text-gray-600 hover:bg-gray-100 flex items-center">
