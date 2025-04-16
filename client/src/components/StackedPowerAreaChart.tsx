@@ -371,13 +371,20 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
               <ResponsiveContainer width="100%" height="95%">
                 <ComposedChart
                   data={chartData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 25 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis 
                     dataKey="time" 
                     tickFormatter={formatXAxis}
                     tick={{ fontSize: 11 }}
+                    interval="preserveStartEnd"
+                    minTickGap={10}
+                    label={{ 
+                      value: `Hours of ${selectedDate ? format(selectedDate, 'MMM dd, yyyy') : format(new Date(), 'MMM dd, yyyy')}`,
+                      position: 'insideBottomRight',
+                      offset: -10 
+                    }}
                   />
                   
                   {/* Left Y-Axis for Power */}

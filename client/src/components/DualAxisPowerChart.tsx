@@ -348,13 +348,20 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                   <ResponsiveContainer width="100%" height="95%">
                     <ComposedChart
                       data={combinedData}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 25 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="time" 
-                        tickFormatter={(value) => `04-16 ${value}`}
+                        tickFormatter={(value) => value}
                         tick={{ fontSize: 11 }}
+                        interval="preserveStartEnd"
+                        minTickGap={10}
+                        label={{ 
+                          value: `Hours of ${format(date, 'MMM dd, yyyy')}`,
+                          position: 'insideBottomRight',
+                          offset: -10 
+                        }}
                       />
                       {/* Left Y-Axis for Power */}
                       <YAxis 
@@ -454,13 +461,15 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart
                     data={combinedData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 15 }}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 25 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="time" 
-                      label={{ value: 'Time (Hourly)', position: 'insideBottomRight', offset: -10 }}
-                      tickFormatter={(value) => `04-16 ${value}`}
+                      label={{ value: `Hours of ${format(date, 'MMM dd, yyyy')}`, position: 'insideBottomRight', offset: -10 }}
+                      tickFormatter={(value) => value}
+                      interval="preserveStartEnd"
+                      minTickGap={10}
                     />
                     <YAxis 
                       label={{ value: 'Voltage (V)', angle: -90, position: 'insideLeft', offset: -5 }} 
