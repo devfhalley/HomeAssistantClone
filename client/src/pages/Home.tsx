@@ -5,8 +5,6 @@ import { ToggleLeft, PieChart, Activity, BarChart3, Zap, Clock, Server, Database
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import PanelPowerChart from "@/components/PanelPowerChart";
-import PanelPowerUsageChart from "@/components/PanelPowerUsageChart";
 import DualAxisPowerChart from "@/components/DualAxisPowerChart";
 
 // Type for panel data
@@ -222,22 +220,7 @@ const Home = () => {
             />
           </div>
           
-          {/* Legacy Single-Axis Charts (for backward compatibility) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* 33KVA Panel Voltage Chart */}
-            <PanelPowerChart 
-              title="33KVA Panel - Phase Voltage" 
-              panelType="33kva"
-              color="#3b82f6" 
-            />
-            
-            {/* 66KVA Panel Voltage Chart */}
-            <PanelPowerChart 
-              title="66KVA Panel - Phase Voltage" 
-              panelType="66kva"
-              color="#f59e0b" 
-            />
-          </div>
+
         </div>
       </div>
 
