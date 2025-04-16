@@ -302,7 +302,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                       yAxisId="right"
                       orientation="right"
                       label={{ value: 'Voltage (V)', angle: 90, position: 'insideRight', offset: -5 }} 
-                      domain={[215, 223]}
+                      domain={[180, 310]}
                       tickCount={5}
                     />
                     <Tooltip 
@@ -395,7 +395,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                     />
                     <YAxis 
                       label={{ value: 'Voltage (V)', angle: -90, position: 'insideLeft', offset: -5 }} 
-                      domain={[215, 223]}
+                      domain={[180, 310]}
                       tickCount={5}
                     />
                     <Tooltip 

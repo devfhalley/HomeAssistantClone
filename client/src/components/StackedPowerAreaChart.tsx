@@ -306,7 +306,8 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={chartData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  margin={{ top: 10, right: 30, left: 20, bottom: 0 }}
+                  layout="horizontal"
                 >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis 
@@ -317,6 +318,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
                   {/* Primary Y axis for power data (kW) */}
                   <YAxis 
                     yAxisId="left"
+                    orientation="left"
                     tickFormatter={formatYAxis}
                     tick={{ fontSize: 12 }}
                     width={60}
@@ -336,33 +338,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
                   
-                  {/* Power data as stacked areas */}
-                  {panelType !== "66kva" && (
-                    <Area 
-                      yAxisId="left"
-                      type="monotone" 
-                      dataKey="panel33Power" 
-                      name="33KVA Panel"
-                      stackId="1"
-                      stroke="#3b82f6" 
-                      fill="#3b82f6" 
-                      fillOpacity={0.6}
-                    />
-                  )}
-                  {panelType !== "33kva" && (
-                    <Area 
-                      yAxisId="left"
-                      type="monotone" 
-                      dataKey="panel66Power" 
-                      name="66KVA Panel"
-                      stackId="1"
-                      stroke="#f59e0b" 
-                      fill="#f59e0b" 
-                      fillOpacity={0.6}
-                    />
-                  )}
-                  
-                  {/* Voltage data as lines */}
+                  {/* Voltage data as lines - placing these first so they render correctly */}
                   <Line
                     yAxisId="right"
                     type="monotone"
@@ -390,6 +366,32 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
                     dot={false}
                     strokeWidth={2}
                   />
+                  
+                  {/* Power data as stacked areas */}
+                  {panelType !== "66kva" && (
+                    <Area 
+                      yAxisId="left"
+                      type="monotone" 
+                      dataKey="panel33Power" 
+                      name="33KVA Panel"
+                      stackId="1"
+                      stroke="#3b82f6" 
+                      fill="#3b82f6" 
+                      fillOpacity={0.6}
+                    />
+                  )}
+                  {panelType !== "33kva" && (
+                    <Area 
+                      yAxisId="left"
+                      type="monotone" 
+                      dataKey="panel66Power" 
+                      name="66KVA Panel"
+                      stackId="1"
+                      stroke="#f59e0b" 
+                      fill="#f59e0b" 
+                      fillOpacity={0.6}
+                    />
+                  )}
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
