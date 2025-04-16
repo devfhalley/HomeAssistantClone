@@ -226,9 +226,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
     <Card className="w-full overflow-visible">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-medium">
-          {panelType === "33kva" 
-            ? "33KVA Panel - Power & Voltage Analysis" 
-            : "66KVA Panel - Power & Voltage Analysis"}
+          Hourly Power Usage and Voltage per Phase (R, S, T)
         </CardTitle>
         <div className="flex items-center space-x-2">
           <Button 
@@ -285,23 +283,25 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart
                     data={combinedData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 15 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="time" 
-                      label={{ value: 'Time (Hourly)', position: 'insideBottomRight', offset: -10 }} 
+                      label={{ value: 'Time (Hourly)', position: 'insideBottomRight', offset: -10 }}
+                      tickFormatter={(value) => `04-16 ${value}`}
                     />
                     <YAxis 
                       yAxisId="left"
-                      label={{ value: 'Power (kW)', angle: -90, position: 'insideLeft' }} 
+                      label={{ value: 'Power (kW)', angle: -90, position: 'insideLeft', offset: -5 }} 
                       domain={[0, 'auto']}
                     />
                     <YAxis 
                       yAxisId="right"
                       orientation="right"
-                      label={{ value: 'Voltage (V)', angle: 90, position: 'insideRight' }} 
-                      domain={[120, 300]}
+                      label={{ value: 'Voltage (V)', angle: 90, position: 'insideRight', offset: -5 }} 
+                      domain={[215, 223]}
+                      tickCount={5}
                     />
                     <Tooltip 
                       formatter={(value: number, name: string) => {
@@ -310,16 +310,22 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                       }}
                       labelFormatter={(label) => `Time: ${label}`}
                     />
-                    <Legend />
+                    <Legend 
+                      verticalAlign="top"
+                      align="right"
+                      iconType="line"
+                      wrapperStyle={{ paddingBottom: '10px' }}
+                    />
                     
-                    {/* Power (Primary Y-axis) */}
-                    <Bar 
+                    {/* Power (Primary Y-axis) - Using Line instead of Bar to match the image */}
+                    <Line 
                       yAxisId="left"
                       dataKey="power"
                       name="Power"
-                      fill={panelType === "33kva" ? "#3b82f6" : "#f59e0b"}
-                      opacity={0.7}
-                      barSize={20}
+                      stroke={panelType === "33kva" ? "#0040ff" : "#f59e0b"}
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={{ r: 4 }}
                     />
                     
                     {/* Voltage (Secondary Y-axis) */}
@@ -328,30 +334,33 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                       type="monotone"
                       dataKey="voltR"
                       name="Voltage R"
-                      stroke="#FF6B6B"
-                      strokeWidth={2}
-                      dot={{ r: 1 }}
-                      activeDot={{ r: 5 }}
+                      stroke="#FFC107"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 4"
+                      dot={false}
+                      activeDot={{ r: 4 }}
                     />
                     <Line
                       yAxisId="right"
                       type="monotone"
                       dataKey="voltS"
                       name="Voltage S"
-                      stroke="#4BC0C0"
-                      strokeWidth={2}
-                      dot={{ r: 1 }}
-                      activeDot={{ r: 5 }}
+                      stroke="#FF5722"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 4"
+                      dot={false}
+                      activeDot={{ r: 4 }}
                     />
                     <Line
                       yAxisId="right"
                       type="monotone"
                       dataKey="voltT"
                       name="Voltage T"
-                      stroke="#9966FF"
-                      strokeWidth={2}
-                      dot={{ r: 1 }}
-                      activeDot={{ r: 5 }}
+                      stroke="#E91E63"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 4"
+                      dot={false}
+                      activeDot={{ r: 4 }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -374,48 +383,58 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart
                     data={combinedData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 15 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="time" 
-                      label={{ value: 'Time (Hourly)', position: 'insideBottomRight', offset: -10 }} 
+                      label={{ value: 'Time (Hourly)', position: 'insideBottomRight', offset: -10 }}
+                      tickFormatter={(value) => `04-16 ${value}`}
                     />
                     <YAxis 
-                      label={{ value: 'Voltage (V)', angle: -90, position: 'insideLeft' }} 
-                      domain={[120, 300]}
+                      label={{ value: 'Voltage (V)', angle: -90, position: 'insideLeft', offset: -5 }} 
+                      domain={[215, 223]}
+                      tickCount={5}
                     />
                     <Tooltip 
                       formatter={(value: number) => [formatVoltage(value), '']}
                       labelFormatter={(label) => `Time: ${label}`}
                     />
-                    <Legend />
+                    <Legend 
+                      verticalAlign="top"
+                      align="right"
+                      iconType="line"
+                      wrapperStyle={{ paddingBottom: '10px' }}
+                    />
                     <Line
                       type="monotone"
                       dataKey="voltR"
                       name="Voltage R"
-                      stroke="#FF6B6B"
-                      strokeWidth={2}
-                      dot={{ r: 1 }}
-                      activeDot={{ r: 5 }}
+                      stroke="#FFC107"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 4"
+                      dot={false}
+                      activeDot={{ r: 4 }}
                     />
                     <Line
                       type="monotone"
                       dataKey="voltS"
                       name="Voltage S"
-                      stroke="#4BC0C0"
-                      strokeWidth={2}
-                      dot={{ r: 1 }}
-                      activeDot={{ r: 5 }}
+                      stroke="#FF5722"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 4"
+                      dot={false}
+                      activeDot={{ r: 4 }}
                     />
                     <Line
                       type="monotone"
                       dataKey="voltT"
                       name="Voltage T"
-                      stroke="#9966FF"
-                      strokeWidth={2}
-                      dot={{ r: 1 }}
-                      activeDot={{ r: 5 }}
+                      stroke="#E91E63"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 4"
+                      dot={false}
+                      activeDot={{ r: 4 }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
