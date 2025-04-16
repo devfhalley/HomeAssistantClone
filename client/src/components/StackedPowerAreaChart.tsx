@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
+import { queryClient } from '@/lib/queryClient';
 import {
   AreaChart,
   Area,
@@ -117,9 +118,23 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: propSelectedDat
     if (date) {
       console.log("Date selected:", format(date, 'yyyy-MM-dd'));
       setLocalSelectedDate(date);
-      // Close the popover automatically after selection
-      document.body.click(); // This will close the popover by clicking outside
+      // We don't close the popover here, so user can verify selection and click Apply
     }
+  };
+  
+  // Function to apply the selected date and close the popover
+  const applySelectedDate = () => {
+    // Apply the currently selected date (already stored in state)
+    if (selectedDate) {
+      console.log("Applying date:", format(selectedDate, 'yyyy-MM-dd'));
+      // Force refresh of data by refetching queries
+      queryClient.invalidateQueries(['/api/total-power']);
+      queryClient.invalidateQueries(['/api/chart-data/voltage/R']);
+      queryClient.invalidateQueries(['/api/chart-data/voltage/S']);
+      queryClient.invalidateQueries(['/api/chart-data/voltage/T']);
+    }
+    // Close the popover
+    document.body.click();
   };
 
   // Create URL for power data with date parameter
@@ -382,24 +397,24 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: propSelectedDat
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={handleDateChange}
-                  initialFocus
-                />
-                <div className="p-3 border-t border-gray-100 flex justify-end">
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    onClick={() => {
-                      if (selectedDate) {
-                        document.body.click(); // Close popover
-                      }
-                    }}
-                  >
-                    Apply
-                  </Button>
+                <div className="p-3">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={handleDateChange}
+                    initialFocus
+                    className="border-none"
+                    disabled={(date) => date > new Date()}
+                  />
+                  <div className="flex justify-end mt-2">
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={applySelectedDate}
+                    >
+                      Apply
+                    </Button>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
