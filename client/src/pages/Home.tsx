@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import PanelPowerChart from "@/components/PanelPowerChart";
 import PanelPowerUsageChart from "@/components/PanelPowerUsageChart";
+import DualAxisPowerChart from "@/components/DualAxisPowerChart";
 
 // Type for panel data
 interface PanelData {
@@ -206,21 +207,22 @@ const Home = () => {
       <div className="mb-6">
         <h2 className="text-xl font-bold mb-4">Power Monitoring Charts</h2>
         <div className="grid grid-cols-1 gap-6 mb-6">
-          {/* Separate Panel Power Usage Charts */}
+          {/* Multi-Axis Power and Voltage Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* 33KVA Power Usage Chart */}
-            <PanelPowerUsageChart 
-              title="33KVA Panel - Hourly Power Usage" 
+            {/* 33KVA Power & Voltage Analysis */}
+            <DualAxisPowerChart
+              title="33KVA Panel Analysis"
               panelType="33kva"
             />
             
-            {/* 66KVA Power Usage Chart */}
-            <PanelPowerUsageChart 
-              title="66KVA Panel - Hourly Power Usage" 
+            {/* 66KVA Power & Voltage Analysis */}
+            <DualAxisPowerChart
+              title="66KVA Panel Analysis"
               panelType="66kva"
             />
           </div>
           
+          {/* Legacy Single-Axis Charts (for backward compatibility) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 33KVA Panel Voltage Chart */}
             <PanelPowerChart 

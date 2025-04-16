@@ -1,0 +1,439 @@
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { RefreshCw, Calendar } from "lucide-react";
+import {
+  ComposedChart,
+  Line,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from "recharts";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import SqlQueryDisplay from '@/components/SqlQueryDisplay';
+
+// Types
+interface ChartDataPoint {
+  time: string;
+  value: number;
+}
+
+interface ChartDataResponse {
+  data: ChartDataPoint[];
+  sqlQueries: { name: string; sql: string }[];
+}
+
+interface PowerData {
+  time: string;
+  panel33Power?: number;
+  panel66Power?: number;
+  totalPower: number;
+}
+
+interface SqlQuery {
+  name: string;
+  sql: string;
+}
+
+interface PowerDataResponse {
+  data: PowerData[];
+  sqlQueries: SqlQuery[];
+}
+
+interface CombinedDataPoint {
+  time: string;
+  power: number;     // Primary axis (kW)
+  voltR: number;     // Secondary axis (V)
+  voltS: number;     // Secondary axis (V)
+  voltT: number;     // Secondary axis (V)
+}
+
+interface DualAxisPowerChartProps {
+  title: string;
+  panelType: "33kva" | "66kva";
+}
+
+const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
+  const [date, setDate] = useState<Date>(new Date());
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [combinedData, setCombinedData] = useState<CombinedDataPoint[]>([]);
+  const [showDebugInfo, setShowDebugInfo] = useState<boolean>(false);
+  const [sqlQueries, setSqlQueries] = useState<SqlQuery[]>([]);
+  const [chartTab, setChartTab] = useState<string>("power-voltage");
+  
+  // Create URLs for the different data types
+  const createChartDataUrl = (dataType: string, phase: string, selectedDate?: Date): string => {
+    const panelParam = panelType === "66kva" ? "&panel=66kva" : "";
+    if (selectedDate) {
+      return `/api/chart-data/${dataType}/${phase}?date=${selectedDate.toISOString()}${panelParam}`;
+    }
+    return `/api/chart-data/${dataType}/${phase}${panelParam ? `?${panelParam.substring(1)}` : ''}`;
+  };
+
+  const getPowerDataUrl = (selectedDate?: Date): string => {
+    if (selectedDate) {
+      return `/api/total-power?date=${selectedDate.toISOString()}`;
+    }
+    return '/api/total-power';
+  };
+
+  // Fetch voltage data for phase R
+  const { data: voltageRData, isLoading: isLoadingVoltageR } = useQuery<ChartDataResponse>({
+    queryKey: [createChartDataUrl("voltage", "R", date), date.toISOString()],
+    refetchInterval: 10000,
+  });
+
+  // Fetch voltage data for phase S
+  const { data: voltageSData, isLoading: isLoadingVoltageS } = useQuery<ChartDataResponse>({
+    queryKey: [createChartDataUrl("voltage", "S", date), date.toISOString()],
+    refetchInterval: 10000,
+  });
+
+  // Fetch voltage data for phase T
+  const { data: voltageTData, isLoading: isLoadingVoltageT } = useQuery<ChartDataResponse>({
+    queryKey: [createChartDataUrl("voltage", "T", date), date.toISOString()],
+    refetchInterval: 10000,
+  });
+
+  // Fetch power data
+  const { data: powerData, isLoading: isLoadingPower } = useQuery<PowerDataResponse>({
+    queryKey: [getPowerDataUrl(date), date.toISOString()],
+    refetchInterval: 10000,
+  });
+
+  // Combine all data for the dual-axis chart
+  useEffect(() => {
+    if (
+      voltageRData?.data && 
+      voltageSData?.data && 
+      voltageTData?.data && 
+      powerData?.data
+    ) {
+      const timePoints = new Set<string>();
+      
+      // Collect all unique time points
+      voltageRData.data.forEach(point => timePoints.add(point.time));
+      voltageSData.data.forEach(point => timePoints.add(point.time));
+      voltageTData.data.forEach(point => timePoints.add(point.time));
+      powerData.data.forEach(point => timePoints.add(point.time));
+      
+      // Create a mapping of time to combined values
+      const timeToValues: Record<string, CombinedDataPoint> = {};
+      
+      // Initialize with all timePoints
+      Array.from(timePoints).sort().forEach(time => {
+        timeToValues[time] = {
+          time,
+          power: 0,
+          voltR: 0,
+          voltS: 0,
+          voltT: 0
+        };
+      });
+      
+      // Fill in the voltage R values
+      voltageRData.data.forEach(point => {
+        if (timeToValues[point.time]) {
+          timeToValues[point.time].voltR = point.value;
+        }
+      });
+      
+      // Fill in the voltage S values
+      voltageSData.data.forEach(point => {
+        if (timeToValues[point.time]) {
+          timeToValues[point.time].voltS = point.value;
+        }
+      });
+      
+      // Fill in the voltage T values
+      voltageTData.data.forEach(point => {
+        if (timeToValues[point.time]) {
+          timeToValues[point.time].voltT = point.value;
+        }
+      });
+      
+      // Fill in the power values
+      powerData.data.forEach(point => {
+        if (timeToValues[point.time]) {
+          if (panelType === "33kva" && point.panel33Power !== undefined) {
+            timeToValues[point.time].power = point.panel33Power / 1000; // Convert from W to kW
+          } else if (panelType === "66kva" && point.panel66Power !== undefined) {
+            timeToValues[point.time].power = point.panel66Power / 1000; // Convert from W to kW
+          }
+        }
+      });
+      
+      // Convert the map to an array and sort by time
+      const combinedDataArray = Object.values(timeToValues).sort((a, b) => {
+        // Convert time strings to comparable values (assuming format is hh:mm)
+        const timeA = a.time.split(':').map(Number);
+        const timeB = b.time.split(':').map(Number);
+        
+        if (timeA[0] !== timeB[0]) {
+          return timeA[0] - timeB[0]; // Compare hours
+        }
+        return timeA[1] - timeB[1]; // Compare minutes
+      });
+      
+      setCombinedData(combinedDataArray);
+      
+      // Collect all SQL queries for debugging
+      const allQueries = [
+        ...(voltageRData.sqlQueries || []),
+        ...(voltageSData.sqlQueries || []),
+        ...(voltageTData.sqlQueries || []),
+        ...(powerData.sqlQueries || [])
+      ];
+      
+      setSqlQueries(allQueries);
+    }
+  }, [voltageRData, voltageSData, voltageTData, powerData, panelType]);
+
+  // Handle date change
+  const handleDateChange = (newDate: Date | undefined) => {
+    if (newDate) {
+      setDate(newDate);
+      setShowCalendar(false);
+    }
+  };
+
+  // Check if data is loading
+  const isLoading = isLoadingVoltageR || isLoadingVoltageS || isLoadingVoltageT || isLoadingPower;
+  const hasData = combinedData.length > 0;
+
+  // Format the date for display
+  const formattedDate = format(date, 'MMM dd, yyyy');
+
+  // Format power for tooltip
+  const formatPower = (value: number) => {
+    return `${value.toFixed(2)} kW`;
+  };
+
+  // Format voltage for tooltip
+  const formatVoltage = (value: number) => {
+    return `${value.toFixed(2)} V`;
+  };
+
+  return (
+    <Card className="w-full overflow-visible">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-lg font-medium">
+          {panelType === "33kva" 
+            ? "33KVA Panel - Power & Voltage Analysis" 
+            : "66KVA Panel - Power & Voltage Analysis"}
+        </CardTitle>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant={showDebugInfo ? "secondary" : "outline"}
+            size="sm" 
+            onClick={() => setShowDebugInfo(!showDebugInfo)}
+            className="mr-2"
+          >
+            {showDebugInfo ? "Hide Debug" : "Show Debug"}
+          </Button>
+          {isLoading && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
+          <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="h-8 gap-1"
+                onClick={() => setShowCalendar(true)}
+              >
+                <Calendar className="h-3.5 w-3.5" />
+                <span>{formattedDate}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <CalendarComponent
+                mode="single"
+                selected={date}
+                onSelect={handleDateChange}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Tabs value={chartTab} onValueChange={setChartTab}>
+          <TabsList className="mb-2">
+            <TabsTrigger value="power-voltage">Power & Voltage</TabsTrigger>
+            <TabsTrigger value="voltage-comparison">Voltage Comparison</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="power-voltage" className="mt-0">
+            <div className="h-[350px] w-full">
+              {isLoading ? (
+                <div className="flex h-full items-center justify-center">
+                  <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : !hasData ? (
+                <div className="flex h-full items-center justify-center flex-col">
+                  <p className="text-muted-foreground">No data available for this date</p>
+                  <p className="text-xs text-muted-foreground mt-1">Try selecting a different date</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={combinedData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="time" 
+                      label={{ value: 'Time (Hourly)', position: 'insideBottomRight', offset: -10 }} 
+                    />
+                    <YAxis 
+                      yAxisId="left"
+                      label={{ value: 'Power (kW)', angle: -90, position: 'insideLeft' }} 
+                      domain={[0, 'auto']}
+                    />
+                    <YAxis 
+                      yAxisId="right"
+                      orientation="right"
+                      label={{ value: 'Voltage (V)', angle: 90, position: 'insideRight' }} 
+                      domain={[120, 300]}
+                    />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => {
+                        if (name === 'Power') return [formatPower(value), name];
+                        return [formatVoltage(value), name];
+                      }}
+                      labelFormatter={(label) => `Time: ${label}`}
+                    />
+                    <Legend />
+                    
+                    {/* Power (Primary Y-axis) */}
+                    <Bar 
+                      yAxisId="left"
+                      dataKey="power"
+                      name="Power"
+                      fill={panelType === "33kva" ? "#3b82f6" : "#f59e0b"}
+                      opacity={0.7}
+                      barSize={20}
+                    />
+                    
+                    {/* Voltage (Secondary Y-axis) */}
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="voltR"
+                      name="Voltage R"
+                      stroke="#FF6B6B"
+                      strokeWidth={2}
+                      dot={{ r: 1 }}
+                      activeDot={{ r: 5 }}
+                    />
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="voltS"
+                      name="Voltage S"
+                      stroke="#4BC0C0"
+                      strokeWidth={2}
+                      dot={{ r: 1 }}
+                      activeDot={{ r: 5 }}
+                    />
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="voltT"
+                      name="Voltage T"
+                      stroke="#9966FF"
+                      strokeWidth={2}
+                      dot={{ r: 1 }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="voltage-comparison" className="mt-0">
+            <div className="h-[350px] w-full">
+              {isLoading ? (
+                <div className="flex h-full items-center justify-center">
+                  <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : !hasData ? (
+                <div className="flex h-full items-center justify-center flex-col">
+                  <p className="text-muted-foreground">No data available for this date</p>
+                  <p className="text-xs text-muted-foreground mt-1">Try selecting a different date</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={combinedData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="time" 
+                      label={{ value: 'Time (Hourly)', position: 'insideBottomRight', offset: -10 }} 
+                    />
+                    <YAxis 
+                      label={{ value: 'Voltage (V)', angle: -90, position: 'insideLeft' }} 
+                      domain={[120, 300]}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => [formatVoltage(value), '']}
+                      labelFormatter={(label) => `Time: ${label}`}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="voltR"
+                      name="Voltage R"
+                      stroke="#FF6B6B"
+                      strokeWidth={2}
+                      dot={{ r: 1 }}
+                      activeDot={{ r: 5 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="voltS"
+                      name="Voltage S"
+                      stroke="#4BC0C0"
+                      strokeWidth={2}
+                      dot={{ r: 1 }}
+                      activeDot={{ r: 5 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="voltT"
+                      name="Voltage T"
+                      stroke="#9966FF"
+                      strokeWidth={2}
+                      dot={{ r: 1 }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+        
+        {/* SQL Queries Display - Only shown when debug is toggled on */}
+        {showDebugInfo && sqlQueries.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-sm font-medium mb-2">SQL Debug Information</h3>
+            <SqlQueryDisplay queries={sqlQueries} />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default DualAxisPowerChart;

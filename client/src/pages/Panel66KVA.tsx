@@ -3,6 +3,7 @@ import HomeAssistant from "@/components/HomeAssistant";
 import PowerMonitorCard from "@/components/PowerMonitorCard";
 import ChartCard from "@/components/ChartCard";
 import TotalPowerChart from "@/components/TotalPowerChart";
+import DualAxisPowerChart from "@/components/DualAxisPowerChart";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { type ChartData } from "@shared/schema";
