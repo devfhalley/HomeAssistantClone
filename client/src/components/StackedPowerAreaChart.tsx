@@ -388,51 +388,23 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: propSelectedDat
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl">{title}</CardTitle>
           <div className="flex gap-2 items-center">
-            {/* Ultra Simple Date Picker */}
+            {/* Ultra Simple HTML Date Links - No JavaScript */}
             <div className="flex flex-col items-center space-y-2 bg-white p-2 rounded-md shadow-sm">
               <div className="text-sm font-semibold mb-1">
-                {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "Today"}
+                Date Selection
               </div>
               <div className="flex space-x-2">
+                {/* Pure HTML links that will pass date as URL parameter */}
                 <a 
-                  href="#" 
-                  className="px-4 py-1 bg-blue-100 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-200"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const yesterday = new Date();
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    setLocalSelectedDate(yesterday);
-                    
-                    // Force data refresh
-                    const dateStr = format(yesterday, 'yyyy-MM-dd');
-                    fetch(`/api/total-power?date=${dateStr}`)
-                      .then(res => res.json())
-                      .then(() => {
-                        // Force refetch all the queries
-                        window.location.reload();
-                      });
-                  }}
+                  href="/?date=2025-04-15" 
+                  className="px-4 py-1 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200 border border-red-300"
                 >
                   Yesterday
                 </a>
                 
                 <a 
-                  href="#" 
-                  className="px-4 py-1 bg-blue-100 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-200"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const today = new Date();
-                    setLocalSelectedDate(today);
-                    
-                    // Force data refresh
-                    const dateStr = format(today, 'yyyy-MM-dd');
-                    fetch(`/api/total-power?date=${dateStr}`)
-                      .then(res => res.json())
-                      .then(() => {
-                        // Force refetch all the queries
-                        window.location.reload();
-                      });
-                  }}
+                  href="/?date=2025-04-16" 
+                  className="px-4 py-1 bg-blue-100 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-200 border border-blue-300"
                 >
                   Today
                 </a>
