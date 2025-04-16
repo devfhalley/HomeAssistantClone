@@ -327,7 +327,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
                   <YAxis 
                     yAxisId="right" 
                     orientation="right"
-                    domain={[215, 223]} 
+                    domain={[180, 310]} 
                     tick={{ fontSize: 12 }}
                     width={60}
                     tickFormatter={(value) => `${value}V`}
