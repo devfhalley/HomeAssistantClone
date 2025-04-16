@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import {
@@ -229,12 +229,54 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
     }
   }, [powerData, selectedDate]);
 
+  // Process voltage data to ensure hourly format that matches power data
+  const processVoltageData = useCallback((data: { phase: string, dataType: string, time: string, value: number }[] | undefined) => {
+    if (!data) return [];
+    
+    // Group by hour and compute average
+    const hourlyData: { [hour: string]: { sum: number, count: number } } = {};
+    
+    // First, group all values by hour
+    data.forEach(point => {
+      // Normalize time format to ensure it's always "HH:00" format
+      const hour = point.time.split(':')[0].padStart(2, '0') + ":00";
+      
+      if (!hourlyData[hour]) {
+        hourlyData[hour] = { sum: 0, count: 0 };
+      }
+      
+      hourlyData[hour].sum += point.value;
+      hourlyData[hour].count += 1;
+    });
+    
+    // Then create averaged points for each hour
+    return Object.entries(hourlyData).map(([hour, { sum, count }]) => ({
+      time: hour,
+      value: count > 0 ? sum / count : 0 // Calculate average or default to 0
+    }));
+  }, []);
+  
+  // Process all voltage data sets
+  const processedVoltageRData = useMemo(() => processVoltageData(voltageRData?.data), [voltageRData?.data, processVoltageData]);
+  const processedVoltageSData = useMemo(() => processVoltageData(voltageSData?.data), [voltageSData?.data, processVoltageData]);
+  const processedVoltageTData = useMemo(() => processVoltageData(voltageTData?.data), [voltageTData?.data, processVoltageData]);
+  
+  // Debug the processed data
+  useEffect(() => {
+    if (processedVoltageRData.length > 0) {
+      console.log("Processed Voltage R data:", processedVoltageRData.slice(0, 5), "...", processedVoltageRData.length, "points");
+    }
+    if (powerData?.data && powerData.data.length > 0) {
+      console.log("Power data format:", powerData.data.slice(0, 5), "...", powerData.data.length, "points");
+    }
+  }, [processedVoltageRData, powerData?.data]);
+  
   // Combine power and voltage data
   const combinedData = useMemo(() => {
     if (!powerData?.data) return [];
     
     return powerData.data.map(point => {
-      // Find matching voltage data points by time
+      // Find matching voltage data points by time (now using processed hourly data)
       const timeStr = point.time;
       
       // Create a combined data point with voltage information
@@ -243,22 +285,16 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
       let voltT = 0;
       
       // Find matching R phase voltage
-      if (voltageRData?.data) {
-        const rPoint = voltageRData.data.find(v => v.time === timeStr);
-        if (rPoint) voltR = rPoint.value;
-      }
+      const rPoint = processedVoltageRData.find((v: {time: string, value: number}) => v.time === timeStr);
+      if (rPoint) voltR = rPoint.value;
       
       // Find matching S phase voltage
-      if (voltageSData?.data) {
-        const sPoint = voltageSData.data.find(v => v.time === timeStr);
-        if (sPoint) voltS = sPoint.value;
-      }
+      const sPoint = processedVoltageSData.find((v: {time: string, value: number}) => v.time === timeStr);
+      if (sPoint) voltS = sPoint.value;
       
       // Find matching T phase voltage
-      if (voltageTData?.data) {
-        const tPoint = voltageTData.data.find(v => v.time === timeStr);
-        if (tPoint) voltT = tPoint.value;
-      }
+      const tPoint = processedVoltageTData.find((v: {time: string, value: number}) => v.time === timeStr);
+      if (tPoint) voltT = tPoint.value;
       
       return {
         ...point,
@@ -267,7 +303,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
         voltT
       };
     });
-  }, [powerData?.data, voltageRData?.data, voltageSData?.data, voltageTData?.data]);
+  }, [powerData?.data, processedVoltageRData, processedVoltageSData, processedVoltageTData]);
 
   // Prepare data for chart
   const chartData = combinedData;

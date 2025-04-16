@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -110,6 +110,53 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
     refetchInterval: 10000,
   });
 
+  // Process voltage data to ensure hourly format to match power data
+  const processVoltageData = useCallback((data: ChartDataPoint[] | undefined) => {
+    if (!data) return [];
+    
+    // Group by hour and compute average
+    const hourlyData: { [hour: string]: { sum: number, count: number } } = {};
+    
+    // First, group all values by hour
+    data.forEach(point => {
+      // Normalize time format to ensure it's always "HH:00" format
+      const hour = point.time.split(':')[0].padStart(2, '0') + ":00";
+      
+      if (!hourlyData[hour]) {
+        hourlyData[hour] = { sum: 0, count: 0 };
+      }
+      
+      hourlyData[hour].sum += point.value;
+      hourlyData[hour].count += 1;
+    });
+    
+    // Then create averaged points for each hour
+    return Object.entries(hourlyData).map(([hour, { sum, count }]) => ({
+      time: hour,
+      value: count > 0 ? sum / count : 0 // Calculate average or default to 0
+    }));
+  }, []);
+  
+  // Process all voltage data sets for better hourly matching
+  const processedVoltageRData = useMemo(() => 
+    processVoltageData(voltageRData?.data), [voltageRData?.data, processVoltageData]
+  );
+  
+  const processedVoltageSData = useMemo(() => 
+    processVoltageData(voltageSData?.data), [voltageSData?.data, processVoltageData]
+  );
+  
+  const processedVoltageTData = useMemo(() => 
+    processVoltageData(voltageTData?.data), [voltageTData?.data, processVoltageData]
+  );
+
+  // Debug processed data
+  useEffect(() => {
+    if (processedVoltageRData.length > 0 && processedVoltageRData[0].value > 0) {
+      console.log(`[DualAxisChart] Processed voltage data - first hour R phase: ${processedVoltageRData[0].time} = ${processedVoltageRData[0].value}V`);
+    }
+  }, [processedVoltageRData]);
+
   // Combine all data for the dual-axis chart
   useEffect(() => {
     if (
@@ -140,22 +187,22 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
         };
       });
       
-      // Fill in the voltage R values
-      voltageRData.data.forEach(point => {
+      // Fill in the voltage R values using processed hourly data
+      processedVoltageRData.forEach(point => {
         if (timeToValues[point.time]) {
           timeToValues[point.time].voltR = point.value;
         }
       });
       
-      // Fill in the voltage S values
-      voltageSData.data.forEach(point => {
+      // Fill in the voltage S values using processed hourly data
+      processedVoltageSData.forEach(point => {
         if (timeToValues[point.time]) {
           timeToValues[point.time].voltS = point.value;
         }
       });
       
-      // Fill in the voltage T values
-      voltageTData.data.forEach(point => {
+      // Fill in the voltage T values using processed hourly data
+      processedVoltageTData.forEach(point => {
         if (timeToValues[point.time]) {
           timeToValues[point.time].voltT = point.value;
         }
@@ -196,7 +243,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
       
       setSqlQueries(allQueries);
     }
-  }, [voltageRData, voltageSData, voltageTData, powerData, panelType]);
+  }, [processedVoltageRData, processedVoltageSData, processedVoltageTData, powerData, panelType]);
 
   // Handle date change
   const handleDateChange = (newDate: Date | undefined) => {

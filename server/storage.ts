@@ -268,11 +268,12 @@ export class DatabaseStorage implements IStorage {
         await pool.query(sqlQuery, params) :
         await pool.query(sqlQuery);
       
-      // Format timestamp to time string with GMT+7 timezone adjustment
+      // Format timestamp to time string with GMT+7 timezone adjustment - match hourly format for power data
       const formatTime = (timestamp: Date): string => {
         // Convert to GMT+7
         const timestampGMT7 = new Date(timestamp.getTime() + (7 * 60 * 60 * 1000));
-        return `${timestampGMT7.getHours().toString().padStart(2, '0')}:${timestampGMT7.getMinutes().toString().padStart(2, '0')}`;
+        // Return only hours for better matching with power data
+        return `${timestampGMT7.getHours().toString().padStart(2, '0')}:00`;
       };
       
       // Map to chart data format
