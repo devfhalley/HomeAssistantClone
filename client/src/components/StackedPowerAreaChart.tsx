@@ -64,6 +64,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
     const baseUrl = '/api/total-power';
     if (specificDate) {
       const dateParam = format(specificDate, 'yyyy-MM-dd');
+      console.log("Requesting data for date:", dateParam);
       return `${baseUrl}?date=${dateParam}`;
     }
     return baseUrl;
@@ -71,17 +72,21 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
 
   // Fetch power data with selected date
   const { data: powerData, isLoading } = useQuery<PowerDataResponse>({
-    queryKey: ['/api/total-power', selectedDate?.toISOString() || 'current'],
+    queryKey: ['/api/total-power', selectedDate ? format(selectedDate, 'yyyy-MM-dd') : 'current'],
     queryFn: async () => {
       const url = getTotalPowerUrl(selectedDate);
+      console.log("Fetching power data from URL:", url);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch power data');
       }
-      return response.json();
+      const data = await response.json();
+      console.log("Data received:", data.data?.length || 0, "points");
+      return data;
     },
     refetchInterval: 10000, // Refresh every 10 seconds
     refetchIntervalInBackground: true,
+    staleTime: 0, // Consider data immediately stale to force refresh
   });
 
   // Log data for debugging

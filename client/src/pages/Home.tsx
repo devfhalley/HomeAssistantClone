@@ -35,6 +35,9 @@ interface SystemInfo {
 }
 
 const Home = () => {
+  // Using a specific date of April 16, 2025 for consistency since that's when we have data
+  const [selectedDate] = useState<Date>(new Date(2025, 3, 16));
+  
   useEffect(() => {
     document.title = "Home Assistant - Home";
   }, []);
@@ -211,7 +214,7 @@ const Home = () => {
             <h3 className="text-lg font-semibold mb-3">Power Consumption (Stacked)</h3>
             <StackedPowerAreaChart
               title="Combined Panel Power Usage"
-              selectedDate={new Date()}
+              selectedDate={selectedDate}
             />
           </div>
           
