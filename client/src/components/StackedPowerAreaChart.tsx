@@ -16,7 +16,10 @@ import {
   ComposedChart
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronDown, ChevronUp, Info } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, Calendar, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import SqlQueryDisplay from './SqlQueryDisplay';
 
 interface PowerData {
@@ -102,8 +105,13 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   return null;
 };
 
-const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQueryParams = {} }: StackedPowerAreaChartProps) => {
+const StackedPowerAreaChart = ({ title, panelType, selectedDate: externalSelectedDate, additionalQueryParams = {} }: StackedPowerAreaChartProps) => {
   const [showQueries, setShowQueries] = useState(false);
+  const [date, setDate] = useState<Date>(externalSelectedDate || new Date());
+  const [showCalendar, setShowCalendar] = useState(false);
+  
+  // Use the internal date state instead of the prop for all data fetching
+  const selectedDate = date;
 
   // Create URL for power data with date parameter
   const getTotalPowerUrl = (specificDate?: Date): string => {
@@ -362,7 +370,36 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl">{title}</CardTitle>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* Date picker */}
+            <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-8 gap-1"
+                  onClick={() => setShowCalendar(true)}
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>{format(date, 'MMM dd, yyyy')}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <CalendarComponent
+                  mode="single"
+                  selected={date}
+                  onSelect={(newDate) => {
+                    if (newDate) {
+                      setDate(newDate);
+                      setShowCalendar(false);
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            
+            {/* SQL info button */}
             <button 
               onClick={() => setShowQueries(!showQueries)}
               className="text-xs px-2 py-1 rounded text-gray-600 hover:bg-gray-100 flex items-center">
@@ -370,6 +407,9 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
               SQL
               {showQueries ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
             </button>
+            
+            {/* Loading indicator */}
+            {isLoading && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
           </div>
         </div>
       </CardHeader>
