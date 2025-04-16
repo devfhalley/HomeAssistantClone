@@ -83,17 +83,36 @@ const Home = () => {
       {/* Power Charts Section */}
       <div className="mb-6">
         <h2 className="text-xl font-bold mb-4">Power Monitoring Charts</h2>
-        <div className="grid grid-cols-1 gap-6 mb-6">
-          {/* Combined Panel Power Consumption */}
-          <div className="w-full">
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">
-              <span className="flex items-center">
-                <Activity className="w-5 h-5 mr-2" />
-                Combined Panel Power Usage
-              </span>
-            </h3>
+        
+        {/* 33KVA Panel Section */}
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold mb-3 text-gray-800">
+            <span className="flex items-center">
+              <Activity className="w-5 h-5 mr-2 text-blue-600" />
+              Panel 1 - 33KVA Power Usage
+            </span>
+          </h3>
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
             <StackedPowerAreaChart
-              title="Combined Panel Power Usage"
+              title="33KVA Panel Power Usage"
+              panelType="33kva"
+              selectedDate={selectedDate}
+            />
+          </div>
+        </div>
+
+        {/* 66KVA Panel Section */}
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold mb-3 text-gray-800">
+            <span className="flex items-center">
+              <Activity className="w-5 h-5 mr-2 text-amber-600" />
+              Panel 2 - 66KVA Power Usage
+            </span>
+          </h3>
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <StackedPowerAreaChart
+              title="66KVA Panel Power Usage"
+              panelType="66kva"
               selectedDate={selectedDate}
             />
           </div>
