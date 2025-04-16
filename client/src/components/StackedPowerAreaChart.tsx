@@ -286,7 +286,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
     }
   }, [processedVoltageRData, powerData?.data]);
   
-  // Combine power and voltage data
+  // Combine power and voltage data with current time limit
   const combinedData = useMemo(() => {
     if (!powerData?.data) return [];
     
@@ -315,22 +315,36 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
     processedVoltageSData.forEach(point => voltageSMap.set(point.time, point.value));
     processedVoltageTData.forEach(point => voltageTMap.set(point.time, point.value));
     
-    return powerData.data.map(point => {
-      const timeStr = point.time;
-      
-      // Get voltage values from maps, or use default values if not found
-      const voltR = voltageRMap.has(timeStr) ? voltageRMap.get(timeStr)! : Math.round(defaultVoltR);
-      const voltS = voltageSMap.has(timeStr) ? voltageSMap.get(timeStr)! : Math.round(defaultVoltS);
-      const voltT = voltageTMap.has(timeStr) ? voltageTMap.get(timeStr)! : Math.round(defaultVoltT);
-      
-      return {
-        ...point,
-        voltR,
-        voltS,
-        voltT
-      };
-    });
-  }, [powerData?.data, processedVoltageRData, processedVoltageSData, processedVoltageTData]);
+    // Get current hour for filtering
+    const currentHour = new Date().getHours();
+    const isToday = selectedDate ? isSameDay(selectedDate, new Date()) : true;
+    
+    return powerData.data
+      .filter(point => {
+        // Only filter by hour for today's date
+        if (isToday) {
+          const hourStr = point.time.split(':')[0];
+          const pointHour = parseInt(hourStr, 10);
+          return pointHour <= currentHour;
+        }
+        return true; // For past dates, show all hours
+      })
+      .map(point => {
+        const timeStr = point.time;
+        
+        // Get voltage values from maps, or use default values if not found
+        const voltR = voltageRMap.has(timeStr) ? voltageRMap.get(timeStr)! : Math.round(defaultVoltR);
+        const voltS = voltageSMap.has(timeStr) ? voltageSMap.get(timeStr)! : Math.round(defaultVoltS);
+        const voltT = voltageTMap.has(timeStr) ? voltageTMap.get(timeStr)! : Math.round(defaultVoltT);
+        
+        return {
+          ...point,
+          voltR,
+          voltS,
+          voltT
+        };
+      });
+  }, [powerData?.data, processedVoltageRData, processedVoltageSData, processedVoltageTData, selectedDate]);
 
   // Prepare data for chart
   const chartData = combinedData;

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { RefreshCw, Calendar } from "lucide-react";
 import {
   ComposedChart,
@@ -164,15 +164,23 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
       // as our primary time reference, since it's guaranteed to have all 24 hours
       const timeToValues: Record<string, CombinedDataPoint> = {};
       
-      // Initialize with all time points from power data
+      // Initialize with time points from power data, filtering for current time
       powerData.data.forEach(point => {
-        timeToValues[point.time] = {
-          time: point.time,
-          power: 0,
-          voltR: 0,
-          voltS: 0,
-          voltT: 0
-        };
+        // For today's date, only include hours up to the current hour
+        const isToday = isSameDay(date, new Date());
+        const currentHour = new Date().getHours();
+        const pointHour = parseInt(point.time.split(':')[0], 10);
+        
+        // If it's not today, or if it is today and the point hour is <= current hour
+        if (!isToday || pointHour <= currentHour) {
+          timeToValues[point.time] = {
+            time: point.time,
+            power: 0,
+            voltR: 0,
+            voltS: 0,
+            voltT: 0
+          };
+        }
       });
       
       // Create a set of all voltage hours we have data for (to handle midnight wrapping)
