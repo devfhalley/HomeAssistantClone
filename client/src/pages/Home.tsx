@@ -97,6 +97,8 @@ const Home = () => {
               title="33KVA Panel Power Usage"
               panelType="33kva"
               selectedDate={selectedDate}
+              // Pass panel=33kva to the voltage data API to fetch from the correct table
+              additionalQueryParams={{ panel: "33kva" }}
             />
           </div>
         </div>
@@ -114,6 +116,8 @@ const Home = () => {
               title="66KVA Panel Power Usage"
               panelType="66kva"
               selectedDate={selectedDate}
+              // Pass panel=66kva to the voltage data API to fetch from the correct table
+              additionalQueryParams={{ panel: "66kva" }}
             />
           </div>
         </div>
