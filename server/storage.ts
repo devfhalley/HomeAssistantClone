@@ -31,7 +31,7 @@ export interface IStorage {
   createPanel66kvaData(data: InsertPanel66kva): Promise<Panel66kva>;
   
   // Chart data methods (now using panel data)
-  getChartDataByType(dataType: string, phase: string, specificDate?: Date): Promise<ChartData[]>;
+  getChartDataByType(dataType: string, phase: string, specificDate?: Date, usePanel66kva?: boolean): Promise<ChartData[]>;
   
   // Total power consumption methods
   getTotalPowerConsumption(granularity: string, startDate?: Date, endDate?: Date): Promise<TotalPowerData[]>;
@@ -231,10 +231,14 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Chart data methods now use panel data
-  async getChartDataByType(dataType: string, phase: string, specificDate?: Date): Promise<ChartData[]> {
+  async getChartDataByType(dataType: string, phase: string, specificDate?: Date, usePanel66kva: boolean = false): Promise<ChartData[]> {
     try {
       let sqlQuery: string;
       let params: Date[] = [];
+      
+      // Determine which panel table to use
+      const tableName = usePanel66kva ? 'panel_66kva' : 'panel_33kva';
+      console.log(`Using panel table: ${tableName} for chart data query`);
       
       if (specificDate) {
         // For a specific date using Asia/Jakarta timezone
@@ -242,7 +246,7 @@ export class DatabaseStorage implements IStorage {
         console.log(`Chart data query using dateStr: ${dateStr} from date ${specificDate.toISOString()}`);
         sqlQuery = `
           SELECT *
-          FROM panel_33kva
+          FROM ${tableName}
           WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
           ORDER BY timestamp
         `;
@@ -251,7 +255,7 @@ export class DatabaseStorage implements IStorage {
         // For today (default) using Asia/Jakarta timezone
         sqlQuery = `
           SELECT *
-          FROM panel_33kva
+          FROM ${tableName}
           WHERE timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta')
             AND timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta' <= CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Jakarta'
           ORDER BY timestamp
@@ -260,7 +264,7 @@ export class DatabaseStorage implements IStorage {
       
       console.log("Chart data query:", sqlQuery, params.length ? `with date: ${params[0]}` : "(today)");
       
-      const panel33Result = params.length ? 
+      const panelResult = params.length ? 
         await pool.query(sqlQuery, params) :
         await pool.query(sqlQuery);
       
@@ -274,8 +278,8 @@ export class DatabaseStorage implements IStorage {
       // Map to chart data format
       const result: ChartData[] = [];
       
-      // Process panel33 data
-      const panel33Data = panel33Result.rows;
+      // Process panel data
+      const panelData = panelResult.rows;
       
       // Get current hour and minute for filtering with GMT+7 timezone adjustment
       const currentUTCDate = new Date();
@@ -285,8 +289,8 @@ export class DatabaseStorage implements IStorage {
       const currentMinute = currentDate.getMinutes();
       
       // Debug database timestamps
-      const panel33Timestamps = panel33Data.map(d => d.timestamp);
-      console.log("First 5 timestamps from panel 33kva:", panel33Timestamps.slice(0, 5));
+      const panelTimestamps = panelData.map((d: any) => d.timestamp);
+      console.log(`First 5 timestamps from ${usePanel66kva ? 'panel 66kva' : 'panel 33kva'}:`, panelTimestamps.slice(0, 5));
       
       // Log extensive debugging information
       console.log(`Chart Data - System time: ${new Date().toISOString()}`);
@@ -295,7 +299,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`Chart Data - Local Hour: ${new Date().getHours()}, Local Minute: ${new Date().getMinutes()}`);
       console.log(`Chart Data - GMT+7 Hour: ${currentHour}, GMT+7 Minute: ${currentMinute}`);
       
-      for (const record of panel33Data) {
+      for (const record of panelData) {
         if (!record.timestamp) continue;
         
         const recordUTCDate = new Date(record.timestamp);

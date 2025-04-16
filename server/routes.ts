@@ -522,8 +522,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { date, panel } = req.query;
       
       // Determine which panel to use (default to 33kva if not specified)
-      const usePanel66kva = panel === "66kva";
-      console.log(`Chart data request received for ${dataType}/${phase}, panel: ${usePanel66kva ? '66KVA' : '33KVA'}`);
+      const isPanelType66kva = panel === "66kva";
+      const panelTable = isPanelType66kva ? 'panel_66kva' : 'panel_33kva';
+      console.log(`Chart data request received for ${dataType}/${phase}, panel: ${isPanelType66kva ? '66KVA' : '33KVA'}`);
       
       // Create a specific date object if date parameter is provided
       let specificDate: Date | undefined = undefined;
@@ -533,26 +534,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Parsed date: ${specificDate.toISOString()}`);
       }
       
-      // Get chart data with the specific date filter
-      const data = await storage.getChartDataByType(dataType, phase, specificDate);
+      // Get chart data with the specific date filter and panel type
+      const data = await storage.getChartDataByType(dataType, phase, specificDate, isPanelType66kva);
       
       // Log the SQL query for this request
       console.log(`Chart data query for ${dataType}/${phase} executed`);
       
       // Include the SQL query in the response with the correct timezone-aware filtering
       let sqlQuery;
+      const tableName = isPanelType66kva ? 'panel_66kva' : 'panel_33kva';
       if (specificDate) {
         const dateStr = specificDate.toISOString().split('T')[0]; // Get just the date part (YYYY-MM-DD)
         sqlQuery = `
           SELECT *
-          FROM panel_33kva
+          FROM ${tableName}
           WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = '${dateStr}'
           ORDER BY timestamp
         `;
       } else {
         sqlQuery = `
           SELECT *
-          FROM panel_33kva
+          FROM ${tableName}
           WHERE DATE(timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta') = CURRENT_DATE
           ORDER BY timestamp
         `;
