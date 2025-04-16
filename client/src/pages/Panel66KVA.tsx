@@ -503,17 +503,7 @@ const Panel66KVA = () => {
           </div>
           
           <h2 className="text-lg font-semibold my-3">Electrical Parameters</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <ChartCard 
-              title="Panel 2 66KVA - Voltage" 
-              phaseRData={processChartData(voltageDataR)}
-              phaseSData={processChartData(voltageDataS)}
-              phaseTData={processChartData(voltageDataT)}
-              yAxisDomain={[190, 240]}
-              unit="V"
-              selectedDate={selectedDate}
-            />
-            
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
             <ChartCard 
               title="Panel 2 66KVA - Current" 
               phaseRData={processChartData(currentDataR)}

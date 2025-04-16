@@ -316,18 +316,7 @@ const PowerMonitoring = () => {
             />
           </div>
           
-          <h2 className="text-lg font-semibold my-3">Electrical Parameters</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <ChartCard 
-              title="Panel 33KVA - Voltage" 
-              phaseRData={processChartData(voltageRChartData)}
-              phaseSData={processChartData(voltageSChartData2)}
-              phaseTData={processChartData(voltageTChartData2)}
-              yAxisDomain={[190, 240]}
-              unit="V"
-              selectedDate={selectedDate}
-            />
-          </div>
+
         </div>
         
         {/* Debug Button */}
