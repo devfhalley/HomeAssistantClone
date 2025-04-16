@@ -159,27 +159,15 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
 
   // Combine all data for the dual-axis chart
   useEffect(() => {
-    if (
-      voltageRData?.data && 
-      voltageSData?.data && 
-      voltageTData?.data && 
-      powerData?.data
-    ) {
-      const timePoints = new Set<string>();
-      
-      // Collect all unique time points
-      voltageRData.data.forEach(point => timePoints.add(point.time));
-      voltageSData.data.forEach(point => timePoints.add(point.time));
-      voltageTData.data.forEach(point => timePoints.add(point.time));
-      powerData.data.forEach(point => timePoints.add(point.time));
-      
-      // Create a mapping of time to combined values
+    if (powerData?.data) {
+      // Instead of collecting time points from all data sources, use ONLY power data
+      // as our primary time reference, since it's guaranteed to have all 24 hours
       const timeToValues: Record<string, CombinedDataPoint> = {};
       
-      // Initialize with all timePoints
-      Array.from(timePoints).sort().forEach(time => {
-        timeToValues[time] = {
-          time,
+      // Initialize with all time points from power data
+      powerData.data.forEach(point => {
+        timeToValues[point.time] = {
+          time: point.time,
           power: 0,
           voltR: 0,
           voltS: 0,
@@ -187,21 +175,46 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
         };
       });
       
-      // Fill in the voltage R values using processed hourly data
+      // Create a set of all voltage hours we have data for (to handle midnight wrapping)
+      const voltageHours = new Set<string>();
+      processedVoltageRData.forEach(point => voltageHours.add(point.time));
+      processedVoltageSData.forEach(point => voltageHours.add(point.time));
+      processedVoltageTData.forEach(point => voltageHours.add(point.time));
+      
+      // Find default voltage values using the average of all available data
+      const defaultVoltR = processedVoltageRData.reduce((sum, point) => sum + point.value, 0) / 
+                          (processedVoltageRData.length || 1);
+      const defaultVoltS = processedVoltageSData.reduce((sum, point) => sum + point.value, 0) / 
+                          (processedVoltageSData.length || 1);
+      const defaultVoltT = processedVoltageTData.reduce((sum, point) => sum + point.value, 0) / 
+                          (processedVoltageTData.length || 1);
+      
+      console.log(`Using default voltage values (averages) - R: ${defaultVoltR.toFixed(1)}V, S: ${defaultVoltS.toFixed(1)}V, T: ${defaultVoltT.toFixed(1)}V`);
+      
+      // For hours where we don't have voltage data, use the average voltage value
+      Object.keys(timeToValues).forEach(time => {
+        if (!voltageHours.has(time)) {
+          timeToValues[time].voltR = Math.round(defaultVoltR);
+          timeToValues[time].voltS = Math.round(defaultVoltS);
+          timeToValues[time].voltT = Math.round(defaultVoltT);
+        }
+      });
+      
+      // Fill in the voltage R values using processed hourly data where available
       processedVoltageRData.forEach(point => {
         if (timeToValues[point.time]) {
           timeToValues[point.time].voltR = point.value;
         }
       });
       
-      // Fill in the voltage S values using processed hourly data
+      // Fill in the voltage S values using processed hourly data where available
       processedVoltageSData.forEach(point => {
         if (timeToValues[point.time]) {
           timeToValues[point.time].voltS = point.value;
         }
       });
       
-      // Fill in the voltage T values using processed hourly data
+      // Fill in the voltage T values using processed hourly data where available
       processedVoltageTData.forEach(point => {
         if (timeToValues[point.time]) {
           timeToValues[point.time].voltT = point.value;
@@ -235,10 +248,10 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
       
       // Collect all SQL queries for debugging
       const allQueries = [
-        ...(voltageRData.sqlQueries || []),
-        ...(voltageSData.sqlQueries || []),
-        ...(voltageTData.sqlQueries || []),
-        ...(powerData.sqlQueries || [])
+        ...(voltageRData?.sqlQueries || []),
+        ...(voltageSData?.sqlQueries || []),
+        ...(voltageTData?.sqlQueries || []),
+        ...(powerData?.sqlQueries || [])
       ];
       
       setSqlQueries(allQueries);

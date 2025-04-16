@@ -275,26 +275,38 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
   const combinedData = useMemo(() => {
     if (!powerData?.data) return [];
     
+    // Create a set of all voltage hours we have data for
+    const voltageHours = new Set<string>();
+    processedVoltageRData.forEach(point => voltageHours.add(point.time));
+    processedVoltageSData.forEach(point => voltageHours.add(point.time));
+    processedVoltageTData.forEach(point => voltageHours.add(point.time));
+    
+    // Calculate default voltage values (averages) for hours without data
+    const defaultVoltR = processedVoltageRData.reduce((sum, point) => sum + point.value, 0) / 
+                         (processedVoltageRData.length || 1);
+    const defaultVoltS = processedVoltageSData.reduce((sum, point) => sum + point.value, 0) / 
+                         (processedVoltageSData.length || 1);
+    const defaultVoltT = processedVoltageTData.reduce((sum, point) => sum + point.value, 0) / 
+                         (processedVoltageTData.length || 1);
+    
+    console.log(`Using default voltage values (averages) - R: ${defaultVoltR.toFixed(1)}V, S: ${defaultVoltS.toFixed(1)}V, T: ${defaultVoltT.toFixed(1)}V`);
+    
+    // Create lookup maps for faster access
+    const voltageRMap = new Map<string, number>();
+    const voltageSMap = new Map<string, number>();
+    const voltageTMap = new Map<string, number>();
+    
+    processedVoltageRData.forEach(point => voltageRMap.set(point.time, point.value));
+    processedVoltageSData.forEach(point => voltageSMap.set(point.time, point.value));
+    processedVoltageTData.forEach(point => voltageTMap.set(point.time, point.value));
+    
     return powerData.data.map(point => {
-      // Find matching voltage data points by time (now using processed hourly data)
       const timeStr = point.time;
       
-      // Create a combined data point with voltage information
-      let voltR = 0;
-      let voltS = 0;
-      let voltT = 0;
-      
-      // Find matching R phase voltage
-      const rPoint = processedVoltageRData.find((v: {time: string, value: number}) => v.time === timeStr);
-      if (rPoint) voltR = rPoint.value;
-      
-      // Find matching S phase voltage
-      const sPoint = processedVoltageSData.find((v: {time: string, value: number}) => v.time === timeStr);
-      if (sPoint) voltS = sPoint.value;
-      
-      // Find matching T phase voltage
-      const tPoint = processedVoltageTData.find((v: {time: string, value: number}) => v.time === timeStr);
-      if (tPoint) voltT = tPoint.value;
+      // Get voltage values from maps, or use default values if not found
+      const voltR = voltageRMap.has(timeStr) ? voltageRMap.get(timeStr)! : Math.round(defaultVoltR);
+      const voltS = voltageSMap.has(timeStr) ? voltageSMap.get(timeStr)! : Math.round(defaultVoltS);
+      const voltT = voltageTMap.has(timeStr) ? voltageTMap.get(timeStr)! : Math.round(defaultVoltT);
       
       return {
         ...point,
