@@ -122,19 +122,26 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: propSelectedDat
     }
   };
   
-  // Function to apply the selected date and close the popover
+  // Function to apply the selected date
   const applySelectedDate = () => {
-    // Apply the currently selected date (already stored in state)
     if (selectedDate) {
       console.log("Applying date:", format(selectedDate, 'yyyy-MM-dd'));
-      // Force refresh of data by refetching queries
-      queryClient.invalidateQueries(['/api/total-power']);
-      queryClient.invalidateQueries(['/api/chart-data/voltage/R']);
-      queryClient.invalidateQueries(['/api/chart-data/voltage/S']);
-      queryClient.invalidateQueries(['/api/chart-data/voltage/T']);
+      
+      // Force a state update to trigger refetch
+      const dateQuery = format(selectedDate, 'yyyy-MM-dd');
+      
+      // Directly fetch data with the current date
+      fetch(`/api/total-power?date=${dateQuery}`)
+        .then(res => res.json())
+        .then(data => {
+          console.log("Refreshed power data:", data.data?.length || 0, "points");
+          // After successful fetch, invalidate the queries to trigger UI refresh
+          queryClient.invalidateQueries({ queryKey: ['/api/total-power'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/chart-data/voltage/R'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/chart-data/voltage/S'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/chart-data/voltage/T'] });
+        });
     }
-    // Close the popover
-    document.body.click();
   };
 
   // Create URL for power data with date parameter
@@ -381,43 +388,51 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: propSelectedDat
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl">{title}</CardTitle>
           <div className="flex gap-2 items-center">
-            {/* Date Picker */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-9 border-dashed flex items-center gap-1 text-xs"
-                >
-                  <CalendarIcon className="h-3.5 w-3.5" />
-                  {selectedDate ? (
-                    format(selectedDate, "PPP")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <div className="p-3">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={handleDateChange}
-                    initialFocus
-                    className="border-none"
-                    disabled={(date) => date > new Date()}
-                  />
-                  <div className="flex justify-end mt-2">
-                    <Button 
-                      variant="default" 
-                      size="sm" 
-                      onClick={applySelectedDate}
-                    >
-                      Apply
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+            {/* Date Picker - Simplified */}
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                className="h-9 border-dashed"
+                onClick={() => {
+                  // Go to previous day
+                  if (selectedDate) {
+                    const prevDay = new Date(selectedDate);
+                    prevDay.setDate(prevDay.getDate() - 1);
+                    setLocalSelectedDate(prevDay);
+                    // We need to update state first and then apply
+                    setTimeout(() => applySelectedDate(), 0);
+                  }
+                }}
+              >
+                ◀
+              </Button>
+              
+              <div className="text-sm font-medium">
+                {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "Today"}
+              </div>
+              
+              <Button
+                variant="outline"
+                className="h-9 border-dashed"
+                onClick={() => {
+                  // Go to next day, but not beyond today
+                  if (selectedDate) {
+                    const nextDay = new Date(selectedDate);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    
+                    // Don't go beyond today
+                    const today = new Date();
+                    if (nextDay <= today) {
+                      setLocalSelectedDate(nextDay);
+                      // We need to update state first and then apply
+                      setTimeout(() => applySelectedDate(), 0);
+                    }
+                  }
+                }}
+              >
+                ▶
+              </Button>
+            </div>
             
             {/* SQL Query Toggle */}
             <button 
