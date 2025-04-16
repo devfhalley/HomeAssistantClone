@@ -62,25 +62,40 @@ interface StackedPowerAreaChartProps {
 // Custom tooltip component
 const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
+    // Separate power and voltage entries
+    const powerEntries = payload.filter(entry => 
+      entry.name && ['33KVA Panel', '66KVA Panel'].includes(entry.name)
+    );
+    
+    const voltageEntries = payload.filter(entry => 
+      entry.name && entry.name.includes('Phase')
+    );
+    
     return (
       <div className="custom-tooltip bg-white p-3 border border-gray-200 shadow-lg rounded-md max-w-xs">
         <p className="label font-semibold">{`Time: ${label}`}</p>
-        <div className="mt-1 border-t pt-1">
-          <p className="font-medium text-sm">Power</p>
-          {payload.filter(entry => entry.name && ['33KVA Panel', '66KVA Panel'].includes(entry.name)).map((entry, index) => (
-            <p key={`power-${index}`} style={{ color: entry.color }} className="ml-2">
-              {`${entry.name}: ${Number(entry.value).toFixed(2)} kW`}
-            </p>
-          ))}
-        </div>
-        <div className="mt-1 border-t pt-1">
-          <p className="font-medium text-sm">Voltage</p>
-          {payload.filter(entry => entry.name && ['R Phase', 'S Phase', 'T Phase'].includes(entry.name)).map((entry, index) => (
-            <p key={`voltage-${index}`} style={{ color: entry.color }} className="ml-2">
-              {`${entry.name}: ${Number(entry.value).toFixed(2)} V`}
-            </p>
-          ))}
-        </div>
+        
+        {powerEntries.length > 0 && (
+          <div className="mt-1 border-t pt-1">
+            <p className="font-medium text-sm">Power</p>
+            {powerEntries.map((entry, index) => (
+              <p key={`power-${index}`} style={{ color: entry.color }} className="ml-2">
+                {`${entry.name}: ${Number(entry.value).toFixed(2)} kW`}
+              </p>
+            ))}
+          </div>
+        )}
+        
+        {voltageEntries.length > 0 && (
+          <div className="mt-1 border-t pt-1">
+            <p className="font-medium text-sm">Voltage</p>
+            {voltageEntries.map((entry, index) => (
+              <p key={`voltage-${index}`} style={{ color: entry.color }} className="ml-2">
+                {`${entry.name}: ${Number(entry.value).toFixed(1)} V`}
+              </p>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -351,108 +366,103 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
           </div>
         ) : (
           <>
-            <div className="grid grid-rows-2 gap-4" style={{ height: "400px" }}>
-              {/* POWER CHART - Top */}
-              <div className="w-full">
-                <h3 className="text-sm font-medium mb-1">Power Usage (kW)</h3>
-                <ResponsiveContainer width="100%" height="90%">
-                  <AreaChart
-                    data={chartData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis 
-                      dataKey="time" 
-                      tickFormatter={formatXAxis}
-                      tick={{ fontSize: 11 }}
+            <div className="h-[400px] w-full">
+              <h3 className="text-sm font-medium mb-1">Combined Power & Voltage Chart</h3>
+              <ResponsiveContainer width="100%" height="95%">
+                <ComposedChart
+                  data={chartData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis 
+                    dataKey="time" 
+                    tickFormatter={formatXAxis}
+                    tick={{ fontSize: 11 }}
+                  />
+                  
+                  {/* Left Y-Axis for Power */}
+                  <YAxis 
+                    yAxisId="left"
+                    tickFormatter={formatYAxis}
+                    tick={{ fontSize: 11 }}
+                    width={60}
+                    domain={[0, 'auto']}
+                    label={{ value: 'Power (kW)', angle: -90, position: 'insideLeft', offset: -5 }}
+                  />
+                  
+                  {/* Right Y-Axis for Voltage */}
+                  <YAxis 
+                    yAxisId="right"
+                    orientation="right"
+                    domain={[180, 310]} 
+                    tick={{ fontSize: 11 }}
+                    width={60}
+                    tickFormatter={(value) => `${value}V`}
+                    label={{ value: 'Voltage (V)', angle: 90, position: 'insideRight', offset: 0 }}
+                  />
+                  
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  
+                  {/* Power data as stacked areas - Left Axis */}
+                  {panelType !== "66kva" && (
+                    <Area 
+                      yAxisId="left"
+                      type="monotone" 
+                      dataKey="panel33Power" 
+                      name="33KVA Panel"
+                      stackId="1"
+                      stroke="#3b82f6" 
+                      fill="#3b82f6" 
+                      fillOpacity={0.6}
                     />
-                    <YAxis 
-                      tickFormatter={formatYAxis}
-                      tick={{ fontSize: 11 }}
-                      width={60}
-                      domain={[0, 'auto']}
+                  )}
+                  {panelType !== "33kva" && (
+                    <Area 
+                      yAxisId="left"
+                      type="monotone" 
+                      dataKey="panel66Power" 
+                      name="66KVA Panel"
+                      stackId="1"
+                      stroke="#f59e0b" 
+                      fill="#f59e0b" 
+                      fillOpacity={0.6}
                     />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    
-                    {/* Power data as stacked areas */}
-                    {panelType !== "66kva" && (
-                      <Area 
-                        type="monotone" 
-                        dataKey="panel33Power" 
-                        name="33KVA Panel"
-                        stackId="1"
-                        stroke="#3b82f6" 
-                        fill="#3b82f6" 
-                        fillOpacity={0.6}
-                      />
-                    )}
-                    {panelType !== "33kva" && (
-                      <Area 
-                        type="monotone" 
-                        dataKey="panel66Power" 
-                        name="66KVA Panel"
-                        stackId="1"
-                        stroke="#f59e0b" 
-                        fill="#f59e0b" 
-                        fillOpacity={0.6}
-                      />
-                    )}
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-              
-              {/* VOLTAGE CHART - Bottom */}
-              <div className="w-full">
-                <h3 className="text-sm font-medium mb-1">Voltage by Phase (V)</h3>
-                <ResponsiveContainer width="100%" height="90%">
-                  <LineChart
-                    data={chartData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis 
-                      dataKey="time" 
-                      tickFormatter={formatXAxis}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <YAxis 
-                      domain={[180, 310]} 
-                      tick={{ fontSize: 11 }}
-                      width={60}
-                      tickFormatter={(value) => `${value}V`}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    
-                    {/* Voltage data as lines */}
-                    <Line
-                      type="monotone"
-                      dataKey="voltR"
-                      name="R Phase"
-                      stroke="#ef4444"
-                      dot={false}
-                      strokeWidth={2}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="voltS"
-                      name="S Phase"
-                      stroke="#10b981"
-                      dot={false}
-                      strokeWidth={2}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="voltT"
-                      name="T Phase"
-                      stroke="#8b5cf6"
-                      dot={false}
-                      strokeWidth={2}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+                  )}
+                  
+                  {/* Voltage data as lines - Right Axis */}
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="voltR"
+                    name="R Phase Voltage"
+                    stroke="#ef4444"
+                    dot={false}
+                    strokeWidth={1.5}
+                    strokeDasharray="4 1"
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="voltS"
+                    name="S Phase Voltage"
+                    stroke="#10b981"
+                    dot={false}
+                    strokeWidth={1.5}
+                    strokeDasharray="4 1"
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="voltT"
+                    name="T Phase Voltage"
+                    stroke="#8b5cf6"
+                    dot={false}
+                    strokeWidth={1.5}
+                    strokeDasharray="4 1"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
             </div>
             {/* SQL Queries Display */}
             {showQueries && powerData?.sqlQueries && (
