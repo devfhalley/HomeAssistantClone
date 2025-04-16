@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import DualAxisPowerChart from "@/components/DualAxisPowerChart";
+import StackedPowerAreaChart from "@/components/StackedPowerAreaChart";
 
 // Type for panel data
 interface PanelData {
@@ -205,22 +206,31 @@ const Home = () => {
       <div className="mb-6">
         <h2 className="text-xl font-bold mb-4">Power Monitoring Charts</h2>
         <div className="grid grid-cols-1 gap-6 mb-6">
-          {/* 33KVA Power & Voltage Analysis - First Row */}
+          {/* Power Consumption Stacked Area Chart - First Row */}
           <div className="w-full">
-            <h3 className="text-lg font-semibold mb-3">33KVA Panel</h3>
-            <DualAxisPowerChart
-              title="33KVA Panel Analysis"
-              panelType="33kva"
+            <h3 className="text-lg font-semibold mb-3">Power Consumption (Stacked)</h3>
+            <StackedPowerAreaChart
+              title="Combined Panel Power Usage"
+              selectedDate={new Date()}
             />
           </div>
           
-          {/* 66KVA Power & Voltage Analysis - Second Row */}
+          {/* Detailed Panel Analysis - Second Row */}
           <div className="w-full">
-            <h3 className="text-lg font-semibold mb-3">66KVA Panel</h3>
-            <DualAxisPowerChart
-              title="66KVA Panel Analysis"
-              panelType="66kva"
-            />
+            <h3 className="text-lg font-semibold mb-3">Detailed Panel Analysis</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* 33KVA Power & Voltage Analysis */}
+              <DualAxisPowerChart
+                title="33KVA Panel Analysis"
+                panelType="33kva"
+              />
+              
+              {/* 66KVA Power & Voltage Analysis */}
+              <DualAxisPowerChart
+                title="66KVA Panel Analysis"
+                panelType="66kva"
+              />
+            </div>
           </div>
         </div>
       </div>
