@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { RefreshCw, Calendar } from "lucide-react";
 import {
   ComposedChart,
+  LineChart,
   Line,
   Bar,
   XAxis,
@@ -282,90 +283,103 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                   <p className="text-xs text-muted-foreground mt-1">Try selecting a different date</p>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart
-                    data={combinedData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 15 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="time" 
-                      label={{ value: 'Time (Hourly)', position: 'insideBottomRight', offset: -10 }}
-                      tickFormatter={(value) => `04-16 ${value}`}
-                    />
-                    <YAxis 
-                      yAxisId="left"
-                      label={{ value: 'Power (kW)', angle: -90, position: 'insideLeft', offset: -5 }} 
-                      domain={[0, 'auto']}
-                    />
-                    <YAxis 
-                      yAxisId="right"
-                      orientation="right"
-                      label={{ value: 'Voltage (V)', angle: 90, position: 'insideRight', offset: -5 }} 
-                      domain={[180, 310]}
-                      tickCount={5}
-                    />
-                    <Tooltip 
-                      formatter={(value: number, name: string) => {
-                        if (name.includes('Power')) return [formatPower(value), name];
-                        return [formatVoltage(value), name];
-                      }}
-                      labelFormatter={(label) => `Time: ${label}`}
-                    />
-                    <Legend 
-                      verticalAlign="top"
-                      align="right"
-                      iconType="line"
-                      wrapperStyle={{ paddingBottom: '10px' }}
-                    />
-                    
-                    {/* Power (Primary Y-axis) - Using Line instead of Bar to match the image */}
-                    <Line 
-                      yAxisId="left"
-                      dataKey="power"
-                      name={panelType === "33kva" ? "33KVA Power" : "66KVA Power"}
-                      stroke={panelType === "33kva" ? "#0040ff" : "#f59e0b"}
-                      strokeWidth={3}
-                      dot={false}
-                      activeDot={{ r: 4 }}
-                    />
-                    
-                    {/* Voltage (Secondary Y-axis) */}
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="voltR"
-                      name="Voltage R"
-                      stroke="#FFC107"
-                      strokeWidth={1.5}
-                      strokeDasharray="4 4"
-                      dot={false}
-                      activeDot={{ r: 4 }}
-                    />
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="voltS"
-                      name="Voltage S"
-                      stroke="#FF5722"
-                      strokeWidth={1.5}
-                      strokeDasharray="4 4"
-                      dot={false}
-                      activeDot={{ r: 4 }}
-                    />
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="voltT"
-                      name="Voltage T"
-                      stroke="#E91E63"
-                      strokeWidth={1.5}
-                      strokeDasharray="4 4"
-                      dot={false}
-                      activeDot={{ r: 4 }}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                <div className="grid grid-rows-2 gap-4" style={{ height: "350px" }}>
+                  {/* Power Chart - Top */}
+                  <div className="w-full">
+                    <h3 className="text-sm font-medium mb-1">Power Usage (kW)</h3>
+                    <ResponsiveContainer width="100%" height="90%">
+                      <LineChart
+                        data={combinedData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="time" 
+                          tickFormatter={(value) => `04-16 ${value}`}
+                          tick={{ fontSize: 11 }}
+                        />
+                        <YAxis 
+                          label={{ value: 'Power (kW)', angle: -90, position: 'insideLeft', offset: -5 }} 
+                          domain={[0, 'auto']}
+                          tick={{ fontSize: 11 }}
+                        />
+                        <Tooltip 
+                          formatter={(value: number) => [formatPower(value), 'Power']}
+                          labelFormatter={(label) => `Time: ${label}`}
+                        />
+                        <Legend />
+                        
+                        {/* Power Line */}
+                        <Line 
+                          dataKey="power"
+                          name={panelType === "33kva" ? "33KVA Power" : "66KVA Power"}
+                          stroke={panelType === "33kva" ? "#0040ff" : "#f59e0b"}
+                          strokeWidth={3}
+                          dot={false}
+                          activeDot={{ r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  {/* Voltage Chart - Bottom */}
+                  <div className="w-full">
+                    <h3 className="text-sm font-medium mb-1">Voltage by Phase (V)</h3>
+                    <ResponsiveContainer width="100%" height="90%">
+                      <LineChart
+                        data={combinedData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="time" 
+                          tickFormatter={(value) => `04-16 ${value}`}
+                          tick={{ fontSize: 11 }}
+                        />
+                        <YAxis 
+                          domain={[180, 310]}
+                          tickCount={5}
+                          tick={{ fontSize: 11 }}
+                          tickFormatter={(value) => `${value}V`}
+                        />
+                        <Tooltip 
+                          formatter={(value: number) => [formatVoltage(value), '']}
+                          labelFormatter={(label) => `Time: ${label}`}
+                        />
+                        <Legend />
+                        
+                        {/* Voltage Lines */}
+                        <Line
+                          type="monotone"
+                          dataKey="voltR"
+                          name="Voltage R"
+                          stroke="#ef4444"
+                          strokeWidth={2}
+                          dot={false}
+                          activeDot={{ r: 4 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="voltS"
+                          name="Voltage S"
+                          stroke="#10b981"
+                          strokeWidth={2}
+                          dot={false}
+                          activeDot={{ r: 4 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="voltT"
+                          name="Voltage T"
+                          stroke="#8b5cf6"
+                          strokeWidth={2}
+                          dot={false}
+                          activeDot={{ r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               )}
             </div>
           </TabsContent>

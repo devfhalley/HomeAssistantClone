@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   TooltipProps,
   Line,
+  LineChart,
   ComposedChart
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -302,98 +303,108 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQuery
           </div>
         ) : (
           <>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                  data={chartData}
-                  margin={{ top: 10, right: 30, left: 20, bottom: 0 }}
-                  layout="horizontal"
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis 
-                    dataKey="time" 
-                    tickFormatter={formatXAxis}
-                    tick={{ fontSize: 12 }}
-                  />
-                  {/* Primary Y axis for power data (kW) */}
-                  <YAxis 
-                    yAxisId="left"
-                    orientation="left"
-                    tickFormatter={formatYAxis}
-                    tick={{ fontSize: 12 }}
-                    width={60}
-                    domain={[0, 'auto']}
-                  />
-                  
-                  {/* Secondary Y axis for voltage data (V) */}
-                  <YAxis 
-                    yAxisId="right" 
-                    orientation="right"
-                    domain={[180, 310]} 
-                    tick={{ fontSize: 12 }}
-                    width={60}
-                    tickFormatter={(value) => `${value}V`}
-                  />
-                  
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  
-                  {/* Voltage data as lines - placing these first so they render correctly */}
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="voltR"
-                    name="R Phase"
-                    stroke="#ef4444"
-                    dot={false}
-                    strokeWidth={2}
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="voltS"
-                    name="S Phase"
-                    stroke="#10b981"
-                    dot={false}
-                    strokeWidth={2}
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="voltT"
-                    name="T Phase"
-                    stroke="#8b5cf6"
-                    dot={false}
-                    strokeWidth={2}
-                  />
-                  
-                  {/* Power data as stacked areas */}
-                  {panelType !== "66kva" && (
-                    <Area 
-                      yAxisId="left"
-                      type="monotone" 
-                      dataKey="panel33Power" 
-                      name="33KVA Panel"
-                      stackId="1"
-                      stroke="#3b82f6" 
-                      fill="#3b82f6" 
-                      fillOpacity={0.6}
+            <div className="grid grid-rows-2 gap-4" style={{ height: "400px" }}>
+              {/* POWER CHART - Top */}
+              <div className="w-full">
+                <h3 className="text-sm font-medium mb-1">Power Usage (kW)</h3>
+                <ResponsiveContainer width="100%" height="90%">
+                  <AreaChart
+                    data={chartData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis 
+                      dataKey="time" 
+                      tickFormatter={formatXAxis}
+                      tick={{ fontSize: 11 }}
                     />
-                  )}
-                  {panelType !== "33kva" && (
-                    <Area 
-                      yAxisId="left"
-                      type="monotone" 
-                      dataKey="panel66Power" 
-                      name="66KVA Panel"
-                      stackId="1"
-                      stroke="#f59e0b" 
-                      fill="#f59e0b" 
-                      fillOpacity={0.6}
+                    <YAxis 
+                      tickFormatter={formatYAxis}
+                      tick={{ fontSize: 11 }}
+                      width={60}
+                      domain={[0, 'auto']}
                     />
-                  )}
-                </ComposedChart>
-              </ResponsiveContainer>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    
+                    {/* Power data as stacked areas */}
+                    {panelType !== "66kva" && (
+                      <Area 
+                        type="monotone" 
+                        dataKey="panel33Power" 
+                        name="33KVA Panel"
+                        stackId="1"
+                        stroke="#3b82f6" 
+                        fill="#3b82f6" 
+                        fillOpacity={0.6}
+                      />
+                    )}
+                    {panelType !== "33kva" && (
+                      <Area 
+                        type="monotone" 
+                        dataKey="panel66Power" 
+                        name="66KVA Panel"
+                        stackId="1"
+                        stroke="#f59e0b" 
+                        fill="#f59e0b" 
+                        fillOpacity={0.6}
+                      />
+                    )}
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              
+              {/* VOLTAGE CHART - Bottom */}
+              <div className="w-full">
+                <h3 className="text-sm font-medium mb-1">Voltage by Phase (V)</h3>
+                <ResponsiveContainer width="100%" height="90%">
+                  <LineChart
+                    data={chartData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis 
+                      dataKey="time" 
+                      tickFormatter={formatXAxis}
+                      tick={{ fontSize: 11 }}
+                    />
+                    <YAxis 
+                      domain={[180, 310]} 
+                      tick={{ fontSize: 11 }}
+                      width={60}
+                      tickFormatter={(value) => `${value}V`}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    
+                    {/* Voltage data as lines */}
+                    <Line
+                      type="monotone"
+                      dataKey="voltR"
+                      name="R Phase"
+                      stroke="#ef4444"
+                      dot={false}
+                      strokeWidth={2}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="voltS"
+                      name="S Phase"
+                      stroke="#10b981"
+                      dot={false}
+                      strokeWidth={2}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="voltT"
+                      name="T Phase"
+                      stroke="#8b5cf6"
+                      dot={false}
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
             {/* SQL Queries Display */}
             {showQueries && powerData?.sqlQueries && (
