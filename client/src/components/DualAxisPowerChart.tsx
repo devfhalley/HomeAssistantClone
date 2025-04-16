@@ -226,7 +226,9 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
     <Card className="w-full overflow-visible">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-medium">
-          Hourly Power Usage and Voltage per Phase (R, S, T)
+          {panelType === "33kva" 
+            ? "33KVA Panel - Hourly Power Usage and Voltage per Phase (R, S, T)" 
+            : "66KVA Panel - Hourly Power Usage and Voltage per Phase (R, S, T)"}
         </CardTitle>
         <div className="flex items-center space-x-2">
           <Button 
@@ -305,7 +307,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                     />
                     <Tooltip 
                       formatter={(value: number, name: string) => {
-                        if (name === 'Power') return [formatPower(value), name];
+                        if (name.includes('Power')) return [formatPower(value), name];
                         return [formatVoltage(value), name];
                       }}
                       labelFormatter={(label) => `Time: ${label}`}
@@ -321,7 +323,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                     <Line 
                       yAxisId="left"
                       dataKey="power"
-                      name="Power"
+                      name={panelType === "33kva" ? "33KVA Power" : "66KVA Power"}
                       stroke={panelType === "33kva" ? "#0040ff" : "#f59e0b"}
                       strokeWidth={3}
                       dot={false}
