@@ -80,128 +80,77 @@ const Home = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Panel 1 - 33KVA Card */}
-        <Link href="/wo-08">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-            <CardHeader className="bg-blue-50 pb-2">
-              <CardTitle className="flex items-center text-xl">
-                <ToggleLeft className="w-6 h-6 text-primary mr-2" />
-                Panel 1 - 33KVA
-              </CardTitle>
-              <CardDescription>
-                Power monitoring system for 33KVA panel
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Usage Card */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <Activity className="w-5 h-5 text-blue-600 mr-2" />
-                    <h3 className="font-semibold text-gray-800">Today's Usage</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-blue-700">
-                    {isLoading ? (
-                      <span className="text-gray-400">Loading...</span>
-                    ) : (
-                      <span>{((powerData?.data?.panel33?.totalUsage) || 0).toFixed(2)} kWh</span>
-                    )}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">Total power consumption</p>
+      {/* Total Power Summary Card */}
+      <div className="mb-6">
+        <Card className="shadow-md">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-amber-50 pb-2">
+            <CardTitle className="flex items-center text-xl">
+              <Activity className="w-6 h-6 text-blue-700 mr-2" />
+              Power Monitoring Summary
+            </CardTitle>
+            <CardDescription>
+              Combined power data from all monitoring panels
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Total Usage */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <Activity className="w-5 h-5 text-blue-700 mr-2" />
+                  <h3 className="font-semibold text-gray-800">Total Usage</h3>
                 </div>
-
-                {/* Highest Peak Card */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <Zap className="w-5 h-5 text-blue-600 mr-2" />
-                    <h3 className="font-semibold text-gray-800">Highest Peak</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-blue-700">
-                    {isLoading ? (
-                      <span className="text-gray-400">Loading...</span>
-                    ) : (
-                      <span>{(powerData?.data?.panel33?.peak || 0).toFixed(2)} kW</span>
-                    )}
-                  </p>
-                  <div className="flex items-center text-sm text-gray-600 mt-1">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {isLoading ? "Loading..." : formatTime(powerData?.data?.panel33?.peakTime || null)}
-                  </div>
-                </div>
+                <p className="text-2xl font-bold text-blue-700">
+                  {isLoading ? (
+                    <span className="text-gray-400">Loading...</span>
+                  ) : (
+                    <span>{(powerData?.data?.totalUsage || 0).toFixed(2)} kWh</span>
+                  )}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">All panels combined</p>
               </div>
 
-              <div className="flex justify-between items-center mt-4">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                  <span className="text-sm text-gray-600">Online</span>
+              {/* Highest Peak */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <Zap className="w-5 h-5 text-blue-700 mr-2" />
+                  <h3 className="font-semibold text-gray-800">Highest Peak</h3>
                 </div>
-                <span className="text-sm text-blue-600 hover:underline">View details →</span>
+                <p className="text-2xl font-bold text-blue-700">
+                  {isLoading ? (
+                    <span className="text-gray-400">Loading...</span>
+                  ) : (
+                    <span>{(powerData?.data?.totalPeak || 0).toFixed(2)} kW</span>
+                  )}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">Maximum combined power</p>
               </div>
-            </CardContent>
-          </Card>
-        </Link>
-
-        {/* Panel 2 - 66KVA Card */}
-        <Link href="/panel-66kva">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-            <CardHeader className="bg-amber-50 pb-2">
-              <CardTitle className="flex items-center text-xl">
-                <ToggleLeft className="w-6 h-6 text-amber-600 mr-2" />
-                Panel 2 - 66KVA
-              </CardTitle>
-              <CardDescription>
-                Power monitoring system for 66KVA panel
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Usage Card */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <Activity className="w-5 h-5 text-amber-600 mr-2" />
-                    <h3 className="font-semibold text-gray-800">Today's Usage</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-amber-700">
-                    {isLoading ? (
-                      <span className="text-gray-400">Loading...</span>
-                    ) : (
-                      <span>{(powerData?.data?.panel66?.totalUsage || 0).toFixed(2)} kWh</span>
-                    )}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">Total power consumption</p>
+              
+              {/* Last Updated */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <Clock className="w-5 h-5 text-blue-700 mr-2" />
+                  <h3 className="font-semibold text-gray-800">Last Updated</h3>
                 </div>
-
-                {/* Highest Peak Card */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <Zap className="w-5 h-5 text-amber-600 mr-2" />
-                    <h3 className="font-semibold text-gray-800">Highest Peak</h3>
-                  </div>
-                  <p className="text-2xl font-bold text-amber-700">
-                    {isLoading ? (
-                      <span className="text-gray-400">Loading...</span>
-                    ) : (
-                      <span>{(powerData?.data?.panel66?.peak || 0).toFixed(2)} kW</span>
-                    )}
-                  </p>
-                  <div className="flex items-center text-sm text-gray-600 mt-1">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {isLoading ? "Loading..." : formatTime(powerData?.data?.panel66?.peakTime || null)}
-                  </div>
-                </div>
+                <p className="text-2xl font-bold text-blue-700">
+                  {isSystemInfoLoading ? (
+                    <span className="text-gray-400">Loading...</span>
+                  ) : (
+                    <span>{formatTime(systemInfo?.timestamp || null)}</span>
+                  )}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">Real-time data monitoring</p>
               </div>
-
-              <div className="flex justify-between items-center mt-4">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                  <span className="text-sm text-gray-600">Online</span>
-                </div>
-                <span className="text-sm text-blue-600 hover:underline">View details →</span>
+            </div>
+            
+            <div className="flex justify-between items-center mt-4">
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                <span className="text-sm text-gray-600">All systems online</span>
               </div>
-            </CardContent>
-          </Card>
-        </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Power Charts Section */}
