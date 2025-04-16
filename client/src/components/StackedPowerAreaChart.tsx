@@ -114,7 +114,12 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: propSelectedDat
   
   // Handle date change and propagate it upwards if an onDateChange prop is provided
   const handleDateChange = (date: Date | undefined) => {
-    setLocalSelectedDate(date);
+    if (date) {
+      console.log("Date selected:", format(date, 'yyyy-MM-dd'));
+      setLocalSelectedDate(date);
+      // Close the popover automatically after selection
+      document.body.click(); // This will close the popover by clicking outside
+    }
   };
 
   // Create URL for power data with date parameter
@@ -383,6 +388,19 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: propSelectedDat
                   onSelect={handleDateChange}
                   initialFocus
                 />
+                <div className="p-3 border-t border-gray-100 flex justify-end">
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => {
+                      if (selectedDate) {
+                        document.body.click(); // Close popover
+                      }
+                    }}
+                  >
+                    Apply
+                  </Button>
+                </div>
               </PopoverContent>
             </Popover>
             
