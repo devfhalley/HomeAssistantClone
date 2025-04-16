@@ -492,8 +492,16 @@ const Panel66KVA = () => {
           </div>
         </div>
 
-        {/* Electrical Parameters Charts */}
+        {/* Advanced Power & Voltage Analysis */}
         <div>
+          <h2 className="text-lg font-semibold my-3">Power & Voltage Analysis</h2>
+          <div className="mb-4">
+            <DualAxisPowerChart
+              title="66KVA Panel Power & Voltage Analysis"
+              panelType="66kva"
+            />
+          </div>
+          
           <h2 className="text-lg font-semibold my-3">Electrical Parameters</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <ChartCard 

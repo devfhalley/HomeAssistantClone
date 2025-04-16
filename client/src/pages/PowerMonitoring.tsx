@@ -3,6 +3,7 @@ import HomeAssistant from "@/components/HomeAssistant";
 import PowerMonitorCard from "@/components/PowerMonitorCard";
 import ChartCard from "@/components/ChartCard";
 import TotalPowerChart from "@/components/TotalPowerChart";
+import DualAxisPowerChart from "@/components/DualAxisPowerChart";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { type ChartData } from "@shared/schema";
@@ -305,8 +306,16 @@ const PowerMonitoring = () => {
           </div>
         </div>
 
-        {/* Electrical Parameters Charts */}
+        {/* Advanced Power & Voltage Analysis */}
         <div>
+          <h2 className="text-lg font-semibold my-3">Power & Voltage Analysis</h2>
+          <div className="mb-4">
+            <DualAxisPowerChart
+              title="33KVA Panel Power & Voltage Analysis"
+              panelType="33kva"
+            />
+          </div>
+          
           <h2 className="text-lg font-semibold my-3">Electrical Parameters</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <ChartCard 
