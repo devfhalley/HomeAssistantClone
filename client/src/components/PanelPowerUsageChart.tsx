@@ -36,9 +36,10 @@ interface PowerDataResponse {
 
 interface PanelPowerUsageChartProps {
   title: string;
+  panelType?: "33kva" | "66kva";  // Added panel type parameter
 }
 
-const PanelPowerUsageChart = ({ title }: PanelPowerUsageChartProps) => {
+const PanelPowerUsageChart = ({ title, panelType }: PanelPowerUsageChartProps) => {
   const [date, setDate] = useState<Date>(new Date());
   const [showCalendar, setShowCalendar] = useState(false);
 
@@ -81,7 +82,13 @@ const PanelPowerUsageChart = ({ title }: PanelPowerUsageChartProps) => {
   return (
     <Card className="w-full overflow-visible">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg font-medium">{title}</CardTitle>
+        <CardTitle className="text-lg font-medium">
+          {panelType === "33kva" 
+            ? "33KVA Panel Power Usage" 
+            : panelType === "66kva" 
+              ? "66KVA Panel Power Usage" 
+              : title}
+        </CardTitle>
         <div className="flex items-center space-x-2">
           {isLoading && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
           <Popover open={showCalendar} onOpenChange={setShowCalendar}>
@@ -138,24 +145,28 @@ const PanelPowerUsageChart = ({ title }: PanelPowerUsageChartProps) => {
                   labelFormatter={(label) => `Time: ${label}`}
                 />
                 <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="panel33Power"
-                  name="33KVA Panel"
-                  stroke="#3b82f6" 
-                  strokeWidth={2}
-                  dot={{ r: 1 }}
-                  activeDot={{ r: 5 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="panel66Power"
-                  name="66KVA Panel"
-                  stroke="#f59e0b" 
-                  strokeWidth={2}
-                  dot={{ r: 1 }}
-                  activeDot={{ r: 5 }}
-                />
+                {(!panelType || panelType === "33kva") && (
+                  <Line
+                    type="monotone"
+                    dataKey="panel33Power"
+                    name="33KVA Panel"
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    dot={{ r: 1 }}
+                    activeDot={{ r: 5 }}
+                  />
+                )}
+                {(!panelType || panelType === "66kva") && (
+                  <Line
+                    type="monotone"
+                    dataKey="panel66Power"
+                    name="66KVA Panel"
+                    stroke="#f59e0b" 
+                    strokeWidth={2}
+                    dot={{ r: 1 }}
+                    activeDot={{ r: 5 }}
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           )}

@@ -206,10 +206,20 @@ const Home = () => {
       <div className="mb-6">
         <h2 className="text-xl font-bold mb-4">Power Monitoring Charts</h2>
         <div className="grid grid-cols-1 gap-6 mb-6">
-          {/* Combined Panel Power Usage Chart */}
-          <PanelPowerUsageChart 
-            title="Hourly Power Usage Comparison (33KVA vs 66KVA)" 
-          />
+          {/* Separate Panel Power Usage Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 33KVA Power Usage Chart */}
+            <PanelPowerUsageChart 
+              title="33KVA Panel - Hourly Power Usage" 
+              panelType="33kva"
+            />
+            
+            {/* 66KVA Power Usage Chart */}
+            <PanelPowerUsageChart 
+              title="66KVA Panel - Hourly Power Usage" 
+              panelType="66kva"
+            />
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 33KVA Panel Voltage Chart */}
