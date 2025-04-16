@@ -55,6 +55,7 @@ interface StackedPowerAreaChartProps {
   title: string;
   panelType?: "33kva" | "66kva";  // Optional panel type parameter
   selectedDate?: Date;
+  additionalQueryParams?: Record<string, string>; // Optional query parameters for API calls
 }
 
 // Custom tooltip component
@@ -85,7 +86,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   return null;
 };
 
-const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerAreaChartProps) => {
+const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQueryParams = {} }: StackedPowerAreaChartProps) => {
   const [showQueries, setShowQueries] = useState(false);
 
   // Create URL for power data with date parameter
@@ -99,13 +100,29 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
     return baseUrl;
   };
   
-  // Create URL for voltage data
+  // Create URL for voltage data with panel type and date parameters
   const createVoltageDataUrl = (phase: string, specificDate?: Date): string => {
     const baseUrl = `/api/chart-data/voltage/${phase}`;
+    
+    // Start building query params
+    const queryParams: string[] = [];
+    
+    // Add date param if provided
     if (specificDate) {
       const dateParam = format(specificDate, 'yyyy-MM-dd');
-      return `${baseUrl}?date=${dateParam}`;
+      queryParams.push(`date=${dateParam}`);
     }
+    
+    // Add additional query params (like panel=33kva)
+    Object.entries(additionalQueryParams).forEach(([key, value]) => {
+      queryParams.push(`${key}=${value}`);
+    });
+    
+    // Create final URL with query params
+    if (queryParams.length > 0) {
+      return `${baseUrl}?${queryParams.join('&')}`;
+    }
+    
     return baseUrl;
   };
 
@@ -130,7 +147,11 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
   
   // Fetch voltage data for R phase
   const { data: voltageRData, isLoading: isVoltageRLoading } = useQuery<VoltageDataResponse>({
-    queryKey: ['/api/chart-data/voltage/R', selectedDate ? format(selectedDate, 'yyyy-MM-dd') : 'current'],
+    queryKey: [
+      '/api/chart-data/voltage/R', 
+      selectedDate ? format(selectedDate, 'yyyy-MM-dd') : 'current',
+      Object.keys(additionalQueryParams).length > 0 ? JSON.stringify(additionalQueryParams) : 'default'
+    ],
     queryFn: async () => {
       const url = createVoltageDataUrl('R', selectedDate);
       const response = await fetch(url);
@@ -147,7 +168,11 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
   
   // Fetch voltage data for S phase
   const { data: voltageSData, isLoading: isVoltageSLoading } = useQuery<VoltageDataResponse>({
-    queryKey: ['/api/chart-data/voltage/S', selectedDate ? format(selectedDate, 'yyyy-MM-dd') : 'current'],
+    queryKey: [
+      '/api/chart-data/voltage/S', 
+      selectedDate ? format(selectedDate, 'yyyy-MM-dd') : 'current',
+      Object.keys(additionalQueryParams).length > 0 ? JSON.stringify(additionalQueryParams) : 'default'
+    ],
     queryFn: async () => {
       const url = createVoltageDataUrl('S', selectedDate);
       const response = await fetch(url);
@@ -164,7 +189,11 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
   
   // Fetch voltage data for T phase
   const { data: voltageTData, isLoading: isVoltageTLoading } = useQuery<VoltageDataResponse>({
-    queryKey: ['/api/chart-data/voltage/T', selectedDate ? format(selectedDate, 'yyyy-MM-dd') : 'current'],
+    queryKey: [
+      '/api/chart-data/voltage/T', 
+      selectedDate ? format(selectedDate, 'yyyy-MM-dd') : 'current',
+      Object.keys(additionalQueryParams).length > 0 ? JSON.stringify(additionalQueryParams) : 'default'
+    ],
     queryFn: async () => {
       const url = createVoltageDataUrl('T', selectedDate);
       const response = await fetch(url);
