@@ -205,22 +205,23 @@ const Home = () => {
       <div className="mb-6">
         <h2 className="text-xl font-bold mb-4">Power Monitoring Charts</h2>
         <div className="grid grid-cols-1 gap-6 mb-6">
-          {/* Multi-Axis Power and Voltage Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* 33KVA Power & Voltage Analysis */}
+          {/* 33KVA Power & Voltage Analysis - First Row */}
+          <div className="w-full">
+            <h3 className="text-lg font-semibold mb-3">33KVA Panel</h3>
             <DualAxisPowerChart
               title="33KVA Panel Analysis"
               panelType="33kva"
             />
-            
-            {/* 66KVA Power & Voltage Analysis */}
+          </div>
+          
+          {/* 66KVA Power & Voltage Analysis - Second Row */}
+          <div className="w-full">
+            <h3 className="text-lg font-semibold mb-3">66KVA Panel</h3>
             <DualAxisPowerChart
               title="66KVA Panel Analysis"
               panelType="66kva"
             />
           </div>
-          
-
         </div>
       </div>
 
