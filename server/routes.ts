@@ -519,13 +519,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/chart-data/:dataType/:phase", async (req: Request, res: Response) => {
     try {
       const { dataType, phase } = req.params;
-      const { date } = req.query;
+      const { date, panel } = req.query;
+      
+      // Determine which panel to use (default to 33kva if not specified)
+      const usePanel66kva = panel === "66kva";
+      console.log(`Chart data request received for ${dataType}/${phase}, panel: ${usePanel66kva ? '66KVA' : '33KVA'}`);
       
       // Create a specific date object if date parameter is provided
       let specificDate: Date | undefined = undefined;
       if (date) {
         specificDate = new Date(date as string);
-        console.log(`Chart data request received for ${dataType}/${phase} with date: ${date}`);
+        console.log(`Chart data request has date parameter: ${date}`);
         console.log(`Parsed date: ${specificDate.toISOString()}`);
       }
       

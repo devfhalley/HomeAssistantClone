@@ -5,6 +5,8 @@ import { ToggleLeft, PieChart, Activity, BarChart3, Zap, Clock, Server, Database
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import PanelPowerChart from "@/components/PanelPowerChart";
+import PanelPowerUsageChart from "@/components/PanelPowerUsageChart";
 
 // Type for panel data
 interface PanelData {
@@ -198,6 +200,33 @@ const Home = () => {
             </CardContent>
           </Card>
         </Link>
+      </div>
+
+      {/* Power Charts Section */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold mb-4">Power Monitoring Charts</h2>
+        <div className="grid grid-cols-1 gap-6 mb-6">
+          {/* Combined Panel Power Usage Chart */}
+          <PanelPowerUsageChart 
+            title="Hourly Power Usage Comparison (33KVA vs 66KVA)" 
+          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 33KVA Panel Voltage Chart */}
+            <PanelPowerChart 
+              title="33KVA Panel - Phase Voltage" 
+              panelType="33kva"
+              color="#3b82f6" 
+            />
+            
+            {/* 66KVA Panel Voltage Chart */}
+            <PanelPowerChart 
+              title="66KVA Panel - Phase Voltage" 
+              panelType="66kva"
+              color="#f59e0b" 
+            />
+          </div>
+        </div>
       </div>
 
       {/* System Status */}
