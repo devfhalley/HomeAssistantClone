@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import {
@@ -10,7 +10,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  TooltipProps
+  TooltipProps,
+  Line,
+  ComposedChart
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronDown, ChevronUp, Info } from "lucide-react";
@@ -21,6 +23,9 @@ interface PowerData {
   panel33Power?: number;
   panel66Power?: number;
   totalPower: number;
+  voltR?: number;  // R phase voltage
+  voltS?: number;  // S phase voltage
+  voltT?: number;  // T phase voltage
 }
 
 interface SqlQuery {
@@ -30,6 +35,19 @@ interface SqlQuery {
 
 interface PowerDataResponse {
   data: PowerData[];
+  sqlQueries: SqlQuery[];
+}
+
+// Interface for voltage data that we'll fetch separately
+interface VoltageData {
+  time: string;
+  phase: string;
+  dataType: string;
+  value: number;
+}
+
+interface VoltageDataResponse {
+  data: VoltageData[];
   sqlQueries: SqlQuery[];
 }
 
@@ -43,13 +61,24 @@ interface StackedPowerAreaChartProps {
 const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     return (
-      <div className="custom-tooltip bg-white p-3 border border-gray-200 shadow-lg rounded-md">
+      <div className="custom-tooltip bg-white p-3 border border-gray-200 shadow-lg rounded-md max-w-xs">
         <p className="label font-semibold">{`Time: ${label}`}</p>
-        {payload.map((entry, index) => (
-          <p key={`item-${index}`} style={{ color: entry.color }}>
-            {`${entry.name}: ${Number(entry.value).toFixed(2)} kW`}
-          </p>
-        ))}
+        <div className="mt-1 border-t pt-1">
+          <p className="font-medium text-sm">Power</p>
+          {payload.filter(entry => entry.name && ['33KVA Panel', '66KVA Panel'].includes(entry.name)).map((entry, index) => (
+            <p key={`power-${index}`} style={{ color: entry.color }} className="ml-2">
+              {`${entry.name}: ${Number(entry.value).toFixed(2)} kW`}
+            </p>
+          ))}
+        </div>
+        <div className="mt-1 border-t pt-1">
+          <p className="font-medium text-sm">Voltage</p>
+          {payload.filter(entry => entry.name && ['R Phase', 'S Phase', 'T Phase'].includes(entry.name)).map((entry, index) => (
+            <p key={`voltage-${index}`} style={{ color: entry.color }} className="ml-2">
+              {`${entry.name}: ${Number(entry.value).toFixed(2)} V`}
+            </p>
+          ))}
+        </div>
       </div>
     );
   }
@@ -69,9 +98,19 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
     }
     return baseUrl;
   };
+  
+  // Create URL for voltage data
+  const createVoltageDataUrl = (phase: string, specificDate?: Date): string => {
+    const baseUrl = `/api/chart-data/voltage/${phase}`;
+    if (specificDate) {
+      const dateParam = format(specificDate, 'yyyy-MM-dd');
+      return `${baseUrl}?date=${dateParam}`;
+    }
+    return baseUrl;
+  };
 
   // Fetch power data with selected date
-  const { data: powerData, isLoading } = useQuery<PowerDataResponse>({
+  const { data: powerData, isLoading: isPowerLoading } = useQuery<PowerDataResponse>({
     queryKey: ['/api/total-power', selectedDate ? format(selectedDate, 'yyyy-MM-dd') : 'current'],
     queryFn: async () => {
       const url = getTotalPowerUrl(selectedDate);
@@ -81,13 +120,67 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
         throw new Error('Failed to fetch power data');
       }
       const data = await response.json();
-      console.log("Data received:", data.data?.length || 0, "points");
+      console.log("Power data received:", data.data?.length || 0, "points");
       return data;
     },
     refetchInterval: 10000, // Refresh every 10 seconds
     refetchIntervalInBackground: true,
     staleTime: 0, // Consider data immediately stale to force refresh
   });
+  
+  // Fetch voltage data for R phase
+  const { data: voltageRData, isLoading: isVoltageRLoading } = useQuery<VoltageDataResponse>({
+    queryKey: ['/api/chart-data/voltage/R', selectedDate ? format(selectedDate, 'yyyy-MM-dd') : 'current'],
+    queryFn: async () => {
+      const url = createVoltageDataUrl('R', selectedDate);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch R phase voltage data');
+      }
+      const data = await response.json();
+      console.log("Voltage R data received:", data.data?.length || 0, "points");
+      return data;
+    },
+    refetchInterval: 10000,
+    refetchIntervalInBackground: true,
+  });
+  
+  // Fetch voltage data for S phase
+  const { data: voltageSData, isLoading: isVoltageSLoading } = useQuery<VoltageDataResponse>({
+    queryKey: ['/api/chart-data/voltage/S', selectedDate ? format(selectedDate, 'yyyy-MM-dd') : 'current'],
+    queryFn: async () => {
+      const url = createVoltageDataUrl('S', selectedDate);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch S phase voltage data');
+      }
+      const data = await response.json();
+      console.log("Voltage S data received:", data.data?.length || 0, "points");
+      return data;
+    },
+    refetchInterval: 10000,
+    refetchIntervalInBackground: true,
+  });
+  
+  // Fetch voltage data for T phase
+  const { data: voltageTData, isLoading: isVoltageTLoading } = useQuery<VoltageDataResponse>({
+    queryKey: ['/api/chart-data/voltage/T', selectedDate ? format(selectedDate, 'yyyy-MM-dd') : 'current'],
+    queryFn: async () => {
+      const url = createVoltageDataUrl('T', selectedDate);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch T phase voltage data');
+      }
+      const data = await response.json();
+      console.log("Voltage T data received:", data.data?.length || 0, "points");
+      return data;
+    },
+    refetchInterval: 10000,
+    refetchIntervalInBackground: true,
+  });
+  
+  // Combine loading states
+  const isLoading = isPowerLoading || isVoltageRLoading || isVoltageSLoading || isVoltageTLoading;
 
   // Log data for debugging
   useEffect(() => {
@@ -106,8 +199,48 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
     }
   }, [powerData, selectedDate]);
 
-  // Prepare data for specific panel type if requested
-  const chartData = powerData?.data || [];
+  // Combine power and voltage data
+  const combinedData = useMemo(() => {
+    if (!powerData?.data) return [];
+    
+    return powerData.data.map(point => {
+      // Find matching voltage data points by time
+      const timeStr = point.time;
+      
+      // Create a combined data point with voltage information
+      let voltR = 0;
+      let voltS = 0;
+      let voltT = 0;
+      
+      // Find matching R phase voltage
+      if (voltageRData?.data) {
+        const rPoint = voltageRData.data.find(v => v.time === timeStr);
+        if (rPoint) voltR = rPoint.value;
+      }
+      
+      // Find matching S phase voltage
+      if (voltageSData?.data) {
+        const sPoint = voltageSData.data.find(v => v.time === timeStr);
+        if (sPoint) voltS = sPoint.value;
+      }
+      
+      // Find matching T phase voltage
+      if (voltageTData?.data) {
+        const tPoint = voltageTData.data.find(v => v.time === timeStr);
+        if (tPoint) voltT = tPoint.value;
+      }
+      
+      return {
+        ...point,
+        voltR,
+        voltS,
+        voltT
+      };
+    });
+  }, [powerData?.data, voltageRData?.data, voltageSData?.data, voltageTData?.data]);
+
+  // Prepare data for chart
+  const chartData = combinedData;
 
   const formatYAxis = (value: number) => {
     return `${value} kW`;
@@ -142,7 +275,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
           <>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
+                <ComposedChart
                   data={chartData}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
@@ -152,15 +285,32 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
                     tickFormatter={formatXAxis}
                     tick={{ fontSize: 12 }}
                   />
+                  {/* Primary Y axis for power data (kW) */}
                   <YAxis 
+                    yAxisId="left"
                     tickFormatter={formatYAxis}
                     tick={{ fontSize: 12 }}
                     width={60}
+                    domain={[0, 'auto']}
                   />
+                  
+                  {/* Secondary Y axis for voltage data (V) */}
+                  <YAxis 
+                    yAxisId="right" 
+                    orientation="right"
+                    domain={[215, 223]} 
+                    tick={{ fontSize: 12 }}
+                    width={60}
+                    tickFormatter={(value) => `${value}V`}
+                  />
+                  
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
+                  
+                  {/* Power data as stacked areas */}
                   {panelType !== "66kva" && (
                     <Area 
+                      yAxisId="left"
                       type="monotone" 
                       dataKey="panel33Power" 
                       name="33KVA Panel"
@@ -172,6 +322,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
                   )}
                   {panelType !== "33kva" && (
                     <Area 
+                      yAxisId="left"
                       type="monotone" 
                       dataKey="panel66Power" 
                       name="66KVA Panel"
@@ -181,7 +332,36 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate }: StackedPowerA
                       fillOpacity={0.6}
                     />
                   )}
-                </AreaChart>
+                  
+                  {/* Voltage data as lines */}
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="voltR"
+                    name="R Phase"
+                    stroke="#ef4444"
+                    dot={false}
+                    strokeWidth={2}
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="voltS"
+                    name="S Phase"
+                    stroke="#10b981"
+                    dot={false}
+                    strokeWidth={2}
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="voltT"
+                    name="T Phase"
+                    stroke="#8b5cf6"
+                    dot={false}
+                    strokeWidth={2}
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
             {/* SQL Queries Display */}
