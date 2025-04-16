@@ -388,50 +388,55 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: propSelectedDat
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl">{title}</CardTitle>
           <div className="flex gap-2 items-center">
-            {/* Date Picker - Simplified */}
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                className="h-9 border-dashed"
-                onClick={() => {
-                  // Go to previous day
-                  if (selectedDate) {
-                    const prevDay = new Date(selectedDate);
-                    prevDay.setDate(prevDay.getDate() - 1);
-                    setLocalSelectedDate(prevDay);
-                    // We need to update state first and then apply
-                    setTimeout(() => applySelectedDate(), 0);
-                  }
-                }}
-              >
-                ◀
-              </Button>
-              
-              <div className="text-sm font-medium">
+            {/* Ultra Simple Date Picker */}
+            <div className="flex flex-col items-center space-y-2 bg-white p-2 rounded-md shadow-sm">
+              <div className="text-sm font-semibold mb-1">
                 {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "Today"}
               </div>
-              
-              <Button
-                variant="outline"
-                className="h-9 border-dashed"
-                onClick={() => {
-                  // Go to next day, but not beyond today
-                  if (selectedDate) {
-                    const nextDay = new Date(selectedDate);
-                    nextDay.setDate(nextDay.getDate() + 1);
+              <div className="flex space-x-2">
+                <a 
+                  href="#" 
+                  className="px-4 py-1 bg-blue-100 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-200"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    setLocalSelectedDate(yesterday);
                     
-                    // Don't go beyond today
+                    // Force data refresh
+                    const dateStr = format(yesterday, 'yyyy-MM-dd');
+                    fetch(`/api/total-power?date=${dateStr}`)
+                      .then(res => res.json())
+                      .then(() => {
+                        // Force refetch all the queries
+                        window.location.reload();
+                      });
+                  }}
+                >
+                  Yesterday
+                </a>
+                
+                <a 
+                  href="#" 
+                  className="px-4 py-1 bg-blue-100 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-200"
+                  onClick={(e) => {
+                    e.preventDefault();
                     const today = new Date();
-                    if (nextDay <= today) {
-                      setLocalSelectedDate(nextDay);
-                      // We need to update state first and then apply
-                      setTimeout(() => applySelectedDate(), 0);
-                    }
-                  }
-                }}
-              >
-                ▶
-              </Button>
+                    setLocalSelectedDate(today);
+                    
+                    // Force data refresh
+                    const dateStr = format(today, 'yyyy-MM-dd');
+                    fetch(`/api/total-power?date=${dateStr}`)
+                      .then(res => res.json())
+                      .then(() => {
+                        // Force refetch all the queries
+                        window.location.reload();
+                      });
+                  }}
+                >
+                  Today
+                </a>
+              </div>
             </div>
             
             {/* SQL Query Toggle */}
