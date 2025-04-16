@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
-import { queryClient } from '@/lib/queryClient';
 import {
   AreaChart,
   Area,
@@ -17,10 +16,7 @@ import {
   ComposedChart
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { ChevronDown, ChevronUp, Info, CalendarIcon } from "lucide-react";
+import { ChevronDown, ChevronUp, Info } from "lucide-react";
 import SqlQueryDisplay from './SqlQueryDisplay';
 
 interface PowerData {
@@ -106,43 +102,8 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   return null;
 };
 
-const StackedPowerAreaChart = ({ title, panelType, selectedDate: propSelectedDate, additionalQueryParams = {} }: StackedPowerAreaChartProps) => {
+const StackedPowerAreaChart = ({ title, panelType, selectedDate, additionalQueryParams = {} }: StackedPowerAreaChartProps) => {
   const [showQueries, setShowQueries] = useState(false);
-  const [localSelectedDate, setLocalSelectedDate] = useState<Date | undefined>(propSelectedDate || new Date());
-  
-  // Use either the prop date or local state
-  const selectedDate = propSelectedDate || localSelectedDate;
-  
-  // Handle date change and propagate it upwards if an onDateChange prop is provided
-  const handleDateChange = (date: Date | undefined) => {
-    if (date) {
-      console.log("Date selected:", format(date, 'yyyy-MM-dd'));
-      setLocalSelectedDate(date);
-      // We don't close the popover here, so user can verify selection and click Apply
-    }
-  };
-  
-  // Function to apply the selected date
-  const applySelectedDate = () => {
-    if (selectedDate) {
-      console.log("Applying date:", format(selectedDate, 'yyyy-MM-dd'));
-      
-      // Force a state update to trigger refetch
-      const dateQuery = format(selectedDate, 'yyyy-MM-dd');
-      
-      // Directly fetch data with the current date
-      fetch(`/api/total-power?date=${dateQuery}`)
-        .then(res => res.json())
-        .then(data => {
-          console.log("Refreshed power data:", data.data?.length || 0, "points");
-          // After successful fetch, invalidate the queries to trigger UI refresh
-          queryClient.invalidateQueries({ queryKey: ['/api/total-power'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/chart-data/voltage/R'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/chart-data/voltage/S'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/chart-data/voltage/T'] });
-        });
-    }
-  };
 
   // Create URL for power data with date parameter
   const getTotalPowerUrl = (specificDate?: Date): string => {
@@ -387,31 +348,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: propSelectedDat
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl">{title}</CardTitle>
-          <div className="flex gap-2 items-center">
-            {/* Ultra Simple HTML Date Links - No JavaScript */}
-            <div className="flex flex-col items-center space-y-2 bg-white p-2 rounded-md shadow-sm">
-              <div className="text-sm font-semibold mb-1">
-                Date Selection
-              </div>
-              <div className="flex space-x-2">
-                {/* Pure HTML links that will pass date as URL parameter */}
-                <a 
-                  href="/?date=2025-04-15" 
-                  className="px-4 py-1 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200 border border-red-300"
-                >
-                  Yesterday
-                </a>
-                
-                <a 
-                  href="/?date=2025-04-16" 
-                  className="px-4 py-1 bg-blue-100 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-200 border border-blue-300"
-                >
-                  Today
-                </a>
-              </div>
-            </div>
-            
-            {/* SQL Query Toggle */}
+          <div className="flex gap-2">
             <button 
               onClick={() => setShowQueries(!showQueries)}
               className="text-xs px-2 py-1 rounded text-gray-600 hover:bg-gray-100 flex items-center">
