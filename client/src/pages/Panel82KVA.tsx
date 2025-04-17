@@ -71,6 +71,9 @@ const Panel82KVA = () => {
     console.log("Using selected date:", format(selectedDate, "yyyy-MM-dd"), "for 82KVA panel");
   }, [selectedDate]);
   
+  // State for SQL queries
+  const [sqlQueries, setSqlQueries] = useState<{ name: string; sql: string; }[]>([]);
+  
   // Fetch phase data with automatic refetching every 10 seconds
   const { 
     data: phaseDataArray, 
@@ -78,27 +81,28 @@ const Panel82KVA = () => {
     isFetching: isFetchingPhaseData 
   } = useQuery({
     queryKey: ['/api/phase-data', selectedDate?.toISOString()],
-    queryFn: () => {
-      const dateParam = selectedDate ? `?date=${selectedDate.toISOString()}` : '';
-      return apiRequest<PhaseData[]>("GET", `/api/phase-data${dateParam}`);
+    queryFn: async () => {
+      // Add panel=66kva to specify which panel to use (still using 66kva in the database)
+      const response = await apiRequest<PhaseData[]>(
+        "GET", 
+        `/api/phase-data?panel=66kva${selectedDate ? `&date=${selectedDate.toISOString()}` : ''}`
+      );
+      return response;
     },
     refetchInterval: 10000, // Refetch every 10 seconds
-    refetchIntervalInBackground: true // Continue refetching even when tab is not active
+    refetchIntervalInBackground: true
   });
-
-  // State to store SQL queries
-  const [sqlQueries, setSqlQueries] = useState<{ name: string; sql: string; }[]>([]);
   
-  // Create interfaces for the new response formats
+  // Create an interface for the response that includes SQL queries
   interface ChartDataResponse {
     data: ChartData[];
     sqlQueries: { name: string; sql: string; }[];
   }
   
-  // Fetch chart data for each type and phase
+  // Voltage Data Queries - with automatic refetching every 10 seconds
   const { 
     data: voltageDataRResponse,
-    isFetching: isFetchingVoltageR
+    isFetching: isFetchingVoltageR 
   } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'R', selectedDate?.toISOString()],
     queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('voltage', 'R', selectedDate)),
@@ -106,10 +110,8 @@ const Panel82KVA = () => {
     refetchIntervalInBackground: true
   });
   
-  // Extract the chart data from the response
   const voltageDataR = voltageDataRResponse?.data;
   
-  // Collect SQL queries
   useEffect(() => {
     if (voltageDataRResponse?.sqlQueries) {
       setSqlQueries(prev => [...prev, ...voltageDataRResponse.sqlQueries]);
@@ -118,7 +120,7 @@ const Panel82KVA = () => {
 
   const { 
     data: voltageDataSResponse,
-    isFetching: isFetchingVoltageS
+    isFetching: isFetchingVoltageS 
   } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'S', selectedDate?.toISOString()],
     queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('voltage', 'S', selectedDate)),
@@ -136,7 +138,7 @@ const Panel82KVA = () => {
 
   const { 
     data: voltageDataTResponse,
-    isFetching: isFetchingVoltageT
+    isFetching: isFetchingVoltageT 
   } = useQuery({
     queryKey: ['/api/chart-data', 'voltage', 'T', selectedDate?.toISOString()],
     queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('voltage', 'T', selectedDate)),
@@ -151,10 +153,11 @@ const Panel82KVA = () => {
       setSqlQueries(prev => [...prev, ...voltageDataTResponse.sqlQueries]);
     }
   }, [voltageDataTResponse]);
-
+  
+  // Current Data Queries
   const { 
     data: currentDataRResponse,
-    isFetching: isFetchingCurrentR
+    isFetching: isFetchingCurrentR 
   } = useQuery({
     queryKey: ['/api/chart-data', 'current', 'R', selectedDate?.toISOString()],
     queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('current', 'R', selectedDate)),
@@ -169,7 +172,7 @@ const Panel82KVA = () => {
       setSqlQueries(prev => [...prev, ...currentDataRResponse.sqlQueries]);
     }
   }, [currentDataRResponse]);
-
+  
   const { 
     data: currentDataSResponse,
     isFetching: isFetchingCurrentS 
@@ -187,7 +190,7 @@ const Panel82KVA = () => {
       setSqlQueries(prev => [...prev, ...currentDataSResponse.sqlQueries]);
     }
   }, [currentDataSResponse]);
-
+  
   const { 
     data: currentDataTResponse,
     isFetching: isFetchingCurrentT 
@@ -298,7 +301,7 @@ const Panel82KVA = () => {
 
   const { 
     data: frequencyDataTResponse,
-    isFetching: isFetchingFrequencyT 
+    isFetching: isFetchingFrequencyT
   } = useQuery({
     queryKey: ['/api/chart-data', 'frequency', 'T', selectedDate?.toISOString()],
     queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('frequency', 'T', selectedDate)),
@@ -316,7 +319,7 @@ const Panel82KVA = () => {
   
   const { 
     data: pfDataRResponse,
-    isFetching: isFetchingPfR 
+    isFetching: isFetchingPfR
   } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'R', selectedDate?.toISOString()],
     queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('pf', 'R', selectedDate)),
@@ -331,10 +334,10 @@ const Panel82KVA = () => {
       setSqlQueries(prev => [...prev, ...pfDataRResponse.sqlQueries]);
     }
   }, [pfDataRResponse]);
-
+  
   const { 
     data: pfDataSResponse,
-    isFetching: isFetchingPfS 
+    isFetching: isFetchingPfS
   } = useQuery({
     queryKey: ['/api/chart-data', 'pf', 'S', selectedDate?.toISOString()],
     queryFn: () => apiRequest<ChartDataResponse>("GET", createChartDataUrl('pf', 'S', selectedDate)),
@@ -458,49 +461,62 @@ const Panel82KVA = () => {
                 <PowerMonitorCard 
                   title="Panel 2 82KVA - Phase R" 
                   phase="R"
-                  voltage={processedPhaseData.R.voltage}
-                  current={processedPhaseData.R.current}
-                  power={processedPhaseData.R.power}
-                  energy={processedPhaseData.R.energy}
-                  frequency={processedPhaseData.R.frequency}
-                  pf={processedPhaseData.R.pf}
+                  voltage={processedPhaseData.R?.voltage || 0}
+                  current={processedPhaseData.R?.current || 0}
+                  power={processedPhaseData.R?.power || 0}
+                  energy={processedPhaseData.R?.energy || 0}
+                  frequency={processedPhaseData.R?.frequency || 0}
+                  pf={processedPhaseData.R?.pf || 0}
                 />
+                
                 <PowerMonitorCard 
                   title="Panel 2 82KVA - Phase S" 
                   phase="S"
-                  voltage={processedPhaseData.S.voltage}
-                  current={processedPhaseData.S.current}
-                  power={processedPhaseData.S.power}
-                  energy={processedPhaseData.S.energy}
-                  frequency={processedPhaseData.S.frequency}
-                  pf={processedPhaseData.S.pf}
+                  voltage={processedPhaseData.S?.voltage || 0}
+                  current={processedPhaseData.S?.current || 0}
+                  power={processedPhaseData.S?.power || 0}
+                  energy={processedPhaseData.S?.energy || 0}
+                  frequency={processedPhaseData.S?.frequency || 0}
+                  pf={processedPhaseData.S?.pf || 0}
                 />
+                
                 <PowerMonitorCard 
                   title="Panel 2 82KVA - Phase T" 
                   phase="T"
-                  voltage={processedPhaseData.T.voltage}
-                  current={processedPhaseData.T.current}
-                  power={processedPhaseData.T.power}
-                  energy={processedPhaseData.T.energy}
-                  frequency={processedPhaseData.T.frequency}
-                  pf={processedPhaseData.T.pf}
+                  voltage={processedPhaseData.T?.voltage || 0}
+                  current={processedPhaseData.T?.current || 0}
+                  power={processedPhaseData.T?.power || 0}
+                  energy={processedPhaseData.T?.energy || 0}
+                  frequency={processedPhaseData.T?.frequency || 0}
+                  pf={processedPhaseData.T?.pf || 0}
                 />
               </>
             )}
           </div>
         </div>
-        
-        {/* Power & Voltage Combined Chart */}
+
+        {/* Advanced Power & Voltage Analysis */}
         <div>
-          <h2 className="text-lg font-semibold mb-3">Power & Voltage Charts</h2>
-          <div className="grid grid-cols-1 gap-4">
-            <DualAxisPowerChart title="82KVA Panel - Power & Voltage" panelType="82kva" />
+          <h2 className="text-lg font-semibold my-3">Power & Voltage Analysis</h2>
+          <div className="mb-4">
+            <DualAxisPowerChart
+              title="82KVA Panel Power & Voltage Analysis"
+              panelType="82kva"
+            />
           </div>
-        </div>
-        
-        {/* Chart Cards */}
-        <div>
-          <h2 className="text-lg font-semibold mb-3">Power Metrics</h2>
+          
+          <h2 className="text-lg font-semibold my-3">Electrical Parameters</h2>
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
+            <ChartCard 
+              title="Panel 2 82KVA - Current" 
+              phaseRData={processChartData(currentDataR)}
+              phaseSData={processChartData(currentDataS)}
+              phaseTData={processChartData(currentDataT)}
+              yAxisDomain={[0, 100]}
+              unit="A"
+              selectedDate={selectedDate}
+            />
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <ChartCard 

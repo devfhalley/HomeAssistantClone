@@ -17,7 +17,7 @@ interface PanelData {
 // Type for peak power data
 interface PeakPowerData {
   panel33: PanelData;
-  panel66: PanelData;
+  panel66: PanelData; // Still named panel66 in the API for database compatibility
   totalPeak: number;
   totalUsage: number;
 }
@@ -103,20 +103,20 @@ const Home = () => {
           </div>
         </div>
 
-        {/* 66KVA Panel Section */}
+        {/* 82KVA Panel Section */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold mb-3 text-gray-800">
             <span className="flex items-center">
               <Activity className="w-5 h-5 mr-2 text-amber-600" />
-              Panel 2 - 66KVA Power Usage
+              Panel 2 - 82KVA Power Usage
             </span>
           </h3>
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
             <StackedPowerAreaChart
-              title="66KVA Panel Power Usage"
+              title="82KVA Panel Power Usage"
               panelType="66kva"
               selectedDate={selectedDate}
-              // Pass panel=66kva to the voltage data API to fetch from the correct table
+              // Still using panel=66kva for database compatibility
               additionalQueryParams={{ panel: "66kva" }}
             />
           </div>
