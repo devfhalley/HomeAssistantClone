@@ -62,6 +62,12 @@ interface StackedPowerAreaChartProps {
   additionalQueryParams?: Record<string, string>; // Optional query parameters for API calls
 }
 
+// Helper function to format watts to kilowatts
+const formatKw = (watts: number): string => {
+  const kw = watts / 1000;
+  return kw % 1 === 0 ? kw.toString() : kw.toFixed(1);
+};
+
 // Custom tooltip component
 const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
@@ -83,7 +89,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
             <p className="font-medium text-sm">Power</p>
             {powerEntries.map((entry, index) => (
               <p key={`power-${index}`} style={{ color: entry.color }} className="ml-2">
-                {`${entry.name}: ${Number(entry.value) % 1 === 0 ? Number(entry.value) : Number(entry.value).toFixed(1)} kW`}
+                {`${entry.name}: ${formatKw(Number(entry.value))} kW`}
               </p>
             ))}
           </div>
@@ -358,7 +364,9 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: externalSelecte
   const chartData = combinedData;
 
   const formatYAxis = (value: number) => {
-    return `${value % 1 === 0 ? value : value.toFixed(1)} kW`;
+    // Convert watts to kilowatts (divide by 1000)
+    const kw = value / 1000;
+    return `${kw % 1 === 0 ? kw : kw.toFixed(1)} kW`;
   };
 
   const formatXAxis = (value: string) => {

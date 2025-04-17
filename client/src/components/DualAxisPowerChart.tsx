@@ -283,7 +283,9 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
 
   // Format power for tooltip
   const formatPower = (value: number) => {
-    return `${value % 1 === 0 ? value : value.toFixed(1)} kW`;
+    // Convert watts to kilowatts (divide by 1000)
+    const kw = value / 1000;
+    return `${kw % 1 === 0 ? kw : kw.toFixed(1)} kW`;
   };
 
   // Format voltage for tooltip
@@ -377,6 +379,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                         label={{ value: 'Power (kW)', angle: -90, position: 'insideLeft', offset: -5 }} 
                         domain={[0, 'auto']}
                         tick={{ fontSize: 11 }}
+                        tickFormatter={(value) => `${(value / 1000).toFixed(1)}`}
                       />
                       
                       {/* Right Y-Axis for Voltage */}
@@ -395,7 +398,9 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                           if (name.includes('Voltage')) {
                             return [`${value.toFixed(1)}V`, name];
                           } else {
-                            return [`${value % 1 === 0 ? value : value.toFixed(1)} kW`, name];
+                            // Convert watts to kilowatts
+                            const kw = value / 1000;
+                            return [`${kw % 1 === 0 ? kw : kw.toFixed(1)} kW`, name];
                           }
                         }}
                         labelFormatter={(label) => `Time: ${label}`}
