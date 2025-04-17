@@ -16,7 +16,7 @@ type MenuItemWithPath = MenuItem & { path: string };
 const menuItems: MenuItemWithPath[] = [
   { icon: <LayoutGrid className="w-5 h-5" />, label: "Home", path: "/" },
   { icon: <ToggleLeft className="w-5 h-5" />, label: "Panel 1 33KVA", path: "/wo-08" },
-  { icon: <ToggleLeft className="w-5 h-5" />, label: "Panel 2 66KVA", path: "/panel-66kva" },
+  { icon: <ToggleLeft className="w-5 h-5" />, label: "Panel 2 82KVA", path: "/panel-82kva" },
 ];
 
 const SidebarItem = ({ 

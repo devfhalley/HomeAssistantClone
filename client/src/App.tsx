@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import PowerMonitoring from "@/pages/PowerMonitoring";
 import Panel66KVA from "@/pages/Panel66KVA";
+import Panel82KVA from "@/pages/Panel82KVA";
 import Home from "@/pages/Home";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -18,6 +19,7 @@ function Router() {
       <ProtectedRoute path="/" component={Home} />
       <ProtectedRoute path="/wo-08" component={PowerMonitoring} />
       <ProtectedRoute path="/panel-66kva" component={Panel66KVA} />
+      <ProtectedRoute path="/panel-82kva" component={Panel82KVA} />
       <Route path="/auth" component={Home} /> {/* Redirect auth to Home */}
       <Route component={NotFound} />
     </Switch>
