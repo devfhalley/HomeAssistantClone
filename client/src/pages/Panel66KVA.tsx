@@ -68,7 +68,7 @@ const Panel66KVA = () => {
     document.title = "Home Assistant - Panel 82KVA";
     
     // Log the selected date for monitoring
-    console.log("Using selected date:", format(selectedDate, "yyyy-MM-dd"), "for 66KVA panel");
+    console.log("Using selected date:", format(selectedDate, "yyyy-MM-dd"), "for 82KVA panel");
   }, [selectedDate]);
   
   // Fetch phase data with automatic refetching every 10 seconds
@@ -428,7 +428,7 @@ const Panel66KVA = () => {
       <div className="space-y-4">
         {/* Panel Name Header */}
         <div className="bg-amber-600 text-white p-3 rounded-md flex justify-between items-center">
-          <h1 className="text-xl font-bold">Panel 2 66KVA Monitoring</h1>
+          <h1 className="text-xl font-bold">Panel 2 82KVA Monitoring</h1>
           {isFetchingData && (
             <div className="flex items-center">
               <RefreshCw className="w-4 h-4 mr-2 text-white animate-spin" />
@@ -456,7 +456,7 @@ const Panel66KVA = () => {
             ) : (
               <>
                 <PowerMonitorCard 
-                  title="Panel 2 66KVA - Phase R" 
+                  title="Panel 2 82KVA - Phase R" 
                   phase="R"
                   voltage={processedPhaseData.R?.voltage || 0}
                   current={processedPhaseData.R?.current || 0}
@@ -467,7 +467,7 @@ const Panel66KVA = () => {
                 />
                 
                 <PowerMonitorCard 
-                  title="Panel 2 66KVA - Phase S" 
+                  title="Panel 2 82KVA - Phase S" 
                   phase="S"
                   voltage={processedPhaseData.S?.voltage || 0}
                   current={processedPhaseData.S?.current || 0}
@@ -478,7 +478,7 @@ const Panel66KVA = () => {
                 />
                 
                 <PowerMonitorCard 
-                  title="Panel 2 66KVA - Phase T" 
+                  title="Panel 2 82KVA - Phase T" 
                   phase="T"
                   voltage={processedPhaseData.T?.voltage || 0}
                   current={processedPhaseData.T?.current || 0}
@@ -497,7 +497,7 @@ const Panel66KVA = () => {
           <h2 className="text-lg font-semibold my-3">Power & Voltage Analysis</h2>
           <div className="mb-4">
             <DualAxisPowerChart
-              title="66KVA Panel Power & Voltage Analysis"
+              title="82KVA Panel Power & Voltage Analysis"
               panelType="66kva"
             />
           </div>
@@ -505,7 +505,7 @@ const Panel66KVA = () => {
           <h2 className="text-lg font-semibold my-3">Electrical Parameters</h2>
           <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
             <ChartCard 
-              title="Panel 2 66KVA - Current" 
+              title="Panel 2 82KVA - Current" 
               phaseRData={processChartData(currentDataR)}
               phaseSData={processChartData(currentDataS)}
               phaseTData={processChartData(currentDataT)}
