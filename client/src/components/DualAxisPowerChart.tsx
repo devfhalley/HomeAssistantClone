@@ -290,7 +290,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
 
   // Format voltage for tooltip
   const formatVoltage = (value: number) => {
-    return `${value.toFixed(2)} V`;
+    return `${Math.round(value)} V`;
   };
 
   return (
@@ -396,7 +396,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                       <Tooltip 
                         formatter={(value: number, name: string) => {
                           if (name.includes('Voltage')) {
-                            return [`${value.toFixed(1)}V`, name];
+                            return [`${Math.round(value)}V`, name];
                           } else {
                             // Convert watts to kilowatts
                             const kw = value / 1000;
@@ -488,6 +488,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                       label={{ value: 'Voltage (V)', angle: -90, position: 'insideLeft', offset: -5 }} 
                       domain={[180, 310]}
                       tickCount={5}
+                      tickFormatter={(value) => `${Math.round(value)}`}
                     />
                     <Tooltip 
                       formatter={(value: number) => [formatVoltage(value), '']}

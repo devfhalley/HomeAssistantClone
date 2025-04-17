@@ -100,7 +100,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
             <p className="font-medium text-sm">Voltage</p>
             {voltageEntries.map((entry, index) => (
               <p key={`voltage-${index}`} style={{ color: entry.color }} className="ml-2">
-                {`${entry.name}: ${Number(entry.value).toFixed(1)} V`}
+                {`${entry.name}: ${Math.round(Number(entry.value))} V`}
               </p>
             ))}
           </div>
@@ -466,7 +466,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: externalSelecte
                     domain={[180, 310]} 
                     tick={{ fontSize: 11 }}
                     width={60}
-                    tickFormatter={(value) => `${value}V`}
+                    tickFormatter={(value) => `${Math.round(value)}V`}
                     label={{ value: 'Voltage (V)', angle: 90, position: 'insideRight', offset: 0 }}
                   />
                   
