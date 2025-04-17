@@ -36,7 +36,7 @@ interface ChartDataResponse {
 
 interface PanelPowerChartProps {
   title: string;
-  panelType: "33kva" | "66kva";
+  panelType: "33kva" | "66kva" | "82kva";
   color: string;
 }
 
@@ -46,7 +46,7 @@ const PanelPowerChart = ({ title, panelType, color }: PanelPowerChartProps) => {
 
   // Create URLs for the different phase voltage data
   const createChartDataUrl = (phase: string, selectedDate?: Date): string => {
-    const panelParam = panelType === "66kva" ? "&panel=66kva" : "";
+    const panelParam = (panelType === "66kva" || panelType === "82kva") ? "&panel=66kva" : "";
     if (selectedDate) {
       return `/api/chart-data/voltage/${phase}?date=${selectedDate.toISOString()}${panelParam}`;
     }

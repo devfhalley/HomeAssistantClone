@@ -36,7 +36,7 @@ interface PowerDataResponse {
 
 interface PanelPowerUsageChartProps {
   title: string;
-  panelType?: "33kva" | "66kva";  // Added panel type parameter
+  panelType?: "33kva" | "66kva" | "82kva";  // Updated to include 82kva
 }
 
 const PanelPowerUsageChart = ({ title, panelType }: PanelPowerUsageChartProps) => {
@@ -86,8 +86,10 @@ const PanelPowerUsageChart = ({ title, panelType }: PanelPowerUsageChartProps) =
           {panelType === "33kva" 
             ? "33KVA Panel Power Usage" 
             : panelType === "66kva" 
-              ? "66KVA Panel Power Usage" 
-              : title}
+              ? "66KVA Panel Power Usage"
+              : panelType === "82kva"
+                ? "82KVA Panel Power Usage" 
+                : title}
         </CardTitle>
         <div className="flex items-center space-x-2">
           {isLoading && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
