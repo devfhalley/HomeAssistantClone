@@ -299,7 +299,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
         <CardTitle className="text-lg font-medium">
           {panelType === "33kva" 
             ? "33KVA Panel - Hourly Power Usage and Voltage per Phase (R, S, T)" 
-            : "66KVA Panel - Hourly Power Usage and Voltage per Phase (R, S, T)"}
+            : "82KVA Panel - Hourly Power Usage and Voltage per Phase (R, S, T)"}
         </CardTitle>
         <div className="flex items-center space-x-2">
           <Button 
@@ -411,7 +411,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                       <Line 
                         yAxisId="left"
                         dataKey="power"
-                        name={panelType === "33kva" ? "33KVA Power" : "66KVA Power"}
+                        name={panelType === "33kva" ? "33KVA Power" : "82KVA Power"}
                         stroke={panelType === "33kva" ? "#0040ff" : "#f59e0b"}
                         strokeWidth={3}
                         dot={false}

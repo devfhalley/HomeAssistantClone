@@ -184,7 +184,7 @@ const TotalPowerChart = ({ selectedDate: externalSelectedDate, onDateChange }: T
               ? "Daily Total Power Consumption" 
               : showPanel33 
                 ? "Panel 1 33KVA Daily Consumption" 
-                : "Panel 2 66KVA Daily Consumption"}
+                : "Panel 2 82KVA Daily Consumption"}
           </CardTitle>
           <div className="flex items-center space-x-2">
             <Button 
@@ -326,7 +326,7 @@ const TotalPowerChart = ({ selectedDate: externalSelectedDate, onDateChange }: T
                   <Area 
                     type="monotone" 
                     dataKey="panel66Power" 
-                    name={`Panel 2 66KVA ${selectedDate ? `(${format(selectedDate, "dd MMM yyyy")})` : ''}`}
+                    name={`Panel 2 82KVA ${selectedDate ? `(${format(selectedDate, "dd MMM yyyy")})` : ''}`}
                     stroke="#ff9800" 
                     fill="#ff9800" 
                     fillOpacity={0.3}

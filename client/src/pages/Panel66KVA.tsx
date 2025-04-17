@@ -65,7 +65,7 @@ const Panel66KVA = () => {
   const [showDebugInfo, setShowDebugInfo] = useState<boolean>(false);
   
   useEffect(() => {
-    document.title = "Home Assistant - Panel 66KVA";
+    document.title = "Home Assistant - Panel 82KVA";
     
     // Log the selected date for monitoring
     console.log("Using selected date:", format(selectedDate, "yyyy-MM-dd"), "for 66KVA panel");
