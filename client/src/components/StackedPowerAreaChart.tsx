@@ -57,7 +57,7 @@ interface VoltageDataResponse {
 
 interface StackedPowerAreaChartProps {
   title: string;
-  panelType?: "33kva" | "66kva";  // Optional panel type parameter
+  panelType?: "33kva" | "66kva" | "82kva";  // Optional panel type parameter
   selectedDate?: Date;
   additionalQueryParams?: Record<string, string>; // Optional query parameters for API calls
 }
@@ -73,7 +73,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
   if (active && payload && payload.length) {
     // Separate power and voltage entries
     const powerEntries = payload.filter(entry => 
-      entry.name && ['33KVA Panel', '66KVA Panel'].includes(entry.name)
+      entry.name && ['33KVA Panel', '66KVA Panel', '82KVA Panel'].includes(entry.name)
     );
     
     const voltageEntries = payload.filter(entry => 
@@ -474,7 +474,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: externalSelecte
                   <Legend />
                   
                   {/* Power data as stacked areas - Left Axis */}
-                  {panelType !== "66kva" && (
+                  {panelType !== "66kva" && panelType !== "82kva" && (
                     <Area 
                       yAxisId="left"
                       type="monotone" 
