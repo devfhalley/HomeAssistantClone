@@ -283,7 +283,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
 
   // Format power for tooltip
   const formatPower = (value: number) => {
-    return `${value.toFixed(2)} kW`;
+    return `${value % 1 === 0 ? value : value.toFixed(1)} kW`;
   };
 
   // Format voltage for tooltip
@@ -395,7 +395,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
                           if (name.includes('Voltage')) {
                             return [`${value.toFixed(1)}V`, name];
                           } else {
-                            return [`${value.toFixed(2)} kW`, name];
+                            return [`${value % 1 === 0 ? value : value.toFixed(1)} kW`, name];
                           }
                         }}
                         labelFormatter={(label) => `Time: ${label}`}

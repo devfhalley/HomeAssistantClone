@@ -83,7 +83,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
             <p className="font-medium text-sm">Power</p>
             {powerEntries.map((entry, index) => (
               <p key={`power-${index}`} style={{ color: entry.color }} className="ml-2">
-                {`${entry.name}: ${Number(entry.value).toFixed(2)} kW`}
+                {`${entry.name}: ${Number(entry.value) % 1 === 0 ? Number(entry.value) : Number(entry.value).toFixed(1)} kW`}
               </p>
             ))}
           </div>
@@ -358,7 +358,7 @@ const StackedPowerAreaChart = ({ title, panelType, selectedDate: externalSelecte
   const chartData = combinedData;
 
   const formatYAxis = (value: number) => {
-    return `${value} kW`;
+    return `${value % 1 === 0 ? value : value.toFixed(1)} kW`;
   };
 
   const formatXAxis = (value: string) => {
