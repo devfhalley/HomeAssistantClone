@@ -517,7 +517,7 @@ const Panel66KVA = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <ChartCard 
-              title="Panel 2 66KVA - Power" 
+              title="Panel 2 82KVA - Power" 
               phaseRData={processChartData(powerDataR)}
               phaseSData={processChartData(powerDataS)}
               phaseTData={processChartData(powerDataT)}
@@ -527,7 +527,7 @@ const Panel66KVA = () => {
             />
             
             <ChartCard 
-              title="Panel 2 66KVA - Frequency" 
+              title="Panel 2 82KVA - Frequency" 
               phaseRData={processChartData(frequencyDataR)}
               phaseSData={processChartData(frequencyDataS)}
               phaseTData={processChartData(frequencyDataT)}
@@ -537,7 +537,7 @@ const Panel66KVA = () => {
             />
             
             <ChartCard 
-              title="Panel 2 66KVA - Power Factor" 
+              title="Panel 2 82KVA - Power Factor" 
               phaseRData={processChartData(pfDataR)}
               phaseSData={processChartData(pfDataS)}
               phaseTData={processChartData(pfDataT)}

@@ -59,7 +59,7 @@ interface CombinedDataPoint {
 
 interface DualAxisPowerChartProps {
   title: string;
-  panelType: "33kva" | "66kva";
+  panelType: "33kva" | "66kva" | "82kva";
 }
 
 const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
@@ -72,7 +72,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
   
   // Create URLs for the different data types
   const createChartDataUrl = (dataType: string, phase: string, selectedDate?: Date): string => {
-    const panelParam = panelType === "66kva" ? "&panel=66kva" : "";
+    const panelParam = (panelType === "66kva" || panelType === "82kva") ? "&panel=66kva" : "";
     if (selectedDate) {
       return `/api/chart-data/${dataType}/${phase}?date=${selectedDate.toISOString()}${panelParam}`;
     }
@@ -234,7 +234,7 @@ const DualAxisPowerChart = ({ title, panelType }: DualAxisPowerChartProps) => {
         if (timeToValues[point.time]) {
           if (panelType === "33kva" && point.panel33Power !== undefined) {
             timeToValues[point.time].power = point.panel33Power / 1000; // Convert from W to kW
-          } else if (panelType === "66kva" && point.panel66Power !== undefined) {
+          } else if ((panelType === "66kva" || panelType === "82kva") && point.panel66Power !== undefined) {
             timeToValues[point.time].power = point.panel66Power / 1000; // Convert from W to kW
           }
         }
