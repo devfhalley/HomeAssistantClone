@@ -34,8 +34,8 @@ interface SystemInfo {
 }
 
 const Home = () => {
-  // Using a specific date of April 16, 2025 for consistency since that's when we have data
-  const [selectedDate] = useState<Date>(new Date(2025, 3, 16));
+  // Always use today's date as default
+  const [selectedDate] = useState<Date>(new Date());
   
   useEffect(() => {
     document.title = "Home Assistant - Home";
